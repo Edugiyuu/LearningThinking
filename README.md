@@ -1,27 +1,29 @@
 # LearningThinking
 
-**Entenda IA vendo ela funcionar.** Aulas visuais e um laboratório interativo para qualquer pessoa entender redes neurais, LLMs, embeddings, RAG, deep thinking e aprendizado contínuo — sem precisar programar.
+**Entenda IA vendo ela funcionar.** Um laboratório visual, no estilo do Tinkercad, para qualquer pessoa montar e rodar uma rede neural e ver cada conta acontecer, sem precisar programar.
 
-> Status: fase de documentação e arquitetura. Ainda não há código.
+> Status: design da primeira entrega pronto no Figma (Home, Novo projeto, Laboratório) e um teste técnico do laboratório funcionando em [`spikes/camada-react-flow/`](spikes/camada-react-flow/README.md). O projeto real ainda não começou.
 
 ## A ideia
 
-- **Laboratório** (produto principal): uma área de trabalho no estilo do Tinkercad, onde você monta e roda coisas de IA.
+- **Laboratório** (produto principal): uma área de trabalho onde você arrasta blocos (Entrada, Camada, Neurônio, Saída), liga com fios e clica em **Rodar** para ver os números atravessarem a rede, **uma conta de cada vez**.
 - **Tutoriais** em páginas separadas: explicam o conceito e como usar cada ferramenta, e depois levam você ao laboratório.
-- O cálculo roda **no navegador**.
+- Tudo calculado **no navegador**.
 
-Veja o [ADR-0013](docs/adr/0013-formato-tutoriais-e-laboratorio.md). O resto da documentação é uma proposta inicial em revisão.
+Decisões do autor: [ADR-0013](docs/adr/0013-formato-tutoriais-e-laboratorio.md) a [ADR-0018](docs/adr/0018-primeira-entrega-design.md). O resto da documentação é uma proposta inicial da IA, em revisão.
 
-## Stack planejada
+## Stack
 
-Next.js · TypeScript · MDX · Tailwind CSS · Radix · Motion · Web Workers · mini-engine neural própria · Transformers.js · Claude API (modo ao vivo opcional)
+Next.js · TypeScript · Tailwind CSS · GSAP · React Flow · cálculo da rede em TypeScript próprio · projetos salvos no navegador (localStorage) · Vercel. Sem backend na v1; PostgreSQL e contas depois ([ADR-0017](docs/adr/0017-stack.md)).
+
+## Visual
+
+Tema claro, destaque aqua claro `#5ED3DB` e o logo **Bloquinho**, um mascote em pixel ([design system](docs/04-design-system.md)).
 
 ## Documentação
 
 Comece por [docs/README.md](docs/README.md). Destaques:
 
-- [Visão do produto](docs/01-visao-produto.md)
-- [Currículo](docs/02-curriculo.md)
-- [Arquitetura](docs/03-arquitetura.md)
+- [Laboratório](docs/05-laboratorio.md): o que já foi decidido
 - [Design system](docs/04-design-system.md)
-- [Decisões de arquitetura (ADRs)](docs/adr/README.md)
+- [Decisões (ADRs)](docs/adr/README.md)

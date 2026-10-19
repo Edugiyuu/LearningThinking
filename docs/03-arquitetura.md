@@ -1,6 +1,8 @@
 # 03 · Arquitetura
 
 > ⚠️ **Em revisão.** Este documento é uma proposta da IA anterior ao [ADR-0013](adr/0013-formato-tutoriais-e-laboratorio.md). Hoje o produto é um **laboratório estilo Tinkercad** (produto principal) mais **tutoriais em páginas separadas**. As partes sobre "aulas em scrollytelling", "Abrir no Laboratório" e o núcleo compartilhado entre aula e laboratório não valem mais e serão reescritas.
+>
+> **O que já vale (2026-10-19):** a stack real está no [ADR-0017](adr/0017-stack.md): Next.js, TypeScript, Tailwind, GSAP, React Flow, cálculo próprio em TypeScript, localStorage, sem backend na v1. O editor do laboratório já foi validado no teste técnico [`spikes/camada-react-flow/`](../spikes/camada-react-flow/README.md). Lá, as regras ficam separadas da tela em `lib/rede.ts`: blocos, fios, pesos, a "rodada" com a lista de contas em ordem e a "vista" do que aparece em cada passo.
 
 > Visão geral técnica. As decisões individuais e seus porquês estão nos [ADRs](adr/README.md).
 

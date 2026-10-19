@@ -1,5 +1,7 @@
 # 07 · Guia de Conteúdo
 
+> ⚠️ **Em revisão.** Este documento é uma proposta da IA anterior ao [ADR-0013](adr/0013-formato-tutoriais-e-laboratorio.md). Hoje os tutoriais ficam em páginas separadas e levam ao laboratório; o formato deles ainda não foi decidido. A seção de voz e tom do design system continua valendo.
+
 > Como escrever uma aula. Leia junto com [02-curriculo.md](02-curriculo.md) e [04-design-system.md](04-design-system.md#6-voz-e-tom).
 
 ## Checklist antes de escrever

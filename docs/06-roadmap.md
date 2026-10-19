@@ -1,6 +1,25 @@
 # 06 · Roadmap
 
-> Fases por entrega de valor, não por data. Cada fase termina com algo usável em sala.
+> ⚠️ **Em revisão.** As fases abaixo são uma proposta da IA anterior ao [ADR-0013](adr/0013-formato-tutoriais-e-laboratorio.md). Itens como "aulas em scrollytelling", "Abrir no Laboratório", "tema claro/escuro" e os laboratórios L1–L5 não valem mais. O caminho decidido pelo autor está abaixo.
+
+## O que está acontecendo de verdade
+
+Primeira entrega ([ADR-0018](adr/0018-primeira-entrega-design.md)):
+- [x] Stack decidida ([ADR-0017](adr/0017-stack.md))
+- [x] Teste técnico do laboratório no React Flow ([`spikes/camada-react-flow/`](../spikes/camada-react-flow/README.md)): blocos, fios, pesos, Rodar com erros e contas passo a passo
+- [x] Home no Figma (tema claro, aqua, logo Bloquinho)
+- [x] Tela Novo projeto no Figma
+- [x] Tela do Laboratório no Figma
+
+Próximos passos (a decidir com o autor):
+- [ ] Começar o projeto real (Next.js + Tailwind) a partir das telas e do teste técnico
+- [ ] Treinar (repetições, x100, saídas no fim)
+- [ ] Salvar projetos no navegador
+- [ ] Aba Busca por significado
+
+---
+
+> Proposta original (fases por entrega de valor, não por data; cada fase termina com algo usável em sala):
 
 ## Fase 0 · Fundação
 
