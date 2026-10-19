@@ -26,7 +26,7 @@ Com o produto ([ADR-0013](0013-formato-tutoriais-e-laboratorio.md) a [ADR-0016](
 | Escolha do tipo de projeto | Novo projeto · Desktop | ✅ Desenhada |
 | Laboratório | Laboratório · Desktop | ✅ Desenhada (passo a passo das contas) |
 
-Frames de apoio: "Logo · opções", "Cor de destaque · comparação" e "Laboratório · Desktop · violeta (antigo)", guardado só para comparação.
+Frames de apoio: "Logo · opções" e "Cor de destaque · comparação". O laboratório antigo em violeta foi apagado do Figma pelo autor.
 
 Teste técnico do laboratório: [`spikes/camada-react-flow/`](../../spikes/camada-react-flow/README.md), funcionando (ver "Teste técnico" abaixo).
 

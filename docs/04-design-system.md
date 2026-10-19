@@ -7,7 +7,7 @@
 > - **Cor de destaque: aqua claro `#5ED3DB`**, no lugar do violeta (seção 2.2).
 > - **Logo: Aqua**, um mascote em pixel (seção 7). O desenho foi escolhido com o nome provisório "Bloquinho"; o nome **Aqua** foi dado pelo autor em 2026-10-19.
 >
-> **Telas no Figma:** Home · Desktop, Novo projeto · Desktop, Laboratório · Desktop. A Home tem uma segunda versão, **Home · Desktop · mascote** (à esquerda da original), com a Aqua ilustrando as seções (seção 7.1), aguardando a escolha do autor. Ao lado dela, o frame **Mascote · versões** compara opções do card "Aprenda o conceito". Também há os frames de apoio Logo · opções e Cor de destaque · comparação, e um laboratório antigo em violeta, guardado só para comparação.
+> **Telas no Figma:** Home · Desktop, Novo projeto · Desktop, Laboratório · Desktop. A Home tem uma segunda versão, **Home · Desktop · mascote** (à esquerda da original), com a Aqua ilustrando as seções (seção 7.1), aguardando a escolha do autor. Ao lado dela, o frame **Mascote · versões** compara opções do card "Aprenda o conceito". Também há os frames de apoio Logo · opções e Cor de destaque · comparação.
 
 > Inspiração: Apple (clareza, tipografia, scrollytelling, espaço), ElevenLabs (superfícies suaves, gradientes discretos, controles elegantes), Linear/Vercel (precisão, densidade controlada no modo laboratório).
 
