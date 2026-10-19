@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "spike-camada",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "spikes/camada-react-flow", "run", "dev"],
+      "port": 3000
+    }
+  ]
+}
