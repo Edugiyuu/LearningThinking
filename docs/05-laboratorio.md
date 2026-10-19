@@ -2,7 +2,7 @@
 
 ## ✅ Decidido pelo autor
 
-Fontes: [ADR-0013](adr/0013-formato-tutoriais-e-laboratorio.md) e [ADR-0014](adr/0014-laboratorio-abas-projetos-e-erros.md).
+Fontes: [ADR-0013](adr/0013-formato-tutoriais-e-laboratorio.md), [ADR-0014](adr/0014-laboratorio-abas-projetos-e-erros.md), [ADR-0015](adr/0015-aba-redes-neurais-montagem.md), [ADR-0017](adr/0017-stack.md) e [ADR-0018](adr/0018-primeira-entrega-design.md). Telas no Figma: "Novo projeto · Desktop" e "Laboratório · Desktop". Teste técnico funcionando: [`spikes/camada-react-flow/`](../spikes/camada-react-flow/README.md).
 
 - O laboratório é o **produto principal**: uma área de trabalho estilo Tinkercad, onde o aluno arrasta blocos, liga os blocos com fios e roda a montagem. O cálculo é feito no navegador.
 - **Uma aba por tema**, cada uma com o próprio conjunto de blocos. Projetos que usam os mesmos blocos ficam na mesma aba.
@@ -10,27 +10,48 @@ Fontes: [ADR-0013](adr/0013-formato-tutoriais-e-laboratorio.md) e [ADR-0014](adr
   - **Redes neurais:** projetos *Rede neural do zero* e *Esquecimento*.
   - **Busca por significado.**
 - Dentro da aba, os blocos são **ligados livremente**.
-- **Criar novo projeto:** *vazio* ou *básico pronto* (uma montagem bem simples que já funciona).
-- **Ligação sem sentido:** gera um erro **ao clicar em rodar**, destacando **o lugar exato** na montagem, não só uma mensagem.
+- **Criar novo projeto** (tela "Novo projeto"): (1) escolher o tema; (2) escolher **vazio** ou **básico pronto** (uma montagem simples que já funciona); dar um nome ao projeto.
+- **Ligação sem sentido:** gera um erro **ao clicar em Rodar**, destacando **o lugar exato** na montagem (borda vermelha no bloco), não só uma mensagem.
+- **Projetos salvos no navegador** (localStorage, com número de versão); sem contas nem servidor na v1 ([ADR-0017](adr/0017-stack.md)).
 - Os tutoriais ficam em **páginas separadas** e levam ao laboratório.
 
-### Aba Redes neurais ([ADR-0015](adr/0015-aba-redes-neurais-montagem.md))
+### Aba Redes neurais ([ADR-0015](adr/0015-aba-redes-neurais-montagem.md), [ADR-0018](adr/0018-primeira-entrega-design.md))
 
-- **Bloco Camada** com **neurônios** dentro: o aluno arrasta um por um **ou** digita a quantidade.
-- **Montagem básica pronta:** entrada → camada oculta → saída. A rede **recebe uma cor** e responde **azul (0) ou laranja (1)**. Vem com **exemplos prontos**.
-- **Treino:** botão **"Treinar"**, do zero (pesos aleatórios) **ou** com rede já treinada (pesos salvos).
-- **Resultado:** os valores (ex.: 0,3) aparecem de forma **visual** na própria tela da rede, **passo a passo**, até a saída.
-- **Passos:** o usuário avança **manualmente** (um por vez) ou no modo **automático**.
-- **Treinar:** o usuário escolhe **quantas repetições** (ex.: 1000), e o treino corre até lá **em alta velocidade** (~x100).
-- **Forward pass na tela:** cor → 3 números (R, G, B) → cada neurônio oculto faz sua soma ponderada (a conta aparece) → saída → "espremer" entre 0 e 1 → resposta. As linhas têm espessura **bem contrastada** conforme o peso.
-- **Treino acelerado:** mostra tudo passando rápido; no fim, mostra as saídas registradas durante o treinamento.
+**Blocos**
+- **Entrada:** o aluno escolhe o que entra: **Cor** (vira R, G, B de 0 a 1) ou **Números** livres (nome + valor). O laboratório é um sandbox e não só sobre cores.
+- **Camada** com **neurônios** dentro: o aluno arrasta um por um **ou** digita a quantidade.
+- **Saída:** mostra **o número e a cor da resposta**. Ao clicar, o aluno personaliza o **objetivo** (nome e cor das respostas 0 e 1; nome+cor é proposta da IA).
+
+**Fios e pesos**
+- **Fios:** o aluno liga Entrada → Camada → ... → Saída. **A ordem vem do fio, não da posição na tela.** Um fio liga todos os neurônios de um bloco com todos do próximo (camada densa).
+- **Peso na linha:** cada linha mostra o número do peso, além da espessura (força) e da cor (sinal). **Duplo clique** edita.
+- **Ajuste manual de pesos sempre ligado**, em redes pequenas e grandes. É opcional; o Treinar continua sendo o caminho para redes grandes.
+
+**Montagem básica pronta**
+- Entrada (cor) → Camada 1 (2 neurônios: um "detector de laranja" e um "detector de azul") → Camada 2 (1 neurônio) → Saída. Responde **azul (0) ou laranja (1)**, já com pesos que funcionam (laranja `#FF8C00` → 0,97; azul `#378ADD` → 0,12). Vem com **exemplos prontos**.
+
+**Rodar: contas passo a passo (forward pass)**
+- Ao clicar em **Rodar**, a montagem é conferida; se algo estiver errado, os blocos com problema ficam em vermelho e a mensagem aparece no painel.
+- **Camada solta** (sem fio vindo da Entrada) **não é erro, é só um aviso** *(decidido pelo autor em 2026-10-19)*: ela fica com borda tracejada âmbar, o painel avisa que ficou de fora das contas, e a rodada continua.
+- As contas aparecem **uma multiplicação de cada vez**. A **linha da vez fica destacada** (aqua), as já feitas ficam normais e as que ainda não vieram ficam apagadas. O painel mostra só aquela parcela (ex.: `0,55 × 0,50 = 0,28`), depois a próxima, e **só no fim a soma**.
+- Depois da soma: nas camadas do meio, positivo **acende** e passa adiante, negativo **apaga** e passa 0 (ReLU). Na camada ligada à Saída, a soma é **espremida entre 0 e 1** (sigmoide). Por fim, a Saída decide: abaixo de 0,50 é 0, a partir de 0,50 é 1.
+- O usuário avança **manualmente** (Anterior/Próximo) ou no modo **automático**.
+- Mexer na montagem (bloco, fio, peso, entrada) cancela a rodada; é preciso rodar de novo.
+
+**Treinar**
+- Botão **"Treinar"**, do zero (pesos aleatórios) **ou** a partir de uma rede já treinada (pesos salvos).
+- O usuário escolhe **quantas repetições** (ex.: 1000), e o treino corre até lá **em alta velocidade** (~x100): cálculo real → gravação → reprodução.
+- Mostra tudo passando rápido; no fim, mostra as saídas registradas durante o treinamento.
 - **Backward pass passo a passo** (modo "debug"): **depois da v1**, ver [ADR-0016](adr/0016-modo-debug-backward-pass.md).
+
+**O que já funciona no teste técnico:** Entrada (cor e números), Camada, Neurônio, Saída com objetivo, fios, peso na linha com duplo clique, Rodar com erros (vermelho) e avisos (âmbar) marcados e contas passo a passo (manual e automático). **Ainda não:** Treinar, salvar projeto, abas, tela Novo projeto.
 
 ### Em aberto
 
-- Aba Redes neurais: formato da tela de saídas no fim do treino.
-- Aba Busca por significado: blocos e montagem básica.
-- Onde os projetos ficam salvos?
+- Busca por significado: o [ADR-0014](adr/0014-laboratorio-abas-projetos-e-erros.md) coloca a aba na v1, mas a Home e a tela Novo projeto a mostram como "Em breve" porque ela ainda não foi desenhada. Faltam os blocos e a montagem básica.
+- Formato da tela de saídas no fim do treino.
+- Mover um neurônio de uma camada para outra.
+- *Bias* (um número extra somado em cada neurônio): ainda não entrou.
 - Como o tutorial "mostra" o laboratório?
 
 ---
