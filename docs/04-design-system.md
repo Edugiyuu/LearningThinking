@@ -1,6 +1,13 @@
 # 04 · Design System
 
 > ✅ **Aceito pelo autor** como direção visual em 2026-10-19 ([ADR-0018](adr/0018-primeira-entrega-design.md)). As "cores por módulo" valem para os temas/abas do laboratório.
+>
+> **Decisões do autor já refletidas aqui (2026-10-19):**
+> - ☀️ **Tema claro** é o único da v1. O escuro fica guardado para o futuro.
+> - **Cor de destaque: aqua claro `#5ED3DB`**, no lugar do violeta (seção 2.2).
+> - **Logo: Bloquinho**, um mascote em pixel (seção 7).
+>
+> **Telas no Figma:** Home · Desktop, Novo projeto · Desktop, Laboratório · Desktop. Também há os frames de apoio Logo · opções e Cor de destaque · comparação, e um laboratório antigo em violeta, guardado só para comparação.
 
 > Inspiração: Apple (clareza, tipografia, scrollytelling, espaço), ElevenLabs (superfícies suaves, gradientes discretos, controles elegantes), Linear/Vercel (precisão, densidade controlada no modo laboratório).
 
@@ -19,29 +26,74 @@ Tokens são a fonte única de verdade, definidos como CSS custom properties e ex
 
 ### 2.1 Cores neutras
 
-| Token | Claro | Escuro | Uso |
-|---|---|---|---|
-| `--bg` | `#FFFFFF` | `#0A0A0B` | Fundo da página |
-| `--bg-subtle` | `#F5F5F7` | `#111113` | Seções alternadas, cards |
-| `--surface` | `rgba(255,255,255,.72)` + blur | `rgba(22,22,24,.72)` + blur | Painéis flutuantes |
-| `--border` | `rgba(0,0,0,.08)` | `rgba(255,255,255,.08)` | Bordas de 1px |
-| `--text` | `#1D1D1F` | `#F5F5F7` | Texto principal |
-| `--text-muted` | `#6E6E73` | `#A1A1A6` | Texto secundário |
-| `--focus` | `#0071E3` | `#2997FF` | Anel de foco |
+O **claro é o padrão**. O escuro fica guardado para uma opção futura e não é usado na v1.
+
+| Token | Claro (padrão) | Uso |
+|---|---|---|
+| `--bg` | `#FFFFFF` | Fundo da página, barras e painéis do laboratório |
+| `--bg-subtle` | `#F5F5F7` | Cards, seções alternadas, **canvas do laboratório** |
+| `--surface` | `rgba(255,255,255,.72)` + blur | Painéis flutuantes |
+| `--border` | `rgba(0,0,0,.08)` | Bordas de 1px (cards usam `.06`, campos `.15`) |
+| `--text` | `#1D1D1F` | Texto principal; botão principal da Home (fundo) |
+| `--text-muted` | `#6E6E73` | Texto secundário |
+| `--text-subtle` | `#86868B` | Legendas, rodapé |
+| `--focus` | `#0071E3` | Anel de foco |
+
+<details><summary>Escuro (futuro, fora da v1)</summary>
+
+| Token | Escuro |
+|---|---|
+| `--bg` | `#0A0A0B` |
+| `--bg-subtle` | `#111113` |
+| `--surface` | `rgba(22,22,24,.72)` + blur |
+| `--border` | `rgba(255,255,255,.08)` |
+| `--text` | `#F5F5F7` |
+| `--text-muted` | `#A1A1A6` |
+| `--focus` | `#2997FF` |
+
+</details>
 
 ### 2.2 Cores por módulo
+
+> ✅ **Cor de destaque do site: aqua claro `#5ED3DB`** (escolhida pelo autor em 2026-10-19, no lugar do violeta). Vale para a marca (logo Bloquinho), os botões principais, a "linha da vez" e a aba Redes neurais.
+>
+> | Papel | Cor |
+> |---|---|
+> | Destaque (preenchimento, linhas, portas) | `#5ED3DB` |
+> | Texto sobre branco | `#0E7C86` |
+> | Fundo bem claro (chips, neurônio) | `#E8FAFB` |
+> | Texto sobre o destaque (botões, chips) | `#06363A` |
+>
+> Cuidado: por ser claro, o aqua some em traços finos sobre o branco. Linhas e bordas no destaque devem ter pelo menos 2px, e o texto pequeno usa `#0E7C86`, nunca o `#5ED3DB`.
+
+**Botões:**
+- **Principal** (Rodar, Criar projeto, Treinar N vezes): fundo aqua `#5ED3DB`, texto `#06363A`.
+- **Escuro** (Criar novo projeto na Home, Próximo): fundo `#1D1D1F`, texto branco.
+- **Secundário:** fundo branco, borda `rgba(0,0,0,.15)`.
+
+Como a cor foi escolhida: a ideia era fugir do roxo comum em sites gerados por IA. O ciano `#14B8C4` foi testado primeiro, e o autor achou pesado. No frame "Cor de destaque · comparação" foram comparados ciano `#14B8C4`, aqua claro `#5ED3DB`, menta `#2DD4BF` e menta claro `#6EE7D3`, e o autor escolheu o aqua claro.
 
 | Módulo | Nome | Acento | Uso visual |
 |---|---|---|---|
 | 0 · Fundamentos | Grafite | `#8E8E93` | Neutro, introdutório |
-| 1 · Redes neurais | Violeta | `#7C5CFF` | Neurônios, conexões |
+| 1 · Redes neurais | Aqua claro (antes Violeta `#7C5CFF`) | `#5ED3DB` | Neurônios, conexões |
 | 2 · LLMs | Azul | `#2F7CF6` | Tokens, probabilidades |
-| 3 · Embeddings | Ciano | `#14B8C4` | Pontos no espaço |
+| 3 · Embeddings (Busca por significado) | Ciano ⚠️ | `#14B8C4` | Pontos no espaço |
 | 4 · RAG | Verde-água | `#10B981` | Documentos, recuperação |
 | 5 · Deep thinking | Âmbar | `#F59E0B` | Traços de raciocínio |
 | 6 · Aprendizado contínuo | Rosa | `#F43F5E` | Memória, esquecimento |
 
+> ⚠️ **Em aberto:** o ciano de Embeddings ficou parecido demais com o aqua da marca. Quando a aba Busca por significado for desenhada, ela precisa de outra cor.
+
 Cada acento gera uma escala (`50 … 900`) e um **gradiente de destaque** usado só em heróis e em estados "ativos" da visualização.
+
+No fundo claro, o acento puro é fraco para **texto pequeno**. Por isso cada acento tem um tom escuro para texto:
+
+| Acento | Fundo / preenchimento | Texto sobre branco | Fundo bem claro | Texto sobre o acento |
+|---|---|---|---|---|
+| Aqua claro (marca, Redes neurais) | `#5ED3DB` | `#0E7C86` | `#E8FAFB` | `#06363A` |
+| Ciano (Embeddings) | `#14B8C4` | `#0E8A93` | `#E3F7F9` | `#06363A` |
+| Verde-água (RAG) | `#10B981` | `#0B8A5F` | — | — |
 
 ### 2.3 Cores semânticas de visualização
 
@@ -49,10 +101,15 @@ Consistentes em todo o site, para o aluno criar intuição:
 
 | Significado | Cor | Exemplo |
 |---|---|---|
-| Valor positivo / peso positivo | Azul | Conexão que reforça |
-| Valor negativo / peso negativo | Laranja | Conexão que inibe |
-| Erro / perda | Vermelho | Barras de erro |
-| Correto / recuperado | Verde | Chunk relevante |
+| Valor positivo / peso positivo | Azul `#378ADD` (número do peso em `#2A6FB8`) | Conexão que reforça |
+| Valor negativo / peso negativo | Laranja `#E8853A` (número do peso em `#C2621C`) | Conexão que inibe |
+| Passo da vez (conta passo a passo) | Aqua `#5ED3DB`, linha de 4px com brilho | Linha e parcela sendo calculadas agora |
+| Passo ainda não feito | A cor normal da linha com 20% de opacidade | Linhas que a conta ainda não usou |
+| Fio entre blocos | Cinza `#8E8E93`, tracejado | Entrada → Camada → Camada → Saída |
+| Erro na montagem (ao clicar em Rodar) | Vermelho `#E5484D`, borda de 2px | Bloco com problema; a rodada não começa |
+| Aviso na montagem (ao clicar em Rodar) | Âmbar `#F5A524`, borda tracejada de 2px, bloco a 75% de opacidade; texto do aviso `#8A5A00` | Camada solta; a rodada continua |
+| Erro / perda | Vermelho `#E5484D` | Barras de erro |
+| Correto / recuperado / conta feita | Verde `#10B981` | Chunk relevante, ✓ da parcela já calculada |
 | Incerto / probabilidade | Opacidade, não matiz | Barras mais transparentes |
 
 Paleta azul × laranja é segura para daltonismo. **Nunca** usar só cor para transmitir significado — sempre acompanhar com forma, rótulo ou padrão.
@@ -119,14 +176,20 @@ Button (primário, secundário, ghost, pílula) · IconButton · Slider · Toggl
 
 ### 4.3 Componentes de laboratório
 
+Desenhado no Figma ("Laboratório · Desktop") e testado no teste técnico:
+
 | Componente | Descrição |
 |---|---|
-| `<LabShell>` | Layout de 3 zonas: controles (esq.), canvas (centro), inspetor (dir.). Colapsa em abas no celular. |
-| `<ParamControl>` | Slider/select ligado a um parâmetro da simulação, com explicação curta. |
-| `<Transport>` | Play · pausa · passo · reset · velocidade. |
-| `<Inspector>` | Detalhes do elemento selecionado (neurônio, chunk, token). |
-| `<PresetPicker>` | Cenários prontos ("XOR difícil", "chunk grande demais"). |
-| `<ShareLink>` | Copia URL com o estado serializado. |
+| `<LabShell>` | 3 zonas: **paleta de blocos** (esq., 220–240px), **canvas** (centro, fundo `--bg-subtle`), **painel de contas** (dir., ~300px). Barra superior com logo, nome do projeto, abas dos temas, Treinar e Rodar. |
+| Paleta de blocos | Cards arrastáveis: **Entrada** (cor ou números), **Camada**, **Neurônio**, **Saída**, mais o quadro "Como montar". |
+| Bloco Entrada | Escolhe o tipo (Cor / Números). Cor vira R, G, B (0 a 1); Números são linhas com nome e valor, até 6. Cada número é uma bolinha de onde saem as linhas. |
+| Bloco Camada | Título, campo "neurônios", neurônios empilhados. Portas do fio à esquerda e à direita (bolinhas aqua). |
+| Bloco Saída | Número + quadrado com a cor da resposta + rótulo ("laranja (1)"); "aguardando" antes da conta. Selecionado, mostra o objetivo (nome e cor das respostas 0 e 1). |
+| Número do peso | Etiqueta na linha; duplo clique edita. Na linha da vez, fica com fundo aqua. |
+| Painel de contas | Botão Rodar, "Passo N de M", chip do neurônio da vez, uma linha por parcela (feita ✓ / agora / próxima), soma só no fim, resultado (acende/apaga ou espremer 0–1), Anterior/Próximo e Passo a passo/Automático. Erros do Rodar aparecem aqui. |
+| Seção Treinar (no painel) | Repetições, velocidade (x100), começar do zero/já treinada, botão "Treinar N vezes". Só no design; ainda não programado. |
+
+Propostas antigas da IA, ainda não usadas: `<ParamControl>`, `<PresetPicker>` e `<ShareLink>` (link com o estado).
 
 ### 4.4 Gramática visual das simulações
 
@@ -134,8 +197,10 @@ Mesmos elementos sempre significam a mesma coisa:
 
 | Elemento | Representação |
 |---|---|
-| Neurônio | Círculo; preenchimento = ativação |
-| Peso | Linha; espessura = magnitude; cor = sinal |
+| Neurônio | Círculo com borda aqua; preenchimento = ativação; o valor aparece dentro; o da vez ganha um anel de brilho |
+| Peso | Linha; espessura = magnitude; cor = sinal; **número do peso** escrito na linha |
+| Fio | Linha cinza tracejada entre as portas dos blocos; define a ordem das camadas |
+| Linha da vez | Aqua com brilho; as outras ficam apagadas até a vez delas |
 | Dado em movimento | Pulso/partícula seguindo a conexão |
 | Vetor / embedding | Ponto num plano; seta quando o ângulo importa |
 | Documento / chunk | Cartão retangular com borda arredondada |
@@ -145,10 +210,14 @@ Mesmos elementos sempre significam a mesma coisa:
 
 ## 5. Layouts de página
 
-- **Home:** herói com animação viva (rede neural respirando), cartões de módulos com o acento de cada um, CTA "Começar pela aula 0.1".
+Desenhados no Figma:
+- **Home:** barra com logo e "Criar novo projeto"; herói "Veja a IA aprender." com uma rede neural clean (caminho aqua destacado); seções "Como funciona" (3 passos), "Explore" (Redes neurais disponível; Busca por significado e RAG em breve) e um CTA final.
+- **Novo projeto:** (1) tema: Redes neurais / Busca por significado / RAG; (2) como começar: **Básico pronto** (com miniatura da montagem) ou **Vazio**; campo "Nome do projeto"; botões Cancelar e Criar projeto. A escolha marcada tem borda aqua e ✓.
+- **Laboratório:** ver 4.3.
+
+Propostas antigas da IA, ainda não desenhadas:
 - **Módulo:** herói com gradiente do acento, lista de aulas com duração e progresso.
-- **Aula:** scrollytelling em tela cheia; barra de progresso fina no topo; índice de passos discreto na lateral.
-- **Laboratório:** shell de ferramenta, fundo `--bg-subtle`, sem distrações.
+- **Aula / tutorial:** scrollytelling em tela cheia; barra de progresso fina no topo; índice de passos discreto na lateral.
 - **Modo apresentação** (para sala de aula): `?apresentar=1` aumenta tipografia em 125%, avança passos com as setas do teclado e esconde navegação.
 
 ## 6. Voz e tom
@@ -156,3 +225,11 @@ Mesmos elementos sempre significam a mesma coisa:
 - Segunda pessoa, frases curtas, verbos concretos ("a rede *ajusta*", não "ocorre um ajuste").
 - Termo técnico sempre apresentado **depois** da intuição, e em `<Term>`.
 - Sem hype ("revolucionário", "mágico"). Sem medo ("a IA vai substituir…").
+
+## 7. Marca
+
+**Logo: Bloquinho** (escolhido pelo autor em 2026-10-19, entre Bloquinho, Neurônio e Rede em seta; ver o frame "Logo · opções" no Figma).
+
+- Um mascote em pixel (grade de 10 × 6), no espírito do mascote quadradinho do Claude. É **um bloco do laboratório com olhos**: corpo aqua `#5ED3DB`, dois olhos verticais `#06363A`, uma "porta" de cada lado em `#0E7C86` (onde entram e saem os fios) e duas perninhas.
+- Uso: à esquerda do nome "LearningThinking" (Inter 15px, peso 600), com cerca de 30 × 18px na barra do site.
+- Por ser pixel art, ele só é ampliado em múltiplos inteiros, sem suavizar.

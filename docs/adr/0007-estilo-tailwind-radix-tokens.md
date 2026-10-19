@@ -3,6 +3,8 @@
 - **Status:** Proposta (escrita pela IA, aguardando revisão do autor)
 - **Data:** 2026-10-18
 
+> **Atualização (2026-10-19):** o [ADR-0017](0017-stack.md) confirmou **Tailwind CSS** (Radix ainda não foi decidido). O [ADR-0018](0018-primeira-entrega-design.md) definiu **só o tema claro** na v1 e o destaque **aqua claro `#5ED3DB`**. Por isso, a variante `[data-theme="dark"]` citada abaixo fica para o futuro.
+
 ## Contexto
 
 O visual precisa ser premium (referências: Apple, ElevenLabs), consistente entre aula e laboratório, com tema claro/escuro e cores por módulo. Também precisamos de componentes acessíveis (sliders, popovers, diálogos) sem reinventar foco, teclado e ARIA.
