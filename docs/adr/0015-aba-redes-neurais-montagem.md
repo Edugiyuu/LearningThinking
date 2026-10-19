@@ -23,6 +23,14 @@ O [ADR-0014](0014-laboratorio-abas-projetos-e-erros.md) definiu a aba **Redes ne
 - Tarefa: a rede **recebe uma cor** e responde se ela é **azul (0)** ou **laranja (1)**. *(decidido em 2026-10-19)*
   - Por dentro, a cor entra como números: quanto de vermelho, verde e azul ela tem (RGB).
 - Já vem com **exemplos prontos** de cores azuis e laranjas, para o aluno não começar sem dados.
+- Como ficou no teste técnico (proposta da IA): Entrada (cor) → Camada 1 com 2 neurônios (um "detector de laranja", pesos R 2 / G 0,5 / B −2, e um "detector de azul", R −1 / G 0,5 / B 1,5) → Camada 2 com 1 neurônio (pesos 1,5 e −1,5) → Saída. Laranja `#FF8C00` dá 0,97 e azul `#378ADD` dá 0,12. Os pesos já funcionam, para o aluno ver uma resposta certa antes de mexer.
+- Com pesos sorteados, os dois neurônios do meio podem apagar e a resposta fica travada em 0,50. Por isso a montagem básica não pode vir com pesos sorteados.
+
+### Blocos, fios e pesos *(decidido em 2026-10-19, detalhes no [ADR-0018](0018-primeira-entrega-design.md))*
+- **Entrada:** bloco onde o aluno escolhe o que entra: **cor** ou **números livres**. A tarefa da cor é só o template; o laboratório é um sandbox.
+- **Saída:** bloco ligado por fio; mostra o número e a cor da resposta; o aluno personaliza o objetivo.
+- **Fios** ligam Entrada → Camada → ... → Saída, e é deles que vem a ordem. Cada fio liga todos os neurônios das duas pontas.
+- Cada linha mostra o **número do peso**; **duplo clique** edita. Ajuste manual sempre disponível e opcional.
 
 ### Treino
 - O treino é um **botão** ("Treinar"), não um bloco da montagem. *(decidido em 2026-10-19)*
@@ -59,7 +67,8 @@ O aluno escolhe:
 
 Regras visuais:
 - As **contas aparecem na tela**, porque ajudam a entender.
-- A **espessura das linhas** precisa ser **bem contrastada**: um peso forte fica nitidamente mais grosso que um fraco.
+- **Uma parcela de cada vez** *(decidido em 2026-10-19)*: a linha da vez fica destacada e aparece só a multiplicação dela (ex.: `1,00 × −0,34`). Depois vem a próxima, e a soma só no fim. A conta inteira de uma vez confunde quem não está acostumado com matemática.
+- A **espessura das linhas** precisa ser **bem contrastada**: um peso forte fica nitidamente mais grosso que um fraco. Além disso, o **número do peso** aparece na linha.
 
 ### O que o treino acelerado mostra *(decidido em 2026-10-19)*
 - Como funciona: o treino **calcula de verdade**, **grava** cada repetição e **reproduz** acelerado (~x100), sem travar a tela.
@@ -70,6 +79,7 @@ Regras visuais:
 
 - Formato exato da tela de saídas do fim do treino (lista, gráfico...).
 - Pontos numa folha (entrada = posição; saída = cor) ficam como possível template futuro.
+- *Bias* (um número extra somado em cada neurônio): ainda não entrou na montagem.
 
 ## Consequências
 

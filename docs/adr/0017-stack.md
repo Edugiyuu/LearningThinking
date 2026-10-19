@@ -40,6 +40,16 @@ O treino **calcula de verdade**, **grava** o que aconteceu em cada repetição e
 | Armazenamento | **`localStorage` com número de versão** do formato do projeto |
 | Hospedagem | **Vercel** |
 
+### Validação do React Flow *(2026-10-19)*
+O teste técnico em [`spikes/camada-react-flow/`](../../spikes/camada-react-flow/README.md) (Next.js 16, React 19, `@xyflow/react` 12) confirmou que o React Flow aguenta o editor:
+- camada com neurônios dentro (nós "filhos");
+- fios com regras (sem ciclo, um fio por porta);
+- linhas recalculadas a partir dos blocos, com número e edição por duplo clique;
+- bloco Entrada com várias saídas;
+- destaque da linha da vez no passo a passo.
+
+O cálculo da rede no teste é TypeScript puro (`lib/rede.ts`), sem biblioteca de IA, como decidido. GSAP e Tailwind ainda não foram usados no teste.
+
 ## Em aberto
 
 - Contas/login, LGPD e PostgreSQL: decidir quando a v1 estiver pronta.

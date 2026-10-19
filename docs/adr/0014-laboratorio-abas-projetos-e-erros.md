@@ -31,17 +31,24 @@ Duas opções:
 1. **Vazio:** área de trabalho em branco.
 2. **Básico pronto:** uma montagem bem simples que já funciona.
 
+Desenhado no Figma em 2026-10-19 (tela "Novo projeto", ver [ADR-0018](0018-primeira-entrega-design.md)): primeiro o **tema** (a aba), depois **vazio ou básico pronto**, e o nome do projeto.
+
 ### Ligações que não fazem sentido
 - Geram um **erro**.
 - O erro **mostra onde está o problema** na montagem (o bloco/fio fica destacado), não só uma mensagem.
 - O erro aparece **quando o aluno clica em rodar** (como no Tinkercad), não no momento de ligar o fio. *(decidido em 2026-10-18)*
 
+Como ficou no teste técnico (2026-10-19): o bloco com problema ganha **borda vermelha** e a mensagem aparece no painel de contas. Erros conferidos: falta Entrada; Entrada sem fio; camada vazia; última camada sem Saída; camada ligada à Saída sem exatamente 1 neurônio; Saída solta. Alguns fios errados nem chegam a ser ligados (ex.: Entrada direto na Saída, ou um fio que fecha um círculo).
+
+**Aviso em vez de erro** *(decidido pelo autor em 2026-10-19)*: uma camada solta, sem fio vindo da Entrada, **não impede** a rodada. Ela ganha borda tracejada âmbar, fica de fora das contas e o painel mostra um aviso.
+
 ## Em aberto
 
-- O que exatamente vem na montagem básica de cada aba.
-- Onde os projetos ficam salvos e se um projeto pertence a uma única aba.
+- O que vem na montagem básica da aba Busca por significado. A da aba Redes neurais já foi definida no [ADR-0015](0015-aba-redes-neurais-montagem.md).
+- Se um projeto pertence a uma única aba. Já se sabe onde os projetos ficam salvos: no navegador ([ADR-0017](0017-stack.md)).
 - Como o tutorial "mostra" o laboratório.
 - Ferramentas que dependem de um LLM grande (RAG, deep thinking) ficam fora da v1.
+- A Home e a tela Novo projeto mostram Busca por significado como "Em breve" (ainda não desenhada), embora ela faça parte da v1.
 
 ## Consequências
 

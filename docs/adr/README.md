@@ -30,4 +30,4 @@ Registro das decisões de arquitetura do projeto. Formato baseado em [MADR](http
 | [0015](0015-aba-redes-neurais-montagem.md) | Aba Redes neurais: camadas, neurônios, exemplos e treino | **Aceita** (autor) |
 | [0016](0016-modo-debug-backward-pass.md) | Modo "debug": backward pass passo a passo | **Aceita** (autor), adiada |
 | [0017](0017-stack.md) | Stack (Next.js, GSAP, React Flow, sem backend na v1) | **Aceita** (autor) |
-| [0018](0018-primeira-entrega-design.md) | Primeira entrega: design das telas principais no Figma | **Aceita** (autor) |
+| [0018](0018-primeira-entrega-design.md) | Primeira entrega: telas no Figma (Home, Novo projeto, Laboratório), tema claro, aqua, logo, fios, contas passo a passo | **Aceita** (autor) |
