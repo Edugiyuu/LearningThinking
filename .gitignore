@@ -1,0 +1,16 @@
+# Dependências
+node_modules/
+
+# Build do Next.js
+.next/
+out/
+
+# Variáveis de ambiente
+.env*
+
+# Sistema / editor
+.DS_Store
+Thumbs.db
+
+# Notas locais do modo de aprendizado
+.vibe-wise/
