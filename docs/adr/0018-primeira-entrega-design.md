@@ -22,7 +22,7 @@ Com o produto ([ADR-0013](0013-formato-tutoriais-e-laboratorio.md) a [ADR-0016](
 | Tela | Frame no Figma | Situação |
 |---|---|---|
 | Home | Home · Desktop | ✅ Desenhada (tema claro, aqua, logo Bloquinho) |
-| Home com mascote | Home · Desktop · mascote | 🆕 Segunda versão, com o Bloquinho nas seções; aguardando a escolha do autor |
+| Home com mascote | Home · Desktop · mascote | 🆕 Segunda versão, com a mascote Aqua nas seções; aguardando a escolha do autor |
 | Escolha do tipo de projeto | Novo projeto · Desktop | ✅ Desenhada |
 | Laboratório | Laboratório · Desktop | ✅ Desenhada (passo a passo das contas) |
 
@@ -69,11 +69,11 @@ Teste técnico do laboratório: [`spikes/camada-react-flow/`](../../spikes/camad
 - O autor pediu para **refazer a Home colocando o mascote** em vários lugares: em "Aprenda o conceito", o Bloquinho com uma **lâmpada em cima** (aprendeu); em "Veja por dentro", o **mascote do Claude trabalhando** com o Bloquinho **na mente** dele.
 - *Proposta da IA*, no mesmo frame: Bloquinho como camada em "Monte com as mãos", como saída da rede no herói, dormindo nos cards "Em breve", pulando no CTA final (ao lado do Claude) e pequeno no rodapé.
 - Segunda rodada (autor): em "Veja por dentro", o Claude **de lado, digitando no notebook** (a partir de uma referência do autor); em "Monte com as mãos", a camada com **dois neurônios**; "Aprenda o conceito" aprovado, mas com **outras versões** para comparar (frame **Mascote · versões**, A a E).
-- **Nome do mascote em aberto:** o autor sugeriu "AquaThinking"; a IA comentou que soa como nome de produto e fica perto de "LearningThinking".
+- Terceira rodada (autor): **o mascote se chama Aqua**; "Veja por dentro" volta para o **fundo claro**; "Monte com as mãos" fica **mais literal**, sem desenhar camadas: Aqua levanta um bloco de montar para encaixar numa pilha.
 - A versão nova fica num frame separado, **Home · Desktop · mascote**, para comparar com a original. Poses e regras em [04-design-system.md, seção 7.1](../04-design-system.md).
 
 ### Logo
-- **Bloquinho:** um mascote em pixel, que é um bloco do laboratório com dois olhos, uma "porta" de cada lado (onde entram e saem os fios) e duas perninhas. Escolhido entre Bloquinho, Neurônio e Rede em seta. Corpo `#5ED3DB`, olhos `#06363A`, portas `#0E7C86`. Fica antes do nome "LearningThinking".
+- **Aqua** (nome provisório na escolha: Bloquinho): um mascote em pixel, que é um bloco do laboratório com dois olhos, uma "porta" de cada lado (onde entram e saem os fios) e duas perninhas. Escolhido entre Bloquinho, Neurônio e Rede em seta. Corpo `#5ED3DB`, olhos `#06363A`, portas `#0E7C86`. Fica antes do nome "LearningThinking".
 
 ## As telas
 

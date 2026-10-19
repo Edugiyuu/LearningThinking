@@ -18,7 +18,7 @@ Next.js · TypeScript · Tailwind CSS · GSAP · React Flow · cálculo da rede 
 
 ## Visual
 
-Tema claro, destaque aqua claro `#5ED3DB` e o **Bloquinho**, um mascote em pixel que é o logo e aparece pelas telas em várias poses ([design system](docs/04-design-system.md#71-mascote-o-bloquinho-fora-do-logo)).
+Tema claro, destaque aqua claro `#5ED3DB` e o mascote **Aqua**, em pixel, que é o logo e aparece pelas telas em várias poses ([design system](docs/04-design-system.md#71-mascote-aqua)).
 
 ## Documentação
 

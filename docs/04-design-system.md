@@ -5,9 +5,9 @@
 > **Decisões do autor já refletidas aqui (2026-10-19):**
 > - ☀️ **Tema claro** é o único da v1. O escuro fica guardado para o futuro.
 > - **Cor de destaque: aqua claro `#5ED3DB`**, no lugar do violeta (seção 2.2).
-> - **Logo: Bloquinho**, um mascote em pixel (seção 7).
+> - **Logo: Aqua**, um mascote em pixel (seção 7). O desenho foi escolhido com o nome provisório "Bloquinho"; o nome **Aqua** foi dado pelo autor em 2026-10-19.
 >
-> **Telas no Figma:** Home · Desktop, Novo projeto · Desktop, Laboratório · Desktop. A Home tem uma segunda versão, **Home · Desktop · mascote** (à esquerda da original), com o Bloquinho ilustrando as seções (seção 7.1), aguardando a escolha do autor. Ao lado dela, o frame **Mascote · versões** compara opções do card "Aprenda o conceito". Também há os frames de apoio Logo · opções e Cor de destaque · comparação, e um laboratório antigo em violeta, guardado só para comparação.
+> **Telas no Figma:** Home · Desktop, Novo projeto · Desktop, Laboratório · Desktop. A Home tem uma segunda versão, **Home · Desktop · mascote** (à esquerda da original), com a Aqua ilustrando as seções (seção 7.1), aguardando a escolha do autor. Ao lado dela, o frame **Mascote · versões** compara opções do card "Aprenda o conceito". Também há os frames de apoio Logo · opções e Cor de destaque · comparação, e um laboratório antigo em violeta, guardado só para comparação.
 
 > Inspiração: Apple (clareza, tipografia, scrollytelling, espaço), ElevenLabs (superfícies suaves, gradientes discretos, controles elegantes), Linear/Vercel (precisão, densidade controlada no modo laboratório).
 
@@ -55,7 +55,7 @@ O **claro é o padrão**. O escuro fica guardado para uma opção futura e não 
 
 ### 2.2 Cores por módulo
 
-> ✅ **Cor de destaque do site: aqua claro `#5ED3DB`** (escolhida pelo autor em 2026-10-19, no lugar do violeta). Vale para a marca (logo Bloquinho), os botões principais, a "linha da vez" e a aba Redes neurais.
+> ✅ **Cor de destaque do site: aqua claro `#5ED3DB`** (escolhida pelo autor em 2026-10-19, no lugar do violeta). Vale para a marca (logo Aqua), os botões principais, a "linha da vez" e a aba Redes neurais.
 >
 > | Papel | Cor |
 > |---|---|
@@ -228,15 +228,15 @@ Propostas antigas da IA, ainda não desenhadas:
 
 ## 7. Marca
 
-**Logo: Bloquinho** (escolhido pelo autor em 2026-10-19, entre Bloquinho, Neurônio e Rede em seta; ver o frame "Logo · opções" no Figma).
+**Logo: Aqua** (desenho escolhido pelo autor em 2026-10-19 com o nome provisório "Bloquinho", entre Bloquinho, Neurônio e Rede em seta; ver o frame "Logo · opções" no Figma).
 
 - Um mascote em pixel (grade de 10 × 6), no espírito do mascote quadradinho do Claude. É **um bloco do laboratório com olhos**: corpo aqua `#5ED3DB`, dois olhos verticais `#06363A`, uma "porta" de cada lado em `#0E7C86` (onde entram e saem os fios) e duas perninhas.
 - Uso: à esquerda do nome "LearningThinking" (Inter 15px, peso 600), com cerca de 30 × 18px na barra do site.
 - Por ser pixel art, ele só é ampliado em múltiplos inteiros, sem suavizar.
 
-### 7.1 Mascote: o Bloquinho fora do logo
+### 7.1 Mascote: Aqua
 
-O Bloquinho não é só o logo: ele é o **mascote** do site e aparece nas telas como personagem. A ideia é que ele represente **o aluno aprendendo** (e, ao mesmo tempo, um bloco do laboratório), então as poses mostram o que está acontecendo naquela parte da página.
+**Nome: Aqua** (decidido pelo autor em 2026-10-19; antes, "Bloquinho"). Aqua não é só o logo: é o **mascote** do site e aparece nas telas como personagem. A ideia é representar **o aluno aprendendo** (e, ao mesmo tempo, um bloco do laboratório), então as poses mostram o que está acontecendo naquela parte da página.
 
 **Poses** (todas na grade de 10 × 6, mesmas cores do logo):
 
@@ -245,22 +245,20 @@ O Bloquinho não é só o logo: ele é o **mascote** do site e aparece nas telas
 | Normal | Igual ao logo | Logo, rodapé (20 × 12px) |
 | Contente | Olhos normais + bochechas rosa `#F4A3B5` | Card "Aprenda o conceito", card Redes neurais, saída da rede no herói, CTA final |
 | Com a lâmpada | Contente, com uma lâmpada em pixel acesa em cima (amarelo `#FFD54A`, raios `#F59E0B`): "aprendeu" | Card "Aprenda o conceito" |
-| Montando | Em cima de uma **camada com 2 neurônios** (Entrada → Camada → Saída, linhas densas com as cores dos pesos e a linha da vez em aqua) | Card "Monte com as mãos" |
+| Montando | Bracinhos levantados segurando um bloco de montar aqua, prestes a encaixar numa pilha (cinza, azul, laranja), com uma seta tracejada; sem desenhar camadas | Card "Monte com as mãos" |
 | Dormindo | Olhos fechados (traço horizontal) e "z z" em cinza | Cards "Em breve" (Busca por significado, RAG) |
 | Pulando | Contente, com pixels soltos dos lados | CTA final "Pronto para ver por dentro?" |
 | Saída da rede | Ligado por fio aqua ao último neurônio do herói, com o valor `0,97` em cima | Herói |
 
-**Com o mascote do Claude.** No card **"Veja por dentro"**, o mascote em pixel do Claude aparece **de lado, digitando num notebook**, num painel escuro `#161618` (como uma tela por dentro), seguindo uma referência enviada pelo autor. Corpo terracota `#D97757` com o lado direito na sombra `#B9603F`, olhos `#111113`, um bracinho no teclado; a tela do notebook solta uma luz aqua. Da cabeça dele sai um **balão de pensamento com o Bloquinho dentro**: a IA "por dentro" está pensando no que o aluno montou. Ele aparece de novo no CTA final, ao lado do Bloquinho.
+**Com o mascote do Claude.** No card **"Veja por dentro"**, o mascote em pixel do Claude aparece **de lado, digitando num notebook**, num painel claro, como os outros cards (o fundo escuro foi testado e o autor pediu claro), seguindo uma referência enviada pelo autor. Corpo terracota `#D97757` com o lado direito na sombra `#B9603F`, olhos `#111113`, um bracinho no teclado; a tela do notebook solta uma luz aqua. Da cabeça dele sai um **balão de pensamento com a Aqua dentro**: a IA "por dentro" está pensando no que o aluno montou. Ele aparece de novo no CTA final, ao lado da Aqua.
 
 **Versões do "Aprenda o conceito".** O autor aprovou a lâmpada em cima e pediu outras opções para comparar, no frame **Mascote · versões**: A · lâmpada em cima (atual), B · lendo um livro com a ideia chegando, C · formado (capelo), D · lousa com `w·x + b = 0,97` e a lâmpada num balão, E · a lâmpada acendendo em três tempos (dá para virar animação). Aguardando a escolha.
-
-**Nome do mascote (em aberto).** Hoje ele se chama Bloquinho. O autor sugeriu **AquaThinking**. *Opinião da IA:* soa mais como nome de produto do que de personagem e fica perto demais de "LearningThinking", o que pode confundir marca e mascote. Vale comparar com nomes curtos de personagem (ex.: Bloquinho, Bit, Aqui, Nino). A decisão é do autor.
 
 > ⚠️ **Em aberto:** o mascote do Claude é da Anthropic. Usar como homenagem num projeto de estudo é diferente de usar num site público; antes de publicar, rever se ele fica, troca por um personagem próprio ou ganha um aviso.
 
 **Regras de uso**
-- No máximo **um Bloquinho por bloco de conteúdo** (card, seção), e nunca competindo com a visualização principal: ele ilustra, não explica.
+- No máximo **uma Aqua por bloco de conteúdo** (card, seção), e nunca competindo com a visualização principal: ela ilustra, não explica.
 - Pixel art só em múltiplos inteiros da grade (unidades de 2, 4, 5, 7 ou 8px já usadas), sem suavizar nem girar.
-- O Bloquinho **não fala** em balões com texto longo; o texto fica na página.
+- Aqua **não fala** em balões com texto longo; o texto fica na página.
 - Na Home, as ilustrações ficam num painel branco (raio 16px, borda `rgba(0,0,0,.06)`) no topo dos cards de "Como funciona", que passaram de 240 para 440px de altura.
 

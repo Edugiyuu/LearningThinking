@@ -7,7 +7,7 @@
 Primeira entrega ([ADR-0018](adr/0018-primeira-entrega-design.md)):
 - [x] Stack decidida ([ADR-0017](adr/0017-stack.md))
 - [x] Teste técnico do laboratório no React Flow ([`spikes/camada-react-flow/`](../spikes/camada-react-flow/README.md)): blocos, fios, pesos, Rodar com erros e contas passo a passo
-- [x] Home no Figma (tema claro, aqua, logo Bloquinho)
+- [x] Home no Figma (tema claro, aqua, logo Aqua)
 - [x] Tela Novo projeto no Figma
 - [x] Tela do Laboratório no Figma
 
