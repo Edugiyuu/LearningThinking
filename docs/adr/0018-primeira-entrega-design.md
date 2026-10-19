@@ -22,6 +22,7 @@ Com o produto ([ADR-0013](0013-formato-tutoriais-e-laboratorio.md) a [ADR-0016](
 | Tela | Frame no Figma | Situação |
 |---|---|---|
 | Home | Home · Desktop | ✅ Desenhada (tema claro, aqua, logo Bloquinho) |
+| Home com mascote | Home · Desktop · mascote | 🆕 Segunda versão, com o Bloquinho nas seções; aguardando a escolha do autor |
 | Escolha do tipo de projeto | Novo projeto · Desktop | ✅ Desenhada |
 | Laboratório | Laboratório · Desktop | ✅ Desenhada (passo a passo das contas) |
 
@@ -63,6 +64,11 @@ Teste técnico do laboratório: [`spikes/camada-react-flow/`](../../spikes/camad
 ### Cor de destaque
 - Para fugir do roxo comum em sites gerados por IA, o violeta saiu. O ciano `#14B8C4` foi testado e achado pesado. Na comparação entre ciano, **aqua claro `#5ED3DB`**, menta `#2DD4BF` e menta claro `#6EE7D3`, o autor escolheu o **aqua claro**.
 - Por ser claro, ele precisa de traços de pelo menos 2px e de texto pequeno no tom escuro `#0E7C86`. Os botões aqua usam texto `#06363A`. Detalhes no [04-design-system.md](../04-design-system.md).
+
+### Mascote na Home
+- O autor pediu para **refazer a Home colocando o mascote** em vários lugares: em "Aprenda o conceito", o Bloquinho com uma **lâmpada em cima** (aprendeu); em "Veja por dentro", o **mascote do Claude trabalhando** com o Bloquinho **na mente** dele.
+- *Proposta da IA*, no mesmo frame: Bloquinho como camada em "Monte com as mãos", como saída da rede no herói, dormindo nos cards "Em breve", pulando no CTA final (ao lado do Claude) e pequeno no rodapé.
+- A versão nova fica num frame separado, **Home · Desktop · mascote**, para comparar com a original. Poses e regras em [04-design-system.md, seção 7.1](../04-design-system.md).
 
 ### Logo
 - **Bloquinho:** um mascote em pixel, que é um bloco do laboratório com dois olhos, uma "porta" de cada lado (onde entram e saem os fios) e duas perninhas. Escolhido entre Bloquinho, Neurônio e Rede em seta. Corpo `#5ED3DB`, olhos `#06363A`, portas `#0E7C86`. Fica antes do nome "LearningThinking".

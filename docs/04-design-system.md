@@ -7,7 +7,7 @@
 > - **Cor de destaque: aqua claro `#5ED3DB`**, no lugar do violeta (seção 2.2).
 > - **Logo: Bloquinho**, um mascote em pixel (seção 7).
 >
-> **Telas no Figma:** Home · Desktop, Novo projeto · Desktop, Laboratório · Desktop. Também há os frames de apoio Logo · opções e Cor de destaque · comparação, e um laboratório antigo em violeta, guardado só para comparação.
+> **Telas no Figma:** Home · Desktop, Novo projeto · Desktop, Laboratório · Desktop. A Home tem uma segunda versão, **Home · Desktop · mascote** (à esquerda da original), com o Bloquinho ilustrando as seções (seção 7.1), aguardando a escolha do autor. Também há os frames de apoio Logo · opções e Cor de destaque · comparação, e um laboratório antigo em violeta, guardado só para comparação.
 
 > Inspiração: Apple (clareza, tipografia, scrollytelling, espaço), ElevenLabs (superfícies suaves, gradientes discretos, controles elegantes), Linear/Vercel (precisão, densidade controlada no modo laboratório).
 
@@ -233,3 +233,30 @@ Propostas antigas da IA, ainda não desenhadas:
 - Um mascote em pixel (grade de 10 × 6), no espírito do mascote quadradinho do Claude. É **um bloco do laboratório com olhos**: corpo aqua `#5ED3DB`, dois olhos verticais `#06363A`, uma "porta" de cada lado em `#0E7C86` (onde entram e saem os fios) e duas perninhas.
 - Uso: à esquerda do nome "LearningThinking" (Inter 15px, peso 600), com cerca de 30 × 18px na barra do site.
 - Por ser pixel art, ele só é ampliado em múltiplos inteiros, sem suavizar.
+
+### 7.1 Mascote: o Bloquinho fora do logo
+
+O Bloquinho não é só o logo: ele é o **mascote** do site e aparece nas telas como personagem. A ideia é que ele represente **o aluno aprendendo** (e, ao mesmo tempo, um bloco do laboratório), então as poses mostram o que está acontecendo naquela parte da página.
+
+**Poses** (todas na grade de 10 × 6, mesmas cores do logo):
+
+| Pose | O que muda | Onde aparece na Home |
+|---|---|---|
+| Normal | Igual ao logo | Logo, rodapé (20 × 12px) |
+| Contente | Olhos normais + bochechas rosa `#F4A3B5` | Card "Aprenda o conceito", card Redes neurais, saída da rede no herói, CTA final |
+| Com a lâmpada | Contente, com uma lâmpada em pixel acesa em cima (amarelo `#FFD54A`, raios `#F59E0B`): "aprendeu" | Card "Aprenda o conceito" |
+| Como camada | Fios saindo das portas: Entrada → Bloquinho → Saída, fio da vez em aqua | Card "Monte com as mãos" |
+| Dormindo | Olhos fechados (traço horizontal) e "z z" em cinza | Cards "Em breve" (Busca por significado, RAG) |
+| Pulando | Contente, com pixels soltos dos lados | CTA final "Pronto para ver por dentro?" |
+| Saída da rede | Ligado por fio aqua ao último neurônio do herói, com o valor `0,97` em cima | Herói |
+
+**Com o mascote do Claude.** No card **"Veja por dentro"**, o mascote em pixel do Claude (corpo terracota `#D97757`, olhos `#1D1D1F`) trabalha num notebook e **pensa no Bloquinho** (balão de pensamento com o Bloquinho dentro): a IA "por dentro" está pensando no que o aluno montou. Ele aparece de novo no CTA final, ao lado do Bloquinho.
+
+> ⚠️ **Em aberto:** o mascote do Claude é da Anthropic. Usar como homenagem num projeto de estudo é diferente de usar num site público; antes de publicar, rever se ele fica, troca por um personagem próprio ou ganha um aviso.
+
+**Regras de uso**
+- No máximo **um Bloquinho por bloco de conteúdo** (card, seção), e nunca competindo com a visualização principal: ele ilustra, não explica.
+- Pixel art só em múltiplos inteiros da grade (unidades de 2, 4, 5, 7 ou 8px já usadas), sem suavizar nem girar.
+- O Bloquinho **não fala** em balões com texto longo; o texto fica na página.
+- Na Home, as ilustrações ficam num painel branco (raio 16px, borda `rgba(0,0,0,.06)`) no topo dos cards de "Como funciona", que passaram de 240 para 440px de altura.
+

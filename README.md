@@ -18,7 +18,7 @@ Next.js · TypeScript · Tailwind CSS · GSAP · React Flow · cálculo da rede 
 
 ## Visual
 
-Tema claro, destaque aqua claro `#5ED3DB` e o logo **Bloquinho**, um mascote em pixel ([design system](docs/04-design-system.md)).
+Tema claro, destaque aqua claro `#5ED3DB` e o **Bloquinho**, um mascote em pixel que é o logo e aparece pelas telas em várias poses ([design system](docs/04-design-system.md#71-mascote-o-bloquinho-fora-do-logo)).
 
 ## Documentação
 
@@ -27,3 +27,9 @@ Comece por [docs/README.md](docs/README.md). Destaques:
 - [Laboratório](docs/05-laboratorio.md): o que já foi decidido
 - [Design system](docs/04-design-system.md)
 - [Decisões (ADRs)](docs/adr/README.md)
+
+## Como trabalhar no repositório
+
+- **Nunca commitar direto na `main`.** Cada mudança nasce numa branch com o tipo na frente: `feat/...` (feature), `docs/...` (documentação), `fix/...`, `chore/...`. Ex.: `feat/home-mascote`, `docs/mascote`.
+- A `main` só recebe trabalho por merge/PR.
+
