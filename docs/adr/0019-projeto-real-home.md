@@ -22,6 +22,15 @@ Com as telas da primeira entrega prontas no Figma ([ADR-0018](0018-primeira-entr
    - Os links **Tutoriais, Laboratório e Sobre** apontam para páginas que ainda não existem.
    - Para rodar: no preview do Claude Code, o servidor **"web"** (`.claude/launch.json`, porta 3100).
 
+## Tela Novo projeto *(2026-10-19)*
+
+- Em código em `web/app/novo-projeto/`, igual ao frame "Novo projeto · Desktop": tema (só Redes neurais disponível; Busca por significado e RAG "Em breve", sem clique), Básico pronto ou Vazio, e o nome do projeto.
+- *Proposta da IA:*
+  - As escolhas são **botões de rádio de verdade** (escondidos, dentro de cada card), para funcionar com teclado e leitor de tela.
+  - **Criar projeto salva o projeto no navegador** (`web/lib/projetos.ts`: `localStorage`, formato com `versao: 1`, como pede o [ADR-0017](0017-stack.md)) e abre `/laboratorio`.
+  - Enquanto o laboratório não existe em código, **`/laboratorio` é uma página provisória** com a Aqua, dizendo que o projeto foi salvo.
+  - A barra das telas internas (logo + "← Voltar para a Home") virou o componente `TopoSimples`.
+
 ## Consequências
 
 - A Home roda e foi conferida no navegador: em 1440px bate com o Figma e em 375px (celular) não tem rolagem lateral. No celular, o botão "Criar novo projeto" da barra some e fica só o do herói.

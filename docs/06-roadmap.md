@@ -13,7 +13,7 @@ Primeira entrega ([ADR-0018](adr/0018-primeira-entrega-design.md)):
 
 Projeto real em [`web/`](../web) ([ADR-0019](adr/0019-projeto-real-home.md)):
 - [x] Home em código, igual ao Figma (com a Aqua)
-- [ ] Tela Novo projeto em código
+- [x] Tela Novo projeto em código (salva o projeto no navegador)
 - [ ] Laboratório em código, a partir do teste técnico
 
 Próximos passos (a decidir com o autor):

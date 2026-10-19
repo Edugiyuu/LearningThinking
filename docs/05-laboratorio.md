@@ -44,7 +44,7 @@ Fontes: [ADR-0013](adr/0013-formato-tutoriais-e-laboratorio.md), [ADR-0014](adr/
 - Mostra tudo passando rápido; no fim, mostra as saídas registradas durante o treinamento.
 - **Backward pass passo a passo** (modo "debug"): **depois da v1**, ver [ADR-0016](adr/0016-modo-debug-backward-pass.md).
 
-**O que já funciona no teste técnico:** Entrada (cor e números), Camada, Neurônio, Saída com objetivo, fios, peso na linha com duplo clique, Rodar com erros (vermelho) e avisos (âmbar) marcados e contas passo a passo (manual e automático). **Ainda não:** Treinar, salvar projeto, abas, tela Novo projeto.
+**O que já funciona no teste técnico:** Entrada (cor e números), Camada, Neurônio, Saída com objetivo, fios, peso na linha com duplo clique, Rodar com erros (vermelho) e avisos (âmbar) marcados e contas passo a passo (manual e automático). **Ainda não:** Treinar, salvar projeto, abas. A tela Novo projeto já existe no site real (`web/`), mas o laboratório em código ainda não.
 
 ### Em aberto
 
