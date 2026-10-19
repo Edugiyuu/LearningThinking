@@ -14,11 +14,11 @@ Primeira entrega ([ADR-0018](adr/0018-primeira-entrega-design.md)):
 Projeto real em [`web/`](../web) ([ADR-0019](adr/0019-projeto-real-home.md)):
 - [x] Home em código, igual ao Figma (com a Aqua)
 - [x] Tela Novo projeto em código (salva o projeto no navegador)
-- [ ] Laboratório em código, a partir do teste técnico
+- [x] Laboratório em código, a partir do teste técnico ([ADR-0020](adr/0020-laboratorio-em-codigo.md)); Treinar ainda desligado
 
 Próximos passos (a decidir com o autor):
 - [ ] Treinar (repetições, x100, saídas no fim)
-- [ ] Salvar projetos no navegador
+- [x] Salvar projetos no navegador (o último projeto criado; falta a lista de projetos)
 - [ ] Aba Busca por significado
 
 ---

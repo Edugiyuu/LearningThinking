@@ -1,3 +1,5 @@
+import type { Montagem } from "@/lib/rede";
+
 // Projetos salvos no navegador (localStorage), com número de versão do formato (ADR-0017).
 
 export type Tema = "redes-neurais" | "busca-por-significado" | "rag";
@@ -53,5 +55,31 @@ export function projetoAberto(): Projeto | undefined {
     return ler().find((p) => p.id === id);
   } catch {
     return undefined;
+  }
+}
+
+/* ---------- A montagem do laboratório de cada projeto ---------- */
+
+const chaveMontagem = (id: string) => `learningthinking:montagem:${id}`;
+
+export function lerMontagem(id: string): Montagem | null {
+  try {
+    const bruto = localStorage.getItem(chaveMontagem(id));
+    const salvo = bruto ? JSON.parse(bruto) : null;
+    return salvo?.versao === 1 ? (salvo.montagem as Montagem) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Guarda só o que importa: sem seleção nem estado de arraste. */
+export function salvarMontagem(id: string, m: Montagem): boolean {
+  const nodes = m.nodes.map(({ selected, dragging, ...n }) => (void selected, void dragging, n));
+  const fios = m.fios.map(({ selected, ...f }) => (void selected, f));
+  try {
+    localStorage.setItem(chaveMontagem(id), JSON.stringify({ versao: 1, montagem: { nodes, fios, pesos: m.pesos } }));
+    return true;
+  } catch {
+    return false;
   }
 }

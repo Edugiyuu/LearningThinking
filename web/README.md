@@ -13,7 +13,8 @@ No preview do Claude Code, use o servidor **"web"** (porta 3100).
 
 - `app/page.tsx`: Home
 - `app/novo-projeto/`: tela Novo projeto
-- `app/laboratorio/`: provisório, até o laboratório chegar
+- `app/laboratorio/` e `components/laboratorio/`: o laboratório (vindo do teste técnico)
+- `lib/rede.ts`: as regras da rede (blocos, fios, pesos, rodada, passo a passo)
 - `lib/projetos.ts`: projetos salvos no navegador
 - `app/globals.css`: tokens do [design system](../docs/04-design-system.md)
 - `components/mascote.tsx`: a Aqua e o mascote do Claude em pixel

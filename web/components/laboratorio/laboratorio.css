@@ -1,0 +1,903 @@
+/* Estilos do laboratório, vindos do teste técnico (spikes/camada-react-flow). */
+:root {
+  --bg: #ffffff;
+  --bg-subtle: #f5f5f7;
+  --border: rgba(0, 0, 0, 0.08);
+  --text: #1d1d1f;
+  --text-muted: #6e6e73;
+  --text-subtle: #86868b;
+  --destaque: #5ed3db;
+  --destaque-texto: #0e7c86;
+  --destaque-fundo: #e8fafb;
+  --sobre-destaque: #06363a;
+  --positivo: #2a6fb8;
+  --negativo: #c2621c;
+  --erro: #e5484d;
+  --aviso: #f5a524;
+}
+
+.lab button {
+  cursor: pointer;
+}
+
+/* ---------- Página: barra de cima + as três colunas ---------- */
+.lab-pagina {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.lab-topo {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 16px;
+  height: 64px;
+  flex-shrink: 0;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.lab-topo-esquerda,
+.lab-topo-direita {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.lab-topo-direita {
+  justify-content: flex-end;
+}
+
+.lab-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.lab-divisor {
+  width: 1px;
+  height: 20px;
+  margin: 0 6px;
+  background: var(--border);
+}
+
+.lab-projeto {
+  overflow: hidden;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lab-salvo {
+  font-size: 12px;
+  color: var(--text-subtle);
+  white-space: nowrap;
+}
+
+.lab-abas {
+  display: flex;
+  padding: 4px;
+  border-radius: 14px;
+  background: var(--bg-subtle);
+}
+
+.lab-abas button {
+  padding: 6px 28px;
+  border: none;
+  border-radius: 10px;
+  background: none;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.lab-abas button.ativa {
+  background: var(--bg);
+  font-weight: 600;
+  color: var(--text);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+.lab-abas button:disabled {
+  cursor: not-allowed;
+}
+
+.lab-botao {
+  height: 36px;
+  padding: 0 24px;
+  font-size: 14px;
+}
+
+.lab {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ---------- Paleta (esquerda) ---------- */
+.paleta {
+  width: 240px;
+  flex-shrink: 0;
+  padding: 20px;
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.paleta h2 {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.bloco {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 8px;
+  padding: 10px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  background: var(--bg);
+  cursor: grab;
+  user-select: none;
+}
+
+.bloco-icone {
+  flex-shrink: 0;
+}
+
+.bloco-nome {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.bloco-descricao {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.dicas {
+  margin-top: 20px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--bg-subtle);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.dicas strong {
+  color: var(--text);
+}
+
+.dicas ol {
+  margin: 6px 0;
+  padding-left: 16px;
+  list-style: decimal;
+}
+
+.dicas p {
+  margin: 0;
+}
+
+.aviso {
+  margin-top: 16px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  background: rgba(232, 133, 58, 0.12);
+  color: #a8561c;
+}
+
+.canvas {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  background: var(--bg-subtle);
+}
+
+.canvas-zoom {
+  position: absolute;
+  bottom: 20px;
+  left: 16px;
+  display: flex;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+}
+
+.canvas-zoom button {
+  width: 32px;
+  height: 28px;
+  border: none;
+  background: none;
+  font-size: 16px;
+}
+
+.canvas-zoom button + button {
+  border-left: 1px solid var(--border);
+}
+
+.canvas-legenda {
+  position: absolute;
+  bottom: 20px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 10px 18px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* em telas estreitas, a dica sai para a legenda caber */
+@media (max-width: 1279px) {
+  .legenda-dica {
+    display: none;
+  }
+}
+
+.canvas-legenda i {
+  display: inline-block;
+  width: 16px;
+  height: 3px;
+  margin-right: 6px;
+  border-radius: 2px;
+  vertical-align: middle;
+}
+
+.legenda-positivo {
+  background: #378add;
+}
+
+.legenda-negativo {
+  background: #e8853a;
+}
+
+.legenda-dica {
+  margin-left: 24px;
+  color: var(--text-subtle);
+}
+
+/* a conta da linha da vez, embaixo do número do peso */
+.conta-agora {
+  position: absolute;
+  padding: 6px 20px;
+  border-radius: 999px;
+  background: var(--destaque);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sobre-destaque);
+  white-space: nowrap;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.conta-agora::before {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  height: 78px;
+  border-left: 2px dotted var(--destaque-texto);
+}
+
+/* ---------- Blocos no canvas ---------- */
+.camada,
+.entrada,
+.saida {
+  border-radius: 14px;
+  background: var(--bg);
+}
+
+.camada {
+  width: 100%;
+  height: 100%;
+  border: 1px solid rgba(94, 211, 219, 0.7);
+}
+
+.entrada,
+.saida {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.entrada {
+  width: 170px;
+  padding: 10px 0 12px 12px;
+}
+
+.saida {
+  width: 168px;
+  padding: 10px;
+}
+
+.camada.selecionada,
+.entrada.selecionada,
+.saida.selecionada {
+  border-color: var(--destaque);
+  box-shadow: 0 0 0 2px rgba(94, 211, 219, 0.35);
+}
+
+/* bloco com problema ao clicar em Rodar */
+.com-erro,
+.camada.com-erro {
+  border: 2px solid var(--erro);
+  box-shadow: 0 0 0 4px rgba(229, 72, 77, 0.15);
+}
+
+.camada-titulo,
+.saida-titulo,
+.bloco-titulo {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--destaque-texto);
+}
+
+.bloco-titulo {
+  color: var(--text);
+}
+
+.camada-titulo {
+  padding: 8px 10px 4px;
+}
+
+.camada-qtd {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.camada-qtd input {
+  width: 44px;
+  padding: 2px 4px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* ---------- Entrada ---------- */
+.bloco-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-right: 12px;
+}
+
+.bloco-topo select {
+  padding: 2px 6px;
+  border: none;
+  border-radius: 10px;
+  background: var(--bg-subtle);
+  font-size: 11px;
+}
+
+.entrada-cor {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.entrada-cor input {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+.entrada-linha {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding-right: 44px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.entrada-nome {
+  width: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.entrada-campo {
+  width: 42px;
+  padding: 2px 4px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
+  font-size: 11px;
+}
+
+.entrada-campo.valor {
+  width: 46px;
+}
+
+.entrada-remover {
+  padding: 0 2px;
+  border: none;
+  background: none;
+  color: var(--text-subtle);
+}
+
+.entrada-adicionar {
+  margin-top: 4px;
+  padding: 2px 8px;
+  border: 1px dashed rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  background: none;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* bolinha de cada número da Entrada (de onde saem as linhas) */
+.react-flow__handle.valor-ponto {
+  right: 22px;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--destaque);
+  border-radius: 50%;
+}
+
+/* ---------- Neurônio ---------- */
+.neuronio {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--destaque);
+  border-radius: 50%;
+  background: var(--destaque-fundo);
+}
+
+.neuronio.selecionado {
+  box-shadow: 0 0 0 3px rgba(94, 211, 219, 0.35);
+}
+
+/* neurônio cuja conta está acontecendo agora */
+.neuronio.agora {
+  border-width: 3px;
+  box-shadow: 0 0 0 8px rgba(94, 211, 219, 0.25);
+}
+
+.neuronio-valor {
+  font-size: 8px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.ponto {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Portas do fio */
+.porta {
+  width: 12px;
+  height: 12px;
+  border: 2px solid #ffffff;
+  background: var(--destaque);
+}
+
+/* ---------- Número do peso na linha ---------- */
+.peso {
+  position: absolute;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.92);
+  font-size: 10px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 14px;
+  pointer-events: all;
+  cursor: text;
+}
+
+.positivo {
+  color: var(--positivo);
+}
+
+.negativo {
+  color: var(--negativo);
+}
+
+.peso.apagada {
+  opacity: 0.4;
+}
+
+.peso.agora {
+  z-index: 10;
+  padding: 2px 6px;
+  background: var(--destaque);
+  color: var(--sobre-destaque);
+}
+
+.peso-editor {
+  width: 52px;
+  padding: 1px 3px;
+  border: 1px solid var(--destaque);
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+/* ---------- Saída ---------- */
+.saida-resposta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0;
+}
+
+.saida-cor {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+}
+
+.saida-cor.vazia {
+  border: 1px dashed rgba(0, 0, 0, 0.2);
+  background: var(--bg-subtle);
+}
+
+.saida-numero {
+  font-size: 20px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.saida-numero.vazio {
+  color: var(--text-subtle);
+}
+
+.saida-rotulo {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.saida-dica {
+  margin: 6px 0 0;
+  font-size: 11px;
+  color: var(--text-subtle);
+}
+
+.saida-objetivo {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.saida-objetivo-titulo {
+  margin-bottom: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.saida-opcao {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  font-size: 11px;
+}
+
+.saida-opcao input[type="color"] {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+.saida-opcao input:not([type="color"]) {
+  width: 90px;
+  padding: 2px 4px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
+  font-size: 11px;
+}
+
+/* ---------- Painel de contas (direita) ---------- */
+.painel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 320px;
+  flex-shrink: 0;
+  padding: 24px;
+  overflow-y: auto;
+  border-left: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.painel-topo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.painel-topo h2 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.painel-passo {
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+.botao {
+  padding: 9px 14px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 20px;
+  background: var(--bg);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.botao:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.botao.principal {
+  border: none;
+  background: var(--destaque);
+  font-weight: 600;
+  color: var(--sobre-destaque);
+}
+
+.botao.escuro {
+  border: none;
+  background: var(--text);
+  color: #ffffff;
+}
+
+.erros {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(229, 72, 77, 0.08);
+  font-size: 13px;
+  color: #b4232a;
+}
+
+.erros p {
+  margin: 0 0 4px;
+}
+
+.erros-dica {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.contas-vazio,
+.contas-nota {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.contas {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.contas p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.chip {
+  align-self: flex-start;
+  padding: 4px 12px;
+  border-radius: 13px;
+  background: var(--destaque-fundo);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--destaque-texto);
+}
+
+.termo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.termo.feito {
+  border-color: transparent;
+  background: var(--bg-subtle);
+}
+
+.termo.agora {
+  border-color: transparent;
+  background: var(--destaque);
+  color: var(--sobre-destaque);
+}
+
+.termo.proximo {
+  color: var(--text-subtle);
+}
+
+.termo.soma:not(.feito) {
+  border-style: dashed;
+  color: var(--text-subtle);
+}
+
+.termo-marca {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.termo.feito .termo-marca {
+  border: none;
+  background: #10b981;
+  color: #ffffff;
+}
+
+.termo.agora .termo-marca {
+  border: none;
+  background: #ffffff;
+  color: var(--destaque-texto);
+}
+
+.termo-nome {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.termo-conta {
+  font-size: 14px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.contas-formula.agora {
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--destaque);
+  font-weight: 600;
+  color: var(--sobre-destaque);
+}
+
+.contas-resultado {
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--destaque-fundo);
+  color: var(--destaque-texto);
+}
+
+.navegar {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.alternar {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 4px;
+  border-radius: 16px;
+  background: var(--bg-subtle);
+}
+
+.alternar button {
+  padding: 4px;
+  border: none;
+  border-radius: 12px;
+  background: none;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.alternar button.ativo {
+  background: var(--bg);
+  font-weight: 600;
+  color: var(--text);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+/* ---------- Avisos (a rodada continua) ---------- */
+.camada.com-aviso {
+  border: 2px dashed var(--aviso);
+  opacity: 0.75;
+}
+
+.avisos {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(245, 165, 36, 0.12);
+  font-size: 13px;
+  color: #8a5a00;
+}
+
+.avisos p {
+  margin: 0;
+}
+
+/* ---------- Treinar (painel da direita) ---------- */
+.treinar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.treinar h2 {
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+
+.treinar-campos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.treinar-campos label,
+.treinar-rotulo {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.treinar-campos input,
+.treinar-campos select {
+  display: block;
+  width: 100%;
+  height: 36px;
+  margin-top: 6px;
+  padding: 0 12px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 10px;
+  background: var(--bg);
+  font-size: 14px;
+  color: var(--text);
+}
+
+.treinar-botao {
+  height: 44px;
+  font-size: 15px;
+}
+
+.treinar-nota {
+  margin: 0;
+  font-size: 11px;
+  text-align: center;
+  color: var(--text-subtle);
+}
