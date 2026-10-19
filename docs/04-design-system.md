@@ -116,7 +116,7 @@ Paleta azul × laranja é segura para daltonismo. **Nunca** usar só cor para tr
 
 ### 2.4 Tipografia
 
-- **Sans:** Geist Sans (ou Inter como fallback) — licença aberta.
+- **Sans:** **Inter**, a fonte usada nas telas do Figma (decisão no código: [ADR-0019](adr/0019-projeto-real-home.md)). Antes a proposta era Geist Sans.
 - **Mono:** Geist Mono — tokens, números, código.
 - Números tabulares (`font-variant-numeric: tabular-nums`) em todo valor que muda ao vivo.
 

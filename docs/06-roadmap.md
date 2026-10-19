@@ -11,8 +11,12 @@ Primeira entrega ([ADR-0018](adr/0018-primeira-entrega-design.md)):
 - [x] Tela Novo projeto no Figma
 - [x] Tela do Laboratório no Figma
 
+Projeto real em [`web/`](../web) ([ADR-0019](adr/0019-projeto-real-home.md)):
+- [x] Home em código, igual ao Figma (com a Aqua)
+- [ ] Tela Novo projeto em código
+- [ ] Laboratório em código, a partir do teste técnico
+
 Próximos passos (a decidir com o autor):
-- [ ] Começar o projeto real (Next.js + Tailwind) a partir das telas e do teste técnico
 - [ ] Treinar (repetições, x100, saídas no fim)
 - [ ] Salvar projetos no navegador
 - [ ] Aba Busca por significado
