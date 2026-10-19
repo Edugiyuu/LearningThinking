@@ -68,6 +68,8 @@ Teste técnico do laboratório: [`spikes/camada-react-flow/`](../../spikes/camad
 ### Mascote na Home
 - O autor pediu para **refazer a Home colocando o mascote** em vários lugares: em "Aprenda o conceito", o Bloquinho com uma **lâmpada em cima** (aprendeu); em "Veja por dentro", o **mascote do Claude trabalhando** com o Bloquinho **na mente** dele.
 - *Proposta da IA*, no mesmo frame: Bloquinho como camada em "Monte com as mãos", como saída da rede no herói, dormindo nos cards "Em breve", pulando no CTA final (ao lado do Claude) e pequeno no rodapé.
+- Segunda rodada (autor): em "Veja por dentro", o Claude **de lado, digitando no notebook** (a partir de uma referência do autor); em "Monte com as mãos", a camada com **dois neurônios**; "Aprenda o conceito" aprovado, mas com **outras versões** para comparar (frame **Mascote · versões**, A a E).
+- **Nome do mascote em aberto:** o autor sugeriu "AquaThinking"; a IA comentou que soa como nome de produto e fica perto de "LearningThinking".
 - A versão nova fica num frame separado, **Home · Desktop · mascote**, para comparar com a original. Poses e regras em [04-design-system.md, seção 7.1](../04-design-system.md).
 
 ### Logo

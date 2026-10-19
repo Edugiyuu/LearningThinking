@@ -7,7 +7,7 @@
 > - **Cor de destaque: aqua claro `#5ED3DB`**, no lugar do violeta (seção 2.2).
 > - **Logo: Bloquinho**, um mascote em pixel (seção 7).
 >
-> **Telas no Figma:** Home · Desktop, Novo projeto · Desktop, Laboratório · Desktop. A Home tem uma segunda versão, **Home · Desktop · mascote** (à esquerda da original), com o Bloquinho ilustrando as seções (seção 7.1), aguardando a escolha do autor. Também há os frames de apoio Logo · opções e Cor de destaque · comparação, e um laboratório antigo em violeta, guardado só para comparação.
+> **Telas no Figma:** Home · Desktop, Novo projeto · Desktop, Laboratório · Desktop. A Home tem uma segunda versão, **Home · Desktop · mascote** (à esquerda da original), com o Bloquinho ilustrando as seções (seção 7.1), aguardando a escolha do autor. Ao lado dela, o frame **Mascote · versões** compara opções do card "Aprenda o conceito". Também há os frames de apoio Logo · opções e Cor de destaque · comparação, e um laboratório antigo em violeta, guardado só para comparação.
 
 > Inspiração: Apple (clareza, tipografia, scrollytelling, espaço), ElevenLabs (superfícies suaves, gradientes discretos, controles elegantes), Linear/Vercel (precisão, densidade controlada no modo laboratório).
 
@@ -245,12 +245,16 @@ O Bloquinho não é só o logo: ele é o **mascote** do site e aparece nas telas
 | Normal | Igual ao logo | Logo, rodapé (20 × 12px) |
 | Contente | Olhos normais + bochechas rosa `#F4A3B5` | Card "Aprenda o conceito", card Redes neurais, saída da rede no herói, CTA final |
 | Com a lâmpada | Contente, com uma lâmpada em pixel acesa em cima (amarelo `#FFD54A`, raios `#F59E0B`): "aprendeu" | Card "Aprenda o conceito" |
-| Como camada | Fios saindo das portas: Entrada → Bloquinho → Saída, fio da vez em aqua | Card "Monte com as mãos" |
+| Montando | Em cima de uma **camada com 2 neurônios** (Entrada → Camada → Saída, linhas densas com as cores dos pesos e a linha da vez em aqua) | Card "Monte com as mãos" |
 | Dormindo | Olhos fechados (traço horizontal) e "z z" em cinza | Cards "Em breve" (Busca por significado, RAG) |
 | Pulando | Contente, com pixels soltos dos lados | CTA final "Pronto para ver por dentro?" |
 | Saída da rede | Ligado por fio aqua ao último neurônio do herói, com o valor `0,97` em cima | Herói |
 
-**Com o mascote do Claude.** No card **"Veja por dentro"**, o mascote em pixel do Claude (corpo terracota `#D97757`, olhos `#1D1D1F`) trabalha num notebook e **pensa no Bloquinho** (balão de pensamento com o Bloquinho dentro): a IA "por dentro" está pensando no que o aluno montou. Ele aparece de novo no CTA final, ao lado do Bloquinho.
+**Com o mascote do Claude.** No card **"Veja por dentro"**, o mascote em pixel do Claude aparece **de lado, digitando num notebook**, num painel escuro `#161618` (como uma tela por dentro), seguindo uma referência enviada pelo autor. Corpo terracota `#D97757` com o lado direito na sombra `#B9603F`, olhos `#111113`, um bracinho no teclado; a tela do notebook solta uma luz aqua. Da cabeça dele sai um **balão de pensamento com o Bloquinho dentro**: a IA "por dentro" está pensando no que o aluno montou. Ele aparece de novo no CTA final, ao lado do Bloquinho.
+
+**Versões do "Aprenda o conceito".** O autor aprovou a lâmpada em cima e pediu outras opções para comparar, no frame **Mascote · versões**: A · lâmpada em cima (atual), B · lendo um livro com a ideia chegando, C · formado (capelo), D · lousa com `w·x + b = 0,97` e a lâmpada num balão, E · a lâmpada acendendo em três tempos (dá para virar animação). Aguardando a escolha.
+
+**Nome do mascote (em aberto).** Hoje ele se chama Bloquinho. O autor sugeriu **AquaThinking**. *Opinião da IA:* soa mais como nome de produto do que de personagem e fica perto demais de "LearningThinking", o que pode confundir marca e mascote. Vale comparar com nomes curtos de personagem (ex.: Bloquinho, Bit, Aqui, Nino). A decisão é do autor.
 
 > ⚠️ **Em aberto:** o mascote do Claude é da Anthropic. Usar como homenagem num projeto de estudo é diferente de usar num site público; antes de publicar, rever se ele fica, troca por um personagem próprio ou ganha um aviso.
 
