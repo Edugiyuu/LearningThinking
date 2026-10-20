@@ -16,6 +16,11 @@ Projeto real em [`web/`](../web) ([ADR-0019](adr/0019-projeto-real-home.md)):
 - [x] Tela Novo projeto em código (salva o projeto no navegador)
 - [x] Laboratório em código, a partir do teste técnico ([ADR-0020](adr/0020-laboratorio-em-codigo.md)); Treinar ainda desligado
 
+Tutoriais ([ADR-0022](adr/0022-tutoriais-com-a-aqua.md)):
+- [x] Telas no Figma: Tutoriais e a aula O neurônio (cérebro, cérebro × IA, fim com teste rápido)
+- [x] Em código: lista em trilha e 4 tutoriais (O neurônio, Os pesos, A sigmoide, Camadas e fios), com progresso no navegador
+- [ ] 05 · Como a rede aprende (depois do Treinar)
+
 Próximos passos (a decidir com o autor):
 - [ ] Treinar (repetições, x100, saídas no fim)
 - [x] Salvar projetos no navegador (o último projeto criado; falta a lista de projetos)

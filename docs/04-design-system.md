@@ -186,7 +186,7 @@ Desenhado no Figma ("Laboratório · Desktop") e testado no teste técnico:
 | Bloco Camada | Título, campo "neurônios", neurônios empilhados. Portas do fio à esquerda e à direita (bolinhas aqua). |
 | Bloco Saída | Número + quadrado com a cor da resposta + rótulo ("laranja (1)"); "aguardando" antes da conta. Selecionado, mostra o objetivo (nome e cor das respostas 0 e 1). |
 | Número do peso | Etiqueta na linha; duplo clique edita. Na linha da vez, fica com fundo aqua. |
-| Painel de contas | Botão Rodar, "Passo N de M", chip do neurônio da vez, uma linha por parcela (feita ✓ / agora / próxima), soma só no fim, resultado (acende/apaga ou espremer 0–1), Anterior/Próximo e Passo a passo/Automático. Erros do Rodar aparecem aqui. |
+| Painel de contas | Botão Rodar, "Passo N de M", chip do neurônio da vez, uma linha por parcela (feita ✓ / agora / próxima), soma só no fim, resultado (ReLU: acende/apaga, ou sigmoide: 0–1), Anterior/Próximo e Passo a passo/Automático. Erros do Rodar aparecem aqui. |
 | Seção Treinar (no painel) | Repetições, velocidade (x100), começar do zero/já treinada, botão "Treinar N vezes". Só no design; ainda não programado. |
 
 Propostas antigas da IA, ainda não usadas: `<ParamControl>`, `<PresetPicker>` e `<ShareLink>` (link com o estado).
@@ -214,10 +214,11 @@ Desenhados no Figma:
 - **Home:** barra com logo e "Criar novo projeto"; herói "Veja a IA aprender." com uma rede neural clean (caminho aqua destacado); seções "Como funciona" (3 passos), "Explore" (Redes neurais disponível; Busca por significado e RAG em breve) e um CTA final.
 - **Novo projeto:** (1) tema: Redes neurais / Busca por significado / RAG; (2) como começar: **Básico pronto** (com miniatura da montagem) ou **Vazio**; campo "Nome do projeto"; botões Cancelar e Criar projeto. A escolha marcada tem borda aqua e ✓.
 - **Laboratório:** ver 4.3.
+- **Tutoriais** ([ADR-0022](adr/0022-tutoriais-com-a-aqua.md), proposta da IA): a lista é uma **trilha** de cards ligados por fios (como blocos), cada um com miniatura e a Aqua; o card da vez tem borda aqua. A **aula** tem barra com "← Tutoriais", título e progresso em segmentos; **palco** à esquerda (`--bg-subtle`, raio 24px) e texto à direita (476px) com a caixa "A conta" (branca) e "Onde a ideia quebra" (fundo `#FFF7E6`, título `#8A5A00`). O último passo é o **teste rápido**: opção certa com borda `#10B981` e fundo `#ECFDF5`, errada com borda `#E5484D`; acertar acende a lâmpada da Aqua.
 
 Propostas antigas da IA, ainda não desenhadas:
 - **Módulo:** herói com gradiente do acento, lista de aulas com duração e progresso.
-- **Aula / tutorial:** scrollytelling em tela cheia; barra de progresso fina no topo; índice de passos discreto na lateral.
+- ~~**Aula / tutorial:** scrollytelling em tela cheia~~ (trocado pelo passo a passo do ADR-0022).
 - **Modo apresentação** (para sala de aula): `?apresentar=1` aumenta tipografia em 125%, avança passos com as setas do teclado e esconde navegação.
 
 ## 6. Voz e tom
@@ -249,12 +250,23 @@ Propostas antigas da IA, ainda não desenhadas:
 | Dormindo | Olhos fechados (traço horizontal) e "z z" em cinza | Cards "Em breve" (Busca por significado, RAG) |
 | Pulando | Contente, com pixels soltos dos lados | CTA final "Pronto para ver por dentro?" |
 | Saída da rede | Ligado por fio aqua ao último neurônio do herói, com o valor `0,97` em cima | Herói |
+| Preocupada (cozinhando) | Aqua **normal** (sem boca). Em cima da cabeça, dois ícones: **"!"** vermelho `#FF453A` (susto) e **gota de suor** azul `#7CC4F0`. Segura a frigideira pelo cabo, que sai da porta direita; panqueca **queimada** `#3B2414` soltando fumaça cinza | Tutorial 01, passo 2 (1ª tentativa) |
+| Confiante (cozinhando) | Aqua **contente** (bochechas, sem boca) com uma **estrela** amarela `#FFD54A` em cima da cabeça; panqueca **no ponto** `#E9B44C` com **brilhos** amarelos | Tutorial 01, passo 2 (depois de treinar) |
+| Observando | Aqua normal + **lupa** cinza `#6E6E73` com lente `#D6EEFB` e cabo marrom | Revisão: entradas |
+| Pesando | Aqua normal + **balança** (travessão cinza, pratos âmbar `#E9A800`) | Revisão: pesos |
+| Somando | Aqua normal + **Σ** em `#0E7C86` | Revisão: soma ponderada |
+| Decidindo | Aqua contente + **lâmpada acesa** (`#FFD54A`, raios `#F59E0B`) | Revisão: ativação; acerto no teste |
+| Pensando | Aqua normal + **"?"** em `#0E7C86` | Teste rápido, antes de responder |
+
+**Reações (frame "Aqua · reações" no Figma, 2026-10-20).** Grade 10 × 12: o ícone ocupa as linhas 0–4, a linha 5 fica vazia e o corpo original começa na 6. São sete reações: observando, pesando, somando, decidindo, pensando, preocupada e confiante. Servem para a Aqua "fazer" cada parte da conta na revisão e para reagir no teste rápido (pensando → decidindo se acertou, preocupada se errou).
 
 **Com o mascote do Claude.** No card **"Veja por dentro"**, o mascote em pixel do Claude aparece **de lado, digitando num notebook**, num painel claro, como os outros cards (o fundo escuro foi testado e o autor pediu claro), seguindo uma referência enviada pelo autor. Corpo terracota `#D97757` com o lado direito na sombra `#B9603F`, olhos `#111113`, um bracinho no teclado; a tela do notebook solta uma luz aqua. Da cabeça dele sai um **balão de pensamento com a Aqua dentro**: a IA "por dentro" está pensando no que o aluno montou. Ele aparece de novo no CTA final, ao lado da Aqua.
 
 **Versões do "Aprenda o conceito".** O autor aprovou a lâmpada em cima e pediu outras opções para comparar, no frame **Mascote · versões**: A · lâmpada em cima (atual), B · lendo um livro com a ideia chegando, C · formado (capelo), D · lousa com `w·x + b = 0,97` e a lâmpada num balão, E · a lâmpada acendendo em três tempos (dá para virar animação). Aguardando a escolha.
 
 > ⚠️ **Em aberto:** o mascote do Claude é da Anthropic. Usar como homenagem num projeto de estudo é diferente de usar num site público; antes de publicar, rever se ele fica, troca por um personagem próprio ou ganha um aviso.
+
+**Cena da cozinha** (frame **Aqua · cozinhando (poses)** no Figma, 2026-10-20): Grade de 28 × 13: ícone de emoção (linhas 0–4), Aqua original (10 × 6) com o **cabo da frigideira saindo da porta direita**, frigideira vista de lado (bordas, fundo e a panqueca dentro), chamas e balcão. **Regra do autor: o rosto da Aqua não muda.** Ela não ganha boca nem sobrancelha; a emoção vem de um **ícone acima da cabeça**, como nos jogos ("!" e gota = preocupada, estrela = confiante). Versões descartadas: sobrancelhas e olhos em arco (rosto poluído) e depois uma boca (o autor achou horrível, e a frigideira parecia uma barra solta).
 
 **Regras de uso**
 - No máximo **uma Aqua por bloco de conteúdo** (card, seção), e nunca competindo com a visualização principal: ela ilustra, não explica.

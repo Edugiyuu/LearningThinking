@@ -26,7 +26,7 @@ Na rede de verdade nada viaja pela linha: o computador só multiplica o valor pe
 - `web/components/laboratorio/PesoEdge.tsx` desenha a bolinha (`Bolinha`) dentro do SVG da linha da vez. Ela anda junto com o zoom e o arraste do canvas e lê as pontas atuais da linha sem recomeçar.
 - `gsap` entra nas dependências de `web/`.
 - Figma: o frame "Laboratório · Desktop" foi atualizado com verde/vermelho e a bolinha na linha da vez. O frame novo "Laboratório · bolinhas e espremer" mostra os estados.
-- A tela de aulas com a Aqua, que vai explicar o espremer com mais detalhe, ainda não existe.
+- A tela de aulas com a Aqua, que vai explicar o espremer com mais detalhe, ainda não existe. *(Feita depois: tutorial 03 · A sigmoide, [ADR-0022](0022-tutoriais-com-a-aqua.md). O nome "espremer" foi trocado por **sigmoide** na mesma revisão.)*
 
 ## Revisão (2026-10-19): bolinhas que se fundem, visual clean e pesos sem sobreposição
 

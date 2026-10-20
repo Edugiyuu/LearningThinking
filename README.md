@@ -2,7 +2,7 @@
 
 **Entenda IA vendo ela funcionar.** Um laboratório visual, no estilo do Tinkercad, para qualquer pessoa montar e rodar uma rede neural e ver cada conta acontecer, sem precisar programar.
 
-> Status: design da primeira entrega pronto no Figma (Home, Novo projeto, Laboratório) e um teste técnico do laboratório em [`spikes/camada-react-flow/`](spikes/camada-react-flow/README.md). O projeto real começou em [`web/`](web/README.md): a Home, a tela Novo projeto e o Laboratório já estão em código ([ADR-0019](docs/adr/0019-projeto-real-home.md), [ADR-0020](docs/adr/0020-laboratorio-em-codigo.md)); falta o Treinar.
+> Status: design da primeira entrega pronto no Figma (Home, Novo projeto, Laboratório) e um teste técnico do laboratório em [`spikes/camada-react-flow/`](spikes/camada-react-flow/README.md). O projeto real começou em [`web/`](web/README.md): a Home, a tela Novo projeto, o Laboratório e os Tutoriais já estão em código ([ADR-0019](docs/adr/0019-projeto-real-home.md), [ADR-0020](docs/adr/0020-laboratorio-em-codigo.md), [ADR-0022](docs/adr/0022-tutoriais-com-a-aqua.md)); falta o Treinar.
 
 ## A ideia
 
@@ -10,7 +10,7 @@
 - **Tutoriais** em páginas separadas: explicam o conceito e como usar cada ferramenta, e depois levam você ao laboratório.
 - Tudo calculado **no navegador**.
 
-Decisões do autor: [ADR-0013](docs/adr/0013-formato-tutoriais-e-laboratorio.md) a [ADR-0020](docs/adr/0020-laboratorio-em-codigo.md). O resto da documentação é uma proposta inicial da IA, em revisão.
+Decisões do autor: [ADR-0013](docs/adr/0013-formato-tutoriais-e-laboratorio.md) a [ADR-0022](docs/adr/0022-tutoriais-com-a-aqua.md). O resto da documentação é uma proposta inicial da IA, em revisão.
 
 ## Stack
 

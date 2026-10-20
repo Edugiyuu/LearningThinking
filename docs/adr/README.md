@@ -34,3 +34,4 @@ Registro das decisões de arquitetura do projeto. Formato baseado em [MADR](http
 | [0019](0019-projeto-real-home.md) | Início do projeto real em `web/` e a Home em código | **Aceita** (autor), detalhes propostos pela IA |
 | [0020](0020-laboratorio-em-codigo.md) | Laboratório em código a partir do teste técnico, salvando no navegador | **Aceita** (autor), detalhes propostos pela IA |
 | [0021](0021-bolinhas-cores-e-espremer.md) | Bolinhas nas linhas (GSAP), verde/vermelho para o sinal, passo do espremer explicado | **Aceita** (autor), detalhes propostos pela IA |
+| [0022](0022-tutoriais-com-a-aqua.md) | Tutoriais: trilha com a Aqua e aulas passo a passo com teste rápido | **Aceita** (autor) a aba; formato proposto pela IA, em revisão |

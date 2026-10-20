@@ -3,8 +3,8 @@
 > **Status das decisões.** Boa parte destes documentos foi escrita pela IA como **proposta inicial** e ainda vai ser revisada pelo autor, parte por parte. O que já foi decidido pelo autor está nos ADRs com status **Aceita (autor)**, hoje: [ADR-0013](adr/0013-formato-tutoriais-e-laboratorio.md) (formato do produto), [ADR-0014](adr/0014-laboratorio-abas-projetos-e-erros.md) (abas, projetos e erros do laboratório), [ADR-0015](adr/0015-aba-redes-neurais-montagem.md) (aba Redes neurais), [ADR-0016](adr/0016-modo-debug-backward-pass.md) (modo debug, adiado), [ADR-0017](adr/0017-stack.md) (stack) e [ADR-0018](adr/0018-primeira-entrega-design.md) (primeira entrega: telas, tema claro, aqua, logo, fios, contas passo a passo). O resumo do que já foi decidido sobre o laboratório está no topo de [05-laboratorio.md](05-laboratorio.md).
 
 **Onde está cada coisa hoje (2026-10-19):**
-- **Design:** no Figma, com as três telas da primeira entrega (Home, Novo projeto, Laboratório).
-- **Código:** só o teste técnico em [`spikes/camada-react-flow/`](../spikes/camada-react-flow/README.md).
+- **Design:** no Figma, com as três telas da primeira entrega (Home, Novo projeto, Laboratório) as telas de Tutoriais, o roteiro do tutorial 01 e as poses da Aqua cozinhando ([ADR-0022](adr/0022-tutoriais-com-a-aqua.md)).
+- **Código:** o projeto real em [`web/`](../web/README.md) (Home, Novo projeto, Laboratório e Tutoriais) e o teste técnico em [`spikes/camada-react-flow/`](../spikes/camada-react-flow/README.md).
 
 | Documento | Para quê | Situação |
 |---|---|---|
