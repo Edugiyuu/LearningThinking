@@ -7,14 +7,18 @@
 Primeira entrega ([ADR-0018](adr/0018-primeira-entrega-design.md)):
 - [x] Stack decidida ([ADR-0017](adr/0017-stack.md))
 - [x] Teste técnico do laboratório no React Flow ([`spikes/camada-react-flow/`](../spikes/camada-react-flow/README.md)): blocos, fios, pesos, Rodar com erros e contas passo a passo
-- [x] Home no Figma (tema claro, aqua, logo Bloquinho)
+- [x] Home no Figma (tema claro, aqua, logo Aqua)
 - [x] Tela Novo projeto no Figma
 - [x] Tela do Laboratório no Figma
 
+Projeto real em [`web/`](../web) ([ADR-0019](adr/0019-projeto-real-home.md)):
+- [x] Home em código, igual ao Figma (com a Aqua)
+- [x] Tela Novo projeto em código (salva o projeto no navegador)
+- [x] Laboratório em código, a partir do teste técnico ([ADR-0020](adr/0020-laboratorio-em-codigo.md)); Treinar ainda desligado
+
 Próximos passos (a decidir com o autor):
-- [ ] Começar o projeto real (Next.js + Tailwind) a partir das telas e do teste técnico
 - [ ] Treinar (repetições, x100, saídas no fim)
-- [ ] Salvar projetos no navegador
+- [x] Salvar projetos no navegador (o último projeto criado; falta a lista de projetos)
 - [ ] Aba Busca por significado
 
 ---

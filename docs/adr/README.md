@@ -31,3 +31,6 @@ Registro das decisões de arquitetura do projeto. Formato baseado em [MADR](http
 | [0016](0016-modo-debug-backward-pass.md) | Modo "debug": backward pass passo a passo | **Aceita** (autor), adiada |
 | [0017](0017-stack.md) | Stack (Next.js, GSAP, React Flow, sem backend na v1) | **Aceita** (autor) |
 | [0018](0018-primeira-entrega-design.md) | Primeira entrega: telas no Figma (Home, Novo projeto, Laboratório), tema claro, aqua, logo, fios, contas passo a passo | **Aceita** (autor) |
+| [0019](0019-projeto-real-home.md) | Início do projeto real em `web/` e a Home em código | **Aceita** (autor), detalhes propostos pela IA |
+| [0020](0020-laboratorio-em-codigo.md) | Laboratório em código a partir do teste técnico, salvando no navegador | **Aceita** (autor), detalhes propostos pela IA |
+| [0021](0021-bolinhas-cores-e-espremer.md) | Bolinhas nas linhas (GSAP), verde/vermelho para o sinal, passo do espremer explicado | **Aceita** (autor), detalhes propostos pela IA |

@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+/* Tokens do design system (docs/04-design-system.md). Só o tema claro existe na v1. */
+:root {
+  --bg: #ffffff;
+  --bg-subtle: #f5f5f7;
+  --text: #1d1d1f;
+  --text-muted: #6e6e73;
+  --text-subtle: #86868b;
+  --focus: #0071e3;
+
+  /* Destaque aqua (marca e aba Redes neurais) */
+  --aqua: #5ed3db;
+  --aqua-ink: #0e7c86; /* texto sobre branco */
+  --aqua-50: #e8fafb; /* fundo bem claro */
+  --aqua-on: #06363a; /* texto sobre o aqua */
+
+  /* Cores de visualização: sinal do peso e das bolinhas (verde +, vermelho −) */
+  --peso-positivo: #16a34a;
+  --peso-negativo: #dc2626;
+
+  /* Acentos dos módulos "Em breve" */
+  --ciano: #14b8c4;
+  --ciano-ink: #0e8a93;
+  --verde: #10b981;
+  --verde-ink: #0b8a5f;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-subtle: var(--bg-subtle);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-text-subtle: var(--text-subtle);
+  --color-focus: var(--focus);
+  --color-aqua: var(--aqua);
+  --color-aqua-ink: var(--aqua-ink);
+  --color-aqua-50: var(--aqua-50);
+  --color-aqua-on: var(--aqua-on);
+  --color-peso-positivo: var(--peso-positivo);
+  --color-peso-negativo: var(--peso-negativo);
+  --color-ciano: var(--ciano);
+  --color-ciano-ink: var(--ciano-ink);
+  --color-verde: var(--verde);
+  --color-verde-ink: var(--verde-ink);
+
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-geist-mono);
+
+  --radius-card: 24px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
