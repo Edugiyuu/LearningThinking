@@ -100,7 +100,39 @@ sequenceDiagram
     V->>V: anima transição (ou troca direta se reduced-motion)
 ```
 
-## 6. Estrutura de pastas (proposta)
+## 6. Estrutura de pastas
+
+### 6.1 Como está hoje
+
+```
+LearningThinking/
+├─ docs/                      # esta documentação + ADRs
+├─ spikes/
+│  └─ camada-react-flow/      # teste técnico descartável (ADR-0018); não é o app
+└─ web/                       # o app de verdade (ADR-0019): Next.js 16 + Tailwind 4
+   ├─ app/                    # ROTAS: cada pasta com page.tsx vira uma URL
+   │  ├─ layout.tsx           # moldura de todas as páginas (<html>, fonte, globals.css)
+   │  ├─ globals.css          # @import "tailwindcss" + cores do projeto (@theme)
+   │  ├─ page.tsx             # /  (Home com a Aqua)
+   │  ├─ novo-projeto/page.tsx  # /novo-projeto
+   │  └─ laboratorio/page.tsx   # /laboratorio
+   ├─ components/             # peças de tela reutilizáveis
+   │  ├─ mascote.tsx, topo-simples.tsx, rede-heroi.tsx
+   │  └─ laboratorio/         # Lab, blocos (Entrada/Camada/Neurônio/Saída), PesoEdge (linha + bolinha GSAP),
+   │                          # PainelContas, contexto.ts e laboratorio.css (CSS comum, não Tailwind)
+   ├─ lib/                    # lógica pura, sem tela
+   │  ├─ rede.ts              # contas da rede: pesos, soma, ReLU/sigmoid, posicionarPesos
+   │  └─ projetos.ts          # salvar/ler projetos no localStorage
+   ├─ public/ilustracoes/     # imagens servidas direto pela URL
+   └─ next.config.ts          # configuração do Next (equivale ao vite.config)
+```
+
+- **Rotas por pasta:** criar `app/aulas/page.tsx` cria `/aulas`; não existe arquivo de rotas como no `react-router`. Uma pasta entre colchetes (`app/aulas/[aula]/page.tsx`) vira uma rota com parâmetro (`/aulas/sigmoid`, `/aulas/relu`…), com uma página só para todas as aulas.
+- **`"use client"`:** por padrão, o Next roda o componente no servidor. Componentes com estado, cliques ou `localStorage` precisam dessa linha no topo. O laboratório ainda é carregado com `dynamic(..., { ssr: false })`, porque lê o `localStorage`.
+- **Estilo:** Tailwind nas telas comuns (Home, Novo projeto); CSS comum em `laboratorio.css`, porque o React Flow gera os próprios elementos e os estados (apagada, agora, positivo) ficam mais legíveis assim.
+- **GSAP:** só na bolinha de `PesoEdge.tsx`.
+
+### 6.2 Para onde vai (proposta)
 
 ```
 LearningThinking/
