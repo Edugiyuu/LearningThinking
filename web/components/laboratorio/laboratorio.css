@@ -10,8 +10,8 @@
   --destaque-texto: #0e7c86;
   --destaque-fundo: #e8fafb;
   --sobre-destaque: #06363a;
-  --positivo: #2a6fb8;
-  --negativo: #c2621c;
+  --positivo: #15803d;
+  --negativo: #b91c1c;
   --erro: #e5484d;
   --aviso: #f5a524;
 }
@@ -164,30 +164,6 @@
   color: var(--text-muted);
 }
 
-.dicas {
-  margin-top: 20px;
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: var(--bg-subtle);
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--text-muted);
-}
-
-.dicas strong {
-  color: var(--text);
-}
-
-.dicas ol {
-  margin: 6px 0;
-  padding-left: 16px;
-  list-style: decimal;
-}
-
-.dicas p {
-  margin: 0;
-}
-
 .aviso {
   margin-top: 16px;
   padding: 8px 10px;
@@ -260,39 +236,16 @@
 }
 
 .legenda-positivo {
-  background: #378add;
+  background: var(--peso-positivo);
 }
 
 .legenda-negativo {
-  background: #e8853a;
+  background: var(--peso-negativo);
 }
 
 .legenda-dica {
   margin-left: 24px;
   color: var(--text-subtle);
-}
-
-/* a conta da linha da vez, embaixo do número do peso */
-.conta-agora {
-  position: absolute;
-  padding: 6px 20px;
-  border-radius: 999px;
-  background: var(--destaque);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--sobre-destaque);
-  white-space: nowrap;
-  pointer-events: none;
-  font-variant-numeric: tabular-nums;
-}
-
-.conta-agora::before {
-  content: "";
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  height: 78px;
-  border-left: 2px dotted var(--destaque-texto);
 }
 
 /* ---------- Blocos no canvas ---------- */
@@ -451,13 +404,15 @@
   color: var(--text-muted);
 }
 
-/* bolinha de cada número da Entrada (de onde saem as linhas) */
+/* pontinho de cada número da Entrada (de onde saem as linhas): pequeno e vazado,
+   para não ser confundido com um neurônio */
 .react-flow__handle.valor-ponto {
-  right: 22px;
-  width: 22px;
-  height: 22px;
-  border: 2px solid var(--destaque);
+  right: 28px;
+  width: 10px;
+  height: 10px;
+  border: 1.25px solid var(--text-subtle);
   border-radius: 50%;
+  background: #ffffff;
 }
 
 /* ---------- Neurônio ---------- */
@@ -467,19 +422,41 @@
   justify-content: center;
   width: 28px;
   height: 28px;
-  border: 2px solid var(--destaque);
+  border: 1.5px solid var(--destaque);
   border-radius: 50%;
-  background: var(--destaque-fundo);
+  background: #ffffff;
+  transition: background-color 0.25s ease;
+}
+
+/* com valor: preenchido pela cor do sinal, com a borda aqua por fora */
+.neuronio.positivo,
+.neuronio.negativo,
+.neuronio.zero {
+  border-color: #ffffff;
+  box-shadow: 0 0 0 1.5px var(--destaque);
+}
+
+.neuronio.positivo {
+  background: var(--peso-positivo);
+}
+
+.neuronio.negativo {
+  background: var(--peso-negativo);
+}
+
+.neuronio.zero {
+  background: var(--bg-subtle);
 }
 
 .neuronio.selecionado {
   box-shadow: 0 0 0 3px rgba(94, 211, 219, 0.35);
 }
 
-/* neurônio cuja conta está acontecendo agora */
+/* neurônio cuja conta está acontecendo agora: um anel a mais, sem brilho */
 .neuronio.agora {
-  border-width: 3px;
-  box-shadow: 0 0 0 8px rgba(94, 211, 219, 0.25);
+  box-shadow:
+    0 0 0 1.5px var(--destaque),
+    0 0 0 5px rgba(94, 211, 219, 0.22);
 }
 
 .neuronio-valor {
@@ -487,6 +464,28 @@
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--text);
+  animation: fundir 0.3s ease-out;
+}
+
+.neuronio.positivo .neuronio-valor,
+.neuronio.negativo .neuronio-valor {
+  color: #ffffff;
+}
+
+/* a bolinha entrou: o número dá um pulinho */
+@keyframes fundir {
+  from {
+    transform: scale(1.35);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .neuronio-valor {
+    animation: none;
+  }
 }
 
 .ponto {
@@ -502,16 +501,70 @@
   background: var(--destaque);
 }
 
-/* ---------- Número do peso na linha ---------- */
-.peso {
-  position: absolute;
-  padding: 0 4px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.92);
+/* ---------- Bolinha que anda na linha da vez ---------- */
+.bolinha {
+  pointer-events: none;
+}
+
+.bolinha circle {
+  stroke: #ffffff;
+  stroke-width: 1.5;
+}
+
+.bolinha.neutra circle {
+  fill: #ffffff;
+  stroke: var(--destaque-texto);
+}
+
+.bolinha.positiva circle {
+  fill: var(--peso-positivo);
+}
+
+.bolinha.negativa circle {
+  fill: var(--peso-negativo);
+}
+
+.bolinha.zero circle {
+  fill: var(--text-subtle);
+}
+
+/* o número em cima da bolinha, com o fundo da tela em volta para ler sobre as linhas */
+.bolinha text {
   font-size: 10px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  line-height: 14px;
+  paint-order: stroke;
+  stroke: var(--bg-subtle);
+  stroke-width: 3px;
+  fill: var(--text);
+}
+
+.bolinha.positiva text {
+  fill: var(--positivo);
+}
+
+.bolinha.negativa text {
+  fill: var(--negativo);
+}
+
+/* ---------- Número do peso na linha ---------- */
+/* o React Flow põe cada linha numa camada com z-index; os números ficam acima de todas,
+   senão o fundo deles não corta a linha */
+.react-flow__edgelabel-renderer {
+  z-index: 3;
+}
+
+/* texto simples com o fundo da tela por trás: a linha não cruza o número */
+.peso {
+  position: absolute;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--bg-subtle);
+  font-size: 10.5px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  line-height: 16px;
+  white-space: nowrap;
   pointer-events: all;
   cursor: text;
 }
@@ -524,15 +577,20 @@
   color: var(--negativo);
 }
 
-.peso.apagada {
-  opacity: 0.4;
+/* apagada: só o texto fica claro; o fundo continua inteiro para cortar a linha */
+.peso.apagada.positivo {
+  color: rgb(21 128 61 / 0.5);
+}
+
+.peso.apagada.negativo {
+  color: rgb(185 28 28 / 0.5);
 }
 
 .peso.agora {
   z-index: 10;
-  padding: 2px 6px;
-  background: var(--destaque);
-  color: var(--sobre-destaque);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
 }
 
 .peso-editor {
@@ -799,6 +857,33 @@
   border-radius: 12px;
   background: var(--destaque-fundo);
   color: var(--destaque-texto);
+}
+
+/* o passo do último neurônio: a soma espremida entre 0 e 1 */
+.espremer {
+  padding: 12px 14px;
+  border: 1px solid var(--destaque);
+  border-radius: 12px;
+  background: var(--destaque-fundo);
+  color: var(--sobre-destaque);
+}
+
+.espremer-titulo {
+  font-size: 11px;
+}
+
+.espremer-conta {
+  margin-top: 4px;
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.espremer-nota {
+  margin-top: 8px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--text-muted);
 }
 
 .navegar {

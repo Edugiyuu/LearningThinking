@@ -70,15 +70,8 @@ export default function EntradaNode({ id, data, selected }: NodeProps<EntradaNod
               </button>
             </>
           )}
-          {/* cada número é uma bolinha de onde saem as linhas */}
-          <Handle
-            id={`v${i}`}
-            type="source"
-            position={Position.Right}
-            isConnectable={false}
-            className="valor-ponto"
-            style={{ background: `rgba(94, 211, 219, ${0.08 + Math.min(1, Math.max(0, v.valor)) * 0.6})` }}
-          />
+          {/* cada número é um pontinho de onde saem as linhas (pequeno e vazado, para não parecer neurônio) */}
+          <Handle id={`v${i}`} type="source" position={Position.Right} isConnectable={false} className="valor-ponto" />
         </div>
       ))}
 

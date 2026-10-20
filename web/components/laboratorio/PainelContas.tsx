@@ -132,6 +132,26 @@ function Treinar({ secaoRef }: { secaoRef: RefObject<HTMLElement | null> }) {
   );
 }
 
+/**
+ * O último neurônio espreme a soma entre 0 e 1 (sigmoide). A conta aparece
+ * simplificada; de onde sai o e^(−soma) fica para a aula.
+ */
+function Espremer({ soma, valor }: { soma: number; valor: number }) {
+  const e = Math.exp(-soma);
+  return (
+    <div className="espremer">
+      <div className="espremer-titulo">Espremer entre 0 e 1 · soma {formatar(soma)}</div>
+      <div className="espremer-conta">
+        1 ÷ (1 + {formatar(e)}) = {formatar(valor)}
+      </div>
+      <p className="espremer-nota">
+        Fórmula completa: 1 ÷ (1 + e<sup>{formatar(-soma)}</sup>). O {formatar(e)} é o e<sup>{formatar(-soma)}</sup>. Soma alta chega
+        perto de 1; soma baixa, perto de 0. Os detalhes ficam na aula.
+      </p>
+    </div>
+  );
+}
+
 function ContasDoPasso({ rodada, atual, passo, textoResposta }: { rodada: Rodada; atual: number; passo: Passo; textoResposta: Props["textoResposta"] }) {
   if (passo.tipo === "saida") {
     return (
@@ -185,21 +205,15 @@ function ContasDoPasso({ rodada, atual, passo, textoResposta }: { rodada: Rodada
         </div>
       </div>
 
-      {somaPronta ? (
+      {somaPronta?.final ? (
+        <Espremer soma={somaPronta.soma} valor={somaPronta.valor} />
+      ) : somaPronta ? (
         <p className="contas-resultado">
-          {somaPronta.final
-            ? `Espremer entre 0 e 1: ${formatar(somaPronta.soma)} → ${formatar(somaPronta.valor)}`
-            : somaPronta.soma > 0
+          {somaPronta.soma > 0
               ? `Positivo: o neurônio acende e passa ${formatar(somaPronta.valor)} adiante.`
               : "Negativo ou zero: o neurônio apaga e passa 0,00 adiante."}
         </p>
-      ) : (
-        <p className="contas-nota">
-          Depois: {passo.tipo === "termo" && rodada.passos.find((p) => p.tipo === "ativacao" && p.neuronio === passo.neuronio && p.final)
-            ? "a soma é espremida entre 0 e 1."
-            : "se a soma for positiva, o neurônio acende; se não, passa 0."}
-        </p>
-      )}
+      ) : null}
     </div>
   );
 }

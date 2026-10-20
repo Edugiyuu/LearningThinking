@@ -15,9 +15,9 @@
   --aqua-50: #e8fafb; /* fundo bem claro */
   --aqua-on: #06363a; /* texto sobre o aqua */
 
-  /* Cores de visualização */
-  --peso-positivo: #378add;
-  --peso-negativo: #e8853a;
+  /* Cores de visualização: sinal do peso e das bolinhas (verde +, vermelho −) */
+  --peso-positivo: #16a34a;
+  --peso-negativo: #dc2626;
 
   /* Acentos dos módulos "Em breve" */
   --ciano: #14b8c4;

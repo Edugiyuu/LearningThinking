@@ -101,9 +101,9 @@ Consistentes em todo o site, para o aluno criar intuição:
 
 | Significado | Cor | Exemplo |
 |---|---|---|
-| Valor positivo / peso positivo | Azul `#378ADD` (número do peso em `#2A6FB8`) | Conexão que reforça |
-| Valor negativo / peso negativo | Laranja `#E8853A` (número do peso em `#C2621C`) | Conexão que inibe |
-| Passo da vez (conta passo a passo) | Aqua `#5ED3DB`, linha de 4px com brilho | Linha e parcela sendo calculadas agora |
+| Valor positivo / peso positivo | Verde `#16A34A` (número do peso em `#15803D`) | Conexão que reforça; bolinha com resultado positivo ([ADR-0021](adr/0021-bolinhas-cores-e-espremer.md)) |
+| Valor negativo / peso negativo | Vermelho `#DC2626` (número do peso em `#B91C1C`) | Conexão que inibe; bolinha com resultado negativo |
+| Passo da vez (conta passo a passo) | Aqua `#5ED3DB`, linha de 2,5px, sem brilho; o número do peso vira "× 0,50" em texto escuro | Linha e parcela sendo calculadas agora |
 | Passo ainda não feito | A cor normal da linha com 20% de opacidade | Linhas que a conta ainda não usou |
 | Fio entre blocos | Cinza `#8E8E93`, tracejado | Entrada → Camada → Camada → Saída |
 | Erro na montagem (ao clicar em Rodar) | Vermelho `#E5484D`, borda de 2px | Bloco com problema; a rodada não começa |
@@ -181,7 +181,7 @@ Desenhado no Figma ("Laboratório · Desktop") e testado no teste técnico:
 | Componente | Descrição |
 |---|---|
 | `<LabShell>` | 3 zonas: **paleta de blocos** (esq., 220–240px), **canvas** (centro, fundo `--bg-subtle`), **painel de contas** (dir., ~300px). Barra superior com logo, nome do projeto, abas dos temas, Treinar e Rodar. |
-| Paleta de blocos | Cards arrastáveis: **Entrada** (cor ou números), **Camada**, **Neurônio**, **Saída**, mais o quadro "Como montar". |
+| Paleta de blocos | Cards arrastáveis: **Entrada** (cor ou números), **Camada**, **Neurônio**, **Saída**. O quadro "Como montar" saiu ([ADR-0021](adr/0021-bolinhas-cores-e-espremer.md)). |
 | Bloco Entrada | Escolhe o tipo (Cor / Números). Cor vira R, G, B (0 a 1); Números são linhas com nome e valor, até 6. Cada número é uma bolinha de onde saem as linhas. |
 | Bloco Camada | Título, campo "neurônios", neurônios empilhados. Portas do fio à esquerda e à direita (bolinhas aqua). |
 | Bloco Saída | Número + quadrado com a cor da resposta + rótulo ("laranja (1)"); "aguardando" antes da conta. Selecionado, mostra o objetivo (nome e cor das respostas 0 e 1). |

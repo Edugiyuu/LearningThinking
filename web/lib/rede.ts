@@ -364,8 +364,12 @@ export type Vista = {
   linhaAgora: string | null;
   linhasFeitas: Set<string>;
   neuronioAgora: string | null;
-  /** A multiplicação da linha da vez, para mostrar no canvas. */
-  contaAgora: { nome: string; entrada: number; peso: number } | null;
+  /** A multiplicação da linha da vez, para a bolinha levar pelo canvas. */
+  contaAgora: { nome: string; entrada: number; peso: number; passo: number } | null;
+  /** Soma das bolinhas que já entraram em cada neurônio (antes da ativação). */
+  parciais: Map<string, number>;
+  /** A parcela da vez, que entra no neurônio quando a bolinha chega. */
+  termoAgora: { neuronio: string; valor: number } | null;
 };
 
 export function vistaDaRodada(r: Rodada, atual: number): Vista {
@@ -376,14 +380,19 @@ export function vistaDaRodada(r: Rodada, atual: number): Vista {
     linhasFeitas: new Set(),
     neuronioAgora: null,
     contaAgora: null,
+    parciais: new Map(),
+    termoAgora: null,
   };
   r.passos.slice(0, atual + 1).forEach((p, i) => {
     if (p.tipo === "termo") {
       if (i === atual) {
         vista.linhaAgora = p.linha;
-        vista.contaAgora = { nome: p.nome.replace(/^Entrada /, ""), entrada: p.entrada, peso: p.peso };
+        vista.contaAgora = { nome: p.nome.replace(/^Entrada /, ""), entrada: p.entrada, peso: p.peso, passo: i };
+        vista.termoAgora = { neuronio: p.neuronio, valor: p.entrada * p.peso };
+      } else {
+        vista.linhasFeitas.add(p.linha);
+        vista.parciais.set(p.neuronio, (vista.parciais.get(p.neuronio) ?? 0) + p.entrada * p.peso);
       }
-      else vista.linhasFeitas.add(p.linha);
     }
     if (p.tipo === "ativacao") vista.valores.set(p.neuronio, p.valor);
     if (p.tipo === "saida") vista.saidas.set(p.saida, { valor: p.valor, resposta: p.resposta });
@@ -411,11 +420,12 @@ export function linhas(nodes: NoDaRede[], fios: Fio[], pesos: Pesos, editando: s
     origens.forEach((o, i) => {
       for (const b of para) {
         const id = linhaId(o, b.id);
+        // só as linhas já feitas do neurônio da vez ficam acesas; as dos outros voltam a ficar apagadas
         const estado: EstadoLinha = !vista
           ? "normal"
           : vista.linhaAgora === id
             ? "agora"
-            : vista.linhasFeitas.has(id)
+            : vista.linhasFeitas.has(id) && b.id === vista.neuronioAgora
               ? "feita"
               : "apagada";
         edges.push({
@@ -452,6 +462,50 @@ export function camadaNoPonto(nodes: NoDaRede[], x: number, y: number): CamadaNo
 }
 
 /** 2.28 → "2,28"; -2 → "−2,00" */
+/* ---------- Onde fica o número de cada peso ---------- */
+
+export type Segmento = { id: string; sx: number; sy: number; tx: number; ty: number };
+export type Caixa = { x: number; y: number; w: number; h: number };
+
+const ROTULO = { w: 40, wAgora: 56, h: 16 };
+const FOLGAS = [6, 2]; // tenta com espaço confortável; se não couber, aperta um pouco
+// do meio para as pontas: o número prefere o meio da linha
+const CANDIDATOS = Array.from({ length: 15 }, (_, i) => 0.5 + (i % 2 ? 1 : -1) * Math.ceil(i / 2) * 0.05);
+
+/**
+ * Escolhe em que ponto de cada linha (0 = origem, 1 = destino) o número do peso fica,
+ * para nenhum número encostar em outro nem ficar por baixo de um bloco.
+ * A linha da vez escolhe primeiro e fica com o meio.
+ */
+export function posicionarPesos(segmentos: Segmento[], caixas: Caixa[], agora: string | null): Map<string, number> {
+  const ordem = [...segmentos].sort((a, b) => (a.id === agora ? -1 : b.id === agora ? 1 : a.id.localeCompare(b.id)));
+  const postos: Caixa[] = [];
+  const escolha = new Map<string, number>();
+  const bate = (a: Caixa, b: Caixa) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+
+  for (const s of ordem) {
+    let melhor = { t: 0.5, batidas: Infinity, caixa: null as Caixa | null };
+    procura: for (const folga of FOLGAS) {
+      const w = (s.id === agora ? ROTULO.wAgora : ROTULO.w) + folga;
+      const h = ROTULO.h + folga;
+      for (const t of CANDIDATOS) {
+        const cx = s.sx + (s.tx - s.sx) * t;
+        const cy = s.sy + (s.ty - s.sy) * t;
+        const caixa = { x: cx - w / 2, y: cy - h / 2, w, h };
+        const batidas = postos.filter((p) => bate(p, caixa)).length + caixas.filter((c) => bate(c, caixa)).length * 2;
+        if (batidas < melhor.batidas) melhor = { t, batidas, caixa };
+        if (batidas === 0) break procura;
+      }
+    }
+    escolha.set(s.id, melhor.t);
+    if (melhor.caixa) postos.push(melhor.caixa);
+  }
+  return escolha;
+}
+
 export function formatar(n: number): string {
-  return (n < 0 ? "−" : "") + Math.abs(n).toFixed(2).replace(".", ",");
+  // 2,275 vira 2,2749999… no computador; arredondar a partir de 12 dígitos mantém 2,28,
+  // para a soma na tela bater com as parcelas que o aluno viu
+  const centesimos = Math.round(Number((Math.abs(n) * 100).toPrecision(12)));
+  return (n < 0 && centesimos > 0 ? "−" : "") + (centesimos / 100).toFixed(2).replace(".", ",");
 }

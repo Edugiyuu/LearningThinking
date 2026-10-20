@@ -13,6 +13,13 @@ type Laboratorio = {
   avisos: Set<string>;
   editarPeso: (id: string | null) => void;
   salvarPeso: (id: string, valor: number) => void;
+  /** Passo cuja bolinha já entrou no neurônio (a parcela já conta na soma dele). */
+  chegou: number | null;
+  bolinhaChegou: (passo: number) => void;
+  /** Cada linha conta onde estão as suas pontas, para o laboratório decidir onde vai o número. */
+  informarLinha: (id: string, s: { sx: number; sy: number; tx: number; ty: number }) => void;
+  /** Ponto da linha (0 a 1) onde o número do peso fica. */
+  posicaoDoPeso: Map<string, number>;
 };
 
 export const LabContexto = createContext<Laboratorio | null>(null);

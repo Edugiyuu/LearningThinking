@@ -15,9 +15,9 @@ Depois da Home e da tela Novo projeto ([ADR-0019](0019-projeto-real-home.md)), o
    - `web/components/laboratorio/`: os blocos (Entrada, Camada, Neurônio, Saída), a linha com o peso, o painel de contas e o CSS (`laboratorio.css`).
 2. **Layout igual ao Figma** (*proposta da IA* nos detalhes):
    - **Barra de cima:** logo, nome do projeto e "Salvo", abas Redes neurais / Busca por significado (esta desligada, em breve), botões **Treinar** e **Rodar**. O Rodar saiu do painel e foi para a barra, como no Figma.
-   - **Paleta:** blocos com ícone e o "Como montar".
+   - **Paleta:** blocos com ícone e o "Como montar" (removido depois, [ADR-0021](0021-bolinhas-cores-e-espremer.md)).
    - **Canvas:** botões + e − embaixo à esquerda e a **legenda** (peso positivo, peso negativo, "Duplo clique no número muda o peso") embaixo à direita.
-   - **Selo da conta da vez** no canvas, pendurado embaixo do número do peso (ex.: `G: 0,55 × 0,50 = 0,28`).
+   - **Selo da conta da vez** no canvas, pendurado embaixo do número do peso (ex.: `G: 0,55 × 0,50 = 0,28`). Substituído pela bolinha ([ADR-0021](0021-bolinhas-cores-e-espremer.md)).
    - **Painel de contas** como no teste técnico, mais a seção **Treinar** (repetições, velocidade, do zero/já treinada).
 3. **Treinar ainda não funciona.** Os campos aparecem como no Figma, mas o botão "Treinar N vezes" fica desligado com a nota "O treino chega na próxima etapa". O botão Treinar da barra rola até essa seção.
 4. **O projeto abre e salva sozinho** (*proposta da IA*):

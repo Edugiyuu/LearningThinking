@@ -42,6 +42,7 @@ import {
   linhas,
   montagemBasica,
   montagemVazia,
+  posicionarPesos,
   prepararRodada,
   reorganizar,
   vistaDaRodada,
@@ -51,12 +52,13 @@ import {
   type NoDaRede,
   type Pesos,
   type Rodada,
+  type Segmento,
 } from "@/lib/rede";
 
 const nodeTypes = { camada: CamadaNode, neuronio: NeuronioNode, saida: SaidaNode, entrada: EntradaNode };
 const edgeTypes = { peso: PesoEdge };
 const TIPO_ARRASTE = "application/x-bloco";
-const INTERVALO_AUTOMATICO = 900; // ms entre um passo e outro no modo automático
+const INTERVALO_AUTOMATICO = 2300; // ms entre um passo e outro no modo automático (a bolinha leva 2 s)
 const ESPERA_SALVAR = 400; // ms sem mexer antes de salvar
 
 /** A montagem salva do projeto ou, se não houver, a que o aluno escolheu em Novo projeto. */
@@ -81,6 +83,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
   const [editando, setEditando] = useState<string | null>(null);
   const [execucao, setExecucao] = useState<Execucao | null>(null);
   const [automatico, setAutomatico] = useState(false);
+  const [chegou, setChegou] = useState<number | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const [salvamento, setSalvamento] = useState<Salvamento>(projeto ? "salvo" : "nao-salvo");
   const treinarRef = useRef<HTMLElement>(null);
@@ -135,8 +138,35 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
 
   const rodar = () => {
     const { rodada, erros } = prepararRodada(nodes, fios, pesos);
+    setChegou(null);
     setExecucao({ estrutura, rodada, erros, atual: 0 });
   };
+
+  // voltar um passo não repete a viagem: a parcela daquele passo já aparece dentro do neurônio
+  const irPara = (p: number) => {
+    if (p < atual) setChegou(p);
+    setExecucao((e) => (e ? { ...e, atual: p } : e));
+  };
+
+  // onde fica o número de cada peso: as linhas contam as pontas, e o laboratório
+  // escolhe um ponto de cada uma sem encostar em outro número nem ficar embaixo de um bloco
+  const pendentes = useRef(new Map<string, Segmento>());
+  const quadro = useRef(0);
+  const [pontas, setPontas] = useState<Map<string, Segmento>>(() => new Map());
+  const informarLinha = useCallback((id: string, s: Omit<Segmento, "id">) => {
+    pendentes.current.set(id, { id, ...s });
+    // várias linhas mexem juntas (arrastar um bloco): junta tudo num quadro só
+    cancelAnimationFrame(quadro.current);
+    quadro.current = requestAnimationFrame(() => setPontas(new Map(pendentes.current)));
+  }, []);
+  const posicaoDoPeso = useMemo(() => {
+    const ids = new Set(edges.filter((e) => e.type === "peso").map((e) => e.id));
+    const segmentos = [...pontas.values()].filter((s) => ids.has(s.id));
+    const caixas = nodes
+      .filter((n) => !n.parentId && n.measured?.width && n.measured?.height)
+      .map((n) => ({ x: n.position.x, y: n.position.y, w: n.measured!.width!, h: n.measured!.height! }));
+    return posicionarPesos(segmentos, caixas, vista?.linhaAgora ?? null);
+  }, [pontas, edges, nodes, vista?.linhaAgora]);
 
   const lab = useMemo(
     () => ({
@@ -148,8 +178,12 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
         setPesos((p) => ({ ...p, [id]: valor }));
         setEditando(null);
       },
+      chegou,
+      bolinhaChegou: setChegou,
+      informarLinha,
+      posicaoDoPeso,
     }),
-    [vista, ativa],
+    [vista, ativa, chegou, informarLinha, posicaoDoPeso],
   );
 
   const textoResposta = (saidaId: string, valor: number, resposta: 0 | 1) => {
@@ -261,15 +295,6 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
             {bloco("neuronio", "Neurônio", "Solte numa camada")}
             {bloco("saida", "Saída", "A resposta da rede")}
             {aviso && <p className="aviso">{aviso}</p>}
-
-            <div className="dicas">
-              <strong>Como montar</strong>
-              <ol>
-                <li>Arraste os blocos para o canvas.</li>
-                <li>Puxe um fio da bolinha colorida até o próximo bloco.</li>
-                <li>Clique em Rodar.</li>
-              </ol>
-            </div>
           </aside>
 
           <div className="canvas" onDragOver={onDragOver} onDrop={onDrop}>
@@ -314,7 +339,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
             atual={atual}
             erros={ativa?.erros ?? []}
             automatico={automatico}
-            irPara={(p) => setExecucao((e) => (e ? { ...e, atual: p } : e))}
+            irPara={irPara}
             setAutomatico={setAutomatico}
             textoResposta={textoResposta}
             treinarRef={treinarRef}
