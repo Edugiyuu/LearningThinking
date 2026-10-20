@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Aqua, Claude } from "@/components/mascote";
 import { RedeHeroi } from "@/components/rede-heroi";
+import { TopoSite } from "@/components/topo-site";
 
 // Home, igual ao frame "Home · Desktop · mascote" do Figma (ADR-0018).
 
@@ -65,23 +66,7 @@ function TituloSecao({ children }: { children: React.ReactNode }) {
 export default function Home() {
   return (
     <>
-      <header className="mx-auto flex h-20 w-full max-w-[1280px] items-center justify-between px-4 sm:px-6 xl:px-0">
-        <Link href="/" className="flex items-center gap-2" aria-label="LearningThinking, início">
-          <Aqua unidade={3} />
-          <span className="text-lg font-semibold">LearningThinking</span>
-        </Link>
-        <nav className="hidden gap-10 text-[15px] text-text-muted md:flex">
-          <Link href="/laboratorio" className="hover:text-text">Laboratório</Link>
-          <Link href="/tutoriais" className="hover:text-text">Tutoriais</Link>
-          <Link href="/sobre" className="hover:text-text">Sobre</Link>
-        </nav>
-        <Link
-          href="/novo-projeto"
-          className="hidden rounded-full border border-black/10 bg-black/[.04] px-5 py-2.5 text-sm font-medium whitespace-nowrap transition-colors hover:bg-black/[.07] sm:inline-block"
-        >
-          Criar novo projeto
-        </Link>
-      </header>
+      <TopoSite />
 
       <main className="flex-1">
         {/* Herói */}

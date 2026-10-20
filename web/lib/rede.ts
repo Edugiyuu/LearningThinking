@@ -283,8 +283,8 @@ const sigmoide = (x: number) => 1 / (1 + Math.exp(-x));
 /**
  * Confere a montagem e lista todas as contas na ordem em que acontecem:
  * para cada neurônio, uma multiplicação por linha e depois a ativação.
- * Camadas do meio usam ReLU (negativo vira 0); a ligada à Saída espreme
- * a soma entre 0 e 1 (sigmoide).
+ * Camadas do meio usam ReLU (negativo vira 0); a ligada à Saída passa pela sigmoide
+ * e fica entre 0 e 1.
  */
 export function prepararRodada(nodes: NoDaRede[], fios: Fio[], pesos: Pesos): { rodada: Rodada | null; erros: Erro[] } {
   const erros: Erro[] = [];
