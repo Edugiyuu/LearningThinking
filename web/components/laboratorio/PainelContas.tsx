@@ -133,20 +133,20 @@ function Treinar({ secaoRef }: { secaoRef: RefObject<HTMLElement | null> }) {
 }
 
 /**
- * O último neurônio espreme a soma entre 0 e 1 (sigmoide). A conta aparece
- * simplificada; de onde sai o e^(−soma) fica para a aula.
+ * O último neurônio passa a soma pela sigmoide, que a deixa entre 0 e 1. A conta aparece
+ * simplificada; de onde sai o e^(−soma) fica no tutorial 03 · A sigmoide.
  */
-function Espremer({ soma, valor }: { soma: number; valor: number }) {
+function Sigmoide({ soma, valor }: { soma: number; valor: number }) {
   const e = Math.exp(-soma);
   return (
-    <div className="espremer">
-      <div className="espremer-titulo">Espremer entre 0 e 1 · soma {formatar(soma)}</div>
-      <div className="espremer-conta">
+    <div className="sigmoide">
+      <div className="sigmoide-titulo">Sigmoide (deixa entre 0 e 1) · soma {formatar(soma)}</div>
+      <div className="sigmoide-conta">
         1 ÷ (1 + {formatar(e)}) = {formatar(valor)}
       </div>
-      <p className="espremer-nota">
+      <p className="sigmoide-nota">
         Fórmula completa: 1 ÷ (1 + e<sup>{formatar(-soma)}</sup>). O {formatar(e)} é o e<sup>{formatar(-soma)}</sup>. Soma alta chega
-        perto de 1; soma baixa, perto de 0. Os detalhes ficam na aula.
+        perto de 1; soma baixa, perto de 0. Detalhes no tutorial A sigmoide.
       </p>
     </div>
   );
@@ -206,7 +206,7 @@ function ContasDoPasso({ rodada, atual, passo, textoResposta }: { rodada: Rodada
       </div>
 
       {somaPronta?.final ? (
-        <Espremer soma={somaPronta.soma} valor={somaPronta.valor} />
+        <Sigmoide soma={somaPronta.soma} valor={somaPronta.valor} />
       ) : somaPronta ? (
         <p className="contas-resultado">
           {somaPronta.soma > 0

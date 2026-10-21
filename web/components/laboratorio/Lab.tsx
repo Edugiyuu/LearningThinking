@@ -258,7 +258,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
         <header className="lab-topo">
           <div className="lab-topo-esquerda">
             <Link href="/" className="lab-logo" aria-label="LearningThinking, início">
-              <Aqua unidade={3} />
+              <Aqua unidade={4} />
               <span>LearningThinking</span>
             </Link>
             <span className="lab-divisor" />

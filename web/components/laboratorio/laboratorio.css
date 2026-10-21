@@ -860,7 +860,7 @@
 }
 
 /* o passo do último neurônio: a soma espremida entre 0 e 1 */
-.espremer {
+.sigmoide {
   padding: 12px 14px;
   border: 1px solid var(--destaque);
   border-radius: 12px;
@@ -868,18 +868,18 @@
   color: var(--sobre-destaque);
 }
 
-.espremer-titulo {
+.sigmoide-titulo {
   font-size: 11px;
 }
 
-.espremer-conta {
+.sigmoide-conta {
   margin-top: 4px;
   font-size: 18px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
-.espremer-nota {
+.sigmoide-nota {
   margin-top: 8px;
   font-size: 11px;
   line-height: 1.45;

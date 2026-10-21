@@ -59,3 +59,16 @@ body {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
+
+/* Tutorial O neurônio: o pulso corre pelo axônio quando o neurônio dispara */
+@media (prefers-reduced-motion: no-preference) {
+  .pulso-axonio {
+    animation: pulso-axonio 1.6s ease-in infinite;
+  }
+}
+@keyframes pulso-axonio {
+  0% { transform: translateX(0); opacity: 0; }
+  10% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { transform: translateX(240px); opacity: 0; }
+}
