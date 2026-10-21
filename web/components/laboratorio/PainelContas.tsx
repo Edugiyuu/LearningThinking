@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type RefObject } from "react";
+import type { ReactNode } from "react";
 import { formatar, type Erro, type Passo, type Rodada } from "@/lib/rede";
 
 type Props = {
@@ -13,16 +13,20 @@ type Props = {
   setAutomatico: (ligado: boolean) => void;
   /** "0,71 → laranja (1)", com o objetivo que o aluno deu à Saída. */
   textoResposta: (saidaId: string, valor: number, resposta: 0 | 1) => string;
-  /** Para o botão Treinar da barra de cima rolar até aqui. */
-  treinarRef: RefObject<HTMLElement | null>;
+  /** A seção Treinar (components/laboratorio/Treinar.tsx). */
+  treinar: ReactNode;
+  /** Enquanto o treino passa ou depois dele, o painel mostra só o Treinar. */
+  soTreinar: boolean;
 };
 
 /** Painel da direita: as contas, uma multiplicação de cada vez, e o Treinar. */
-export default function PainelContas({ rodada, atual, erros, automatico, irPara, setAutomatico, textoResposta, treinarRef }: Props) {
+export default function PainelContas({ rodada, atual, erros, automatico, irPara, setAutomatico, textoResposta, treinar, soTreinar }: Props) {
   const total = rodada?.passos.length ?? 0;
   const passo = rodada?.passos[atual];
   const graves = erros.filter((e) => e.tipo !== "aviso");
   const avisos = erros.filter((e) => e.tipo === "aviso");
+
+  if (soTreinar) return <aside className="painel">{treinar}</aside>;
 
   return (
     <aside className="painel">
@@ -79,57 +83,8 @@ export default function PainelContas({ rodada, atual, erros, automatico, irPara,
         </>
       )}
 
-      <Treinar secaoRef={treinarRef} />
+      {treinar}
     </aside>
-  );
-}
-
-/**
- * Seção Treinar, como no Figma. O treino ainda não foi feito em código:
- * os campos já funcionam, mas o botão fica desligado (ADR-0020).
- */
-function Treinar({ secaoRef }: { secaoRef: RefObject<HTMLElement | null> }) {
-  const [repeticoes, setRepeticoes] = useState(1000);
-  const [velocidade, setVelocidade] = useState("x100");
-  const [doZero, setDoZero] = useState(true);
-
-  return (
-    <section ref={secaoRef} className="treinar" aria-labelledby="treinar-titulo">
-      <h2 id="treinar-titulo">Treinar</h2>
-      <div className="treinar-campos">
-        <label>
-          <span>Repetições</span>
-          <input
-            type="number"
-            min={1}
-            max={100000}
-            value={repeticoes}
-            onChange={(e) => setRepeticoes(Math.max(1, Number(e.target.value) || 1))}
-          />
-        </label>
-        <label>
-          <span>Velocidade</span>
-          <select value={velocidade} onChange={(e) => setVelocidade(e.target.value)}>
-            <option>x1</option>
-            <option>x10</option>
-            <option>x100</option>
-          </select>
-        </label>
-      </div>
-      <div className="treinar-rotulo">Começar de</div>
-      <div className="alternar">
-        <button className={doZero ? "ativo" : ""} onClick={() => setDoZero(true)}>
-          Do zero
-        </button>
-        <button className={!doZero ? "ativo" : ""} onClick={() => setDoZero(false)}>
-          Já treinada
-        </button>
-      </div>
-      <button className="botao principal treinar-botao" disabled aria-describedby="treinar-nota">
-        Treinar {repeticoes.toLocaleString("pt-BR")} vezes
-      </button>
-      <p id="treinar-nota" className="treinar-nota">O treino chega na próxima etapa. No fim, você verá as saídas de cada repetição.</p>
-    </section>
   );
 }
 

@@ -135,8 +135,8 @@ export function sorteador(semente: number) {
  * Do zero: pesos sorteados entre −1 e 1, mas não qualquer sorteio. Sem *bias*, se nenhum
  * neurônio do meio acende para uma cor, a soma do último é 0 e a resposta fica presa em 0,50.
  * Então a rede precisa começar com um neurônio "puxando" para cada objetivo (acende mais para
- * os exemplos daquele lado), e a linha dele até o último neurônio já com o sinal desse lado
- * (+ para o 1, − para o 0). Sem isso, o treino da montagem básica falhava em ~60% dos sorteios.
+ * os exemplos daquele lado), e as linhas até o último neurônio começam em 0. Com um sorteio
+ * qualquer, o treino da montagem básica falhava em ~60% das vezes.
  */
 export function sortearPesos(rede: Rede, exemplos: Exemplo[], semente: number): Pesos {
   const entradas = exemplos.map((e) => corParaEntradas(e.cor));
@@ -163,11 +163,9 @@ export function sortearPesos(rede: Rede, exemplos: Exemplo[], semente: number): 
     const acesos = contagem(pesos);
     if (lados.every((c) => acesos.some((a) => a[c] > a[1 - c]))) break;
   }
-  // a linha de cada neurônio do meio até o último começa com o sinal do lado que ele puxa
-  contagem(pesos).forEach((a, k) => {
-    const linha = final?.linhas.find((l) => l.de === meio[k].id);
-    if (linha) pesos[linha.id] = (a[1] >= a[0] ? 1 : -1) * Math.abs(pesos[linha.id]);
-  });
+  // as linhas até o último neurônio começam em 0: a rede começa chutando 0,50 para tudo, e o
+  // primeiro ajuste já dá a cada linha o sinal do lado que o neurônio puxa
+  for (const l of final?.linhas ?? []) pesos[l.id] = 0;
   return pesos;
 }
 

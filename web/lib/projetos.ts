@@ -77,7 +77,7 @@ export function salvarMontagem(id: string, m: Montagem): boolean {
   const nodes = m.nodes.map(({ selected, dragging, ...n }) => (void selected, void dragging, n));
   const fios = m.fios.map(({ selected, ...f }) => (void selected, f));
   try {
-    localStorage.setItem(chaveMontagem(id), JSON.stringify({ versao: 1, montagem: { nodes, fios, pesos: m.pesos } }));
+    localStorage.setItem(chaveMontagem(id), JSON.stringify({ versao: 1, montagem: { nodes, fios, pesos: m.pesos, exemplos: m.exemplos } }));
     return true;
   } catch {
     return false;

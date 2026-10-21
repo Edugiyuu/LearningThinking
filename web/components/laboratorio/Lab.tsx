@@ -24,9 +24,11 @@ import NeuronioNode from "@/components/laboratorio/NeuronioNode";
 import SaidaNode from "@/components/laboratorio/SaidaNode";
 import PesoEdge from "@/components/laboratorio/PesoEdge";
 import PainelContas from "@/components/laboratorio/PainelContas";
+import { ResultadoTreino, SecaoTreinar, useTreino } from "@/components/laboratorio/Treinar";
 import { LabContexto } from "@/components/laboratorio/contexto";
 import { Aqua } from "@/components/mascote";
 import { lerMontagem, salvarMontagem, type Projeto } from "@/lib/projetos";
+import { EXEMPLOS_PRONTOS, lerRede, type Exemplo } from "@/lib/treino";
 import {
   camadaNoPonto,
   continuarIds,
@@ -80,6 +82,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
   const [nodes, setNodes] = useState<NoDaRede[]>(inicial.nodes);
   const [fiosBrutos, setFios] = useState<Fio[]>(inicial.fios);
   const [pesos, setPesos] = useState<Pesos>(inicial.pesos);
+  const [exemplos, setExemplos] = useState<Exemplo[]>(inicial.exemplos ?? EXEMPLOS_PRONTOS);
   const [editando, setEditando] = useState<string | null>(null);
   const [execucao, setExecucao] = useState<Execucao | null>(null);
   const [automatico, setAutomatico] = useState(false);
@@ -102,10 +105,22 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
     }
     setSalvamento("salvando");
     const t = setTimeout(() => {
-      setSalvamento(salvarMontagem(projeto.id, { nodes, fios, pesos }) ? "salvo" : "nao-salvo");
+      setSalvamento(salvarMontagem(projeto.id, { nodes, fios, pesos, exemplos }) ? "salvo" : "nao-salvo");
     }, ESPERA_SALVAR);
     return () => clearTimeout(t);
-  }, [projeto, nodes, fios, pesos]);
+  }, [projeto, nodes, fios, pesos, exemplos]);
+
+  // Treinar (ADR-0024): a rede aprende com os exemplos; no fim, os pesos novos entram no projeto
+  const aplicarPesos = useCallback((novos: Pesos) => setPesos((atuais) => ({ ...atuais, ...novos })), []);
+  const treino = useTreino({
+    exemplos,
+    aplicar: aplicarPesos,
+    ler: () => {
+      const entrada = nodes.find((n) => n.type === "entrada");
+      if (entrada?.type === "entrada" && entrada.data.tipo !== "cor") return "Por enquanto o treino usa a Entrada de cor. Troque a Entrada para Cor.";
+      return lerRede(nodes, fios, pesos) ?? "A montagem tem um problema. Clique em Rodar para ver o que falta.";
+    },
+  });
 
   // só o que muda as contas (não a posição nem a seleção); mexer nisso cancela a rodada
   const estrutura = useMemo(
@@ -122,11 +137,22 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
   const atual = ativa?.atual ?? 0;
   const vista = useMemo(() => (rodada ? vistaDaRodada(rodada, atual) : null), [rodada, atual]);
 
-  // as linhas não são guardadas: são recalculadas a partir dos blocos, fios e da rodada
+  // as linhas não são guardadas: são recalculadas a partir dos blocos, fios e da rodada.
+  // Durante o treino, elas mostram os pesos da repetição que está passando.
+  const pesosNaTela = useMemo(() => (treino.pesosAoVivo ? { ...pesos, ...treino.pesosAoVivo } : pesos), [pesos, treino.pesosAoVivo]);
   const edges = useMemo<Edge[]>(
-    () => [...fios, ...linhas(nodes, fios, pesos, editando, vista)],
-    [nodes, fios, pesos, editando, vista],
+    () => [...fios, ...linhas(nodes, fios, pesosNaTela, editando, vista)],
+    [nodes, fios, pesosNaTela, editando, vista],
   );
+
+  // mexer em blocos ou fios no meio do treino cancela o treino
+  const formato = useMemo(() => JSON.stringify([nodes.map((n) => [n.id, n.parentId]), fios.map((f) => [f.source, f.target])]), [nodes, fios]);
+  const formatoDoTreino = useRef(formato);
+  const { emAndamento, parar } = treino;
+  useEffect(() => {
+    if (!emAndamento) formatoDoTreino.current = formato;
+    else if (formato !== formatoDoTreino.current) parar();
+  }, [formato, emAndamento, parar]);
 
   // modo automático: avança sozinho até o último passo
   const total = rodada?.passos.length ?? 0;
@@ -185,6 +211,13 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
     }),
     [vista, ativa, chegou, informarLinha, posicaoDoPeso],
   );
+
+  const saidaDaMontagem = nodes.find((n) => n.type === "saida");
+  const rotulos = saidaDaMontagem?.type === "saida" ? saidaDaMontagem.data : { rotulo0: "0", rotulo1: "1" };
+  const rodarAgora = () => {
+    treino.reiniciar();
+    rodar();
+  };
 
   const textoResposta = (saidaId: string, valor: number, resposta: 0 | 1) => {
     const saida = nodes.find((n) => n.id === saidaId);
@@ -281,7 +314,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
             <button className="botao lab-botao" onClick={() => treinarRef.current?.scrollIntoView({ behavior: "smooth" })}>
               Treinar
             </button>
-            <button className="botao principal lab-botao" onClick={rodar}>
+            <button className="botao principal lab-botao" onClick={rodar} disabled={treino.emAndamento}>
               <span aria-hidden>▶</span> {rodada ? "Rodar de novo" : "Rodar"}
             </button>
           </div>
@@ -332,6 +365,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
               </span>
               <span className="legenda-dica">Duplo clique no número muda o peso</span>
             </div>
+            <ResultadoTreino treino={treino} rotulos={rotulos} rodarAgora={rodarAgora} />
           </div>
 
           <PainelContas
@@ -342,7 +376,8 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
             irPara={irPara}
             setAutomatico={setAutomatico}
             textoResposta={textoResposta}
-            treinarRef={treinarRef}
+            soTreinar={treino.fase !== "pronto"}
+            treinar={<SecaoTreinar treino={treino} exemplos={exemplos} setExemplos={setExemplos} rotulos={rotulos} secaoRef={treinarRef} rodarAgora={rodarAgora} />}
           />
         </div>
       </div>

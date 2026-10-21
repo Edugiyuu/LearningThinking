@@ -69,12 +69,19 @@ test("a mesma semente dá o mesmo treino", () => {
   assert.deepEqual(a.depois, b.depois);
 });
 
+test("do zero, a rede começa chutando 0,50", () => {
+  const { rede } = basica();
+  for (let semente = 0; semente < 20; semente++) {
+    const g = treinar({ rede, pesos: sortearPesos(rede, EXEMPLOS_PRONTOS, semente), exemplos: EXEMPLOS_PRONTOS, repeticoes: 1, passinho: "medio" });
+    g.antes.respostas.forEach((r) => assert.equal(r, 0.5));
+  }
+});
+
 test("uma rede sorteada não nasce morta", () => {
   const { rede } = basica();
-  const entradas = EXEMPLOS_PRONTOS.map((e) => corParaEntradas(e.cor));
   for (let semente = 0; semente < 50; semente++) {
-    const pesos = sortearPesos(rede, EXEMPLOS_PRONTOS, semente);
-    const respostas = entradas.map((x) => rodar(rede, pesos, x).saida);
-    assert.ok(respostas.some((r) => Math.abs(r - 0.5) > 1e-9), `semente ${semente} ficou presa em 0,50`);
+    // depois de algumas repetições, as respostas já saíram de 0,50 para algum lado
+    const g = treinar({ rede, pesos: sortearPesos(rede, EXEMPLOS_PRONTOS, semente), exemplos: EXEMPLOS_PRONTOS, repeticoes: 50, passinho: "medio" });
+    assert.ok(g.quadros[49].respostas.some((r) => Math.abs(r - 0.5) > 1e-3), `semente ${semente} ficou presa em 0,50`);
   }
 });
