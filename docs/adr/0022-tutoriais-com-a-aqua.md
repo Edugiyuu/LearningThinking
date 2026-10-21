@@ -67,6 +67,7 @@ O autor achou os passos 7 e 10 confusos; a IA apontou também o 8. Decidido:
 - **"Neurônios do meio" e "último neurônio" ficam para a aula de camadas** (pedido do autor). O tutorial 01 tem um neurônio só. No passo 8, a ReLU aparece pelo que faz (**negativo vira 0**: −0,50 → 0; 0,99 → 0,99) e a sigmoide também (**sempre entre 0 e 1**: 0 → 0,5; 0,99 → 0,73).
 - **Passo 7 · a barra mostra a subtração.** Massa + tempo vão até 1,02, e a música aparece numa linha embaixo, em vermelho, "tirando 0,03" até o marcador z = 0,99. O quadro da média da escola saiu do palco (a analogia continua no texto "No dia a dia").
 - **Passo 6:** a música "quase não conta, até tira um pouco (−0,10)", para combinar com a "ligação fraca" do passo 2.
+- **Passo 3 · a Aqua fantasiada de cada pesquisador** (pedido do autor): McCulloch e Pitts (duas Aquas em 1943), Rosenblatt de óculos e topete (1958), cabelo e suéter dos anos 80 (1986) e a Aqua normal em "hoje". Detalhes no [04-design-system.md](../04-design-system.md), seção 7.1.
 - **Passo 5 fica como está** (autor): é só a entrada; a nota de cada coisa não precisa ser explicada.
 
 ## Consequências
