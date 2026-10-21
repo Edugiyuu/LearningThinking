@@ -267,53 +267,48 @@ export function AquaFantasia({ quem, unidade = 4, rotulo }: { quem: FantasiaAqua
   );
 }
 
-// Aqua cozinhando (frame "Aqua · cozinhando (poses)"): frigideira na mão, fogo embaixo (grade 28 × 13).
-const FRIGIDEIRA = "#2C2C2E";
+// Cenas do tutorial 01 (frame "Tutorial 01 · O neurônio · roteiro"): a Aqua com a tarefa do
+// laboratório, sem ícone na cabeça. Grade 28 × 13 (cestos) e 22 × 13 (lâmpada); o corpo começa na linha 6.
+const LARANJA = "#FF8C00";
+const AZUL = "#378ADD";
 
-function celulasCozinha(noPonto: boolean): Celula[] {
-  const massa = noPonto ? "#E9B44C" : "#3B2414";
-  const comum: Celula[] = [
-    [10, 8, 3, 1, "#8B5A2B"], // cabo
-    [13, 8, 2, 1, "#48484A"],
-    [15, 7, 1, 2, FRIGIDEIRA],
-    [26, 7, 1, 2, FRIGIDEIRA],
-    [15, 9, 12, 1, FRIGIDEIRA],
-    [16, 10, 10, 1, FRIGIDEIRA],
-    [16, 8, 10, 1, massa],
-    [17, 7, 8, 1, massa],
-    [0, 12, 28, 1, "#D2D2D7"], // fogão
-    [17, 11, 1, 1, "#FF9F0A"],
-    [19, 11, 2, 1, "#FF6B00"],
-    [22, 11, 1, 1, "#FF9F0A"],
-    [24, 11, 1, 1, "#FF6B00"],
-  ];
-  const extra: Celula[] = noPonto
-    ? [
-        ...ICONES.confiante,
-        [18, 4, 1, 1, "#FFD54A"], // brilhos na panqueca
-        [17, 5, 3, 1, "#FFD54A"],
-        [18, 6, 1, 1, "#FFD54A"],
-        [23, 3, 1, 1, "#FFD54A"],
-        [22, 4, 3, 1, "#FFD54A"],
-        [23, 5, 1, 1, "#FFD54A"],
-      ]
-    : [
-        ...ICONES.preocupada,
-        [18, 5, 1, 1, "#A1A1A6"], // fumaça
-        [19, 4, 1, 1, "#A1A1A6"],
-        [18, 3, 1, 1, "#A1A1A6"],
-        [19, 2, 1, 1, "#A1A1A6"],
-        [22, 5, 1, 1, "#A1A1A6"],
-        [23, 4, 1, 1, "#A1A1A6"],
-        [22, 3, 1, 1, "#A1A1A6"],
-        [23, 2, 1, 1, "#A1A1A6"],
-      ];
-  return [...deslocar(celulasAqua(noPonto ? "contente" : "normal"), 0, 6), ...comum, ...extra];
+const celulasSeparando: Celula[] = [
+  ...deslocar(celulasAqua("normal"), 0, 6),
+  [0, 12, 28, 1, "#D2D2D7"], // chão
+  [10, 6, 2, 2, AZUL], // o cartão que ela está separando
+  [11, 9, 8, 1, "#A0522D"], // cesto do laranja
+  [12, 10, 6, 2, "#8B5A2B"],
+  [13, 8, 2, 1, LARANJA],
+  [15, 7, 2, 2, LARANJA],
+  [19, 9, 8, 1, "#A0522D"], // cesto do azul
+  [20, 10, 6, 2, "#8B5A2B"],
+  [21, 8, 2, 1, AZUL],
+  [23, 8, 2, 1, AZUL],
+];
+
+const celulasLampada: Celula[] = [
+  ...deslocar(celulasAqua("normal"), 0, 6),
+  [0, 12, 22, 1, "#D2D2D7"],
+  [10, 8, 6, 1, PORTA], // o fio sai da porta da Aqua
+  [15, 3, 4, 4, "#FFD54A"], // lâmpada acesa
+  [16, 4, 1, 1, "#FFF3C4"],
+  [16, 7, 2, 2, "#8E8E93"],
+  [16, 9, 2, 3, CINZA_ICONE],
+  [13, 4, 1, 1, "#F59E0B"], // raios
+  [20, 4, 1, 1, "#F59E0B"],
+  [14, 2, 1, 1, "#F59E0B"],
+  [19, 2, 1, 1, "#F59E0B"],
+  [17, 1, 1, 1, "#F59E0B"],
+];
+
+/** A Aqua separando cartões laranja e azul em dois cestos (passo 2 do tutorial 01). */
+export function AquaSeparando({ unidade = 3, rotulo }: { unidade?: number; rotulo?: string }) {
+  return <Pixels celulas={celulasSeparando} colunas={28} linhas={13} unidade={unidade} rotulo={rotulo} />;
 }
 
-/** Aqua com a frigideira: preocupada com a panqueca queimada ou confiante com ela no ponto. */
-export function AquaCozinhando({ noPonto, unidade = 5, rotulo }: { noPonto: boolean; unidade?: number; rotulo?: string }) {
-  return <Pixels celulas={celulasCozinha(noPonto)} colunas={28} linhas={13} unidade={unidade} rotulo={rotulo} />;
+/** A Aqua ligada a uma lâmpada acesa: o neurônio acendeu (passo 8 do tutorial 01). */
+export function AquaAcendendo({ unidade = 3, rotulo }: { unidade?: number; rotulo?: string }) {
+  return <Pixels celulas={celulasLampada} colunas={22} linhas={13} unidade={unidade} rotulo={rotulo} />;
 }
 
 /** Mascote em pixel do Claude (grade 12 × 7). */

@@ -3,7 +3,7 @@
 import { Aqua, type PoseAqua } from "@/components/mascote";
 import { formatar } from "@/lib/rede";
 import type { Visual } from "@/lib/tutoriais";
-import { Ativacao, Cozinha, Historia, Panqueca, Ponte, Revisao, Soma, TestePanqueca, type EstadoTeste } from "./neuronio";
+import { Ativacao, Cor, Cores, Historia, Ponte, Revisao, Soma, TesteCor, type EstadoTeste } from "./neuronio";
 
 // O "palco" dos tutoriais: a visualização à esquerda de cada passo (frame "Tutorial · O neurônio · Desktop").
 // Usa a mesma gramática do laboratório (docs/04-design-system.md, 4.4): linhas verdes/vermelhas pelo
@@ -258,7 +258,7 @@ function Curva({ soma, marcos }: { soma: number; marcos?: boolean }) {
       <text x={CX1} y={CY0 + 50} textAnchor="end" fontSize={13} fontWeight={500} fill={MUDO}>soma →</text>
       <path d={CAMINHO_S} fill="none" stroke={AQUA} strokeWidth={3} strokeLinejoin="round" />
       {marcos &&
-        [0, 4].map((s) => (
+        [-3, 0].map((s) => (
           <g key={s}>
             <circle cx={xCurva(s)} cy={yCurva(sigmoide(s))} r={6} fill="#FFFFFF" stroke={AQUA_TEXTO} strokeWidth={2} />
             <text x={xCurva(s) + 14} y={yCurva(sigmoide(s)) + 22} fontSize={13} fontWeight={600} fontFamily={MONO} fill={AQUA_TEXTO}>
@@ -284,12 +284,19 @@ function PainelLab() {
     <div className="flex flex-col items-center gap-8 px-6 py-10 sm:flex-row sm:items-end sm:justify-center">
       <div className="w-full max-w-[360px] rounded-2xl border border-black/[.08] bg-white p-5">
         <span className="rounded-full bg-aqua-50 px-3 py-1 text-xs font-semibold text-aqua-ink">Passo 9 de 9 · Camada 2</span>
-        <div className="mt-4 rounded-xl bg-bg-subtle p-4">
-          <p className="text-[13px] font-semibold text-text-muted">Sigmoide (deixa entre 0 e 1) · soma 1,20</p>
-          <p className="mt-2 font-mono text-xl font-medium">
-            1 ÷ (1 + 0,30) = <b className="text-[#15803D]">0,77</b>
+        <div className="mt-4 rounded-xl border border-aqua bg-aqua-50 p-4 text-aqua-on">
+          <p className="text-[13px]">
+            <b>Sigmoide</b> deixa a soma entre 0 e 1
           </p>
-          <p className="mt-2 text-[13px] text-text-subtle">Fórmula completa: 1 ÷ (1 + e^(−1,20)).</p>
+          <ol className="mt-3 space-y-1.5 font-mono text-[15px] tabular-nums">
+            <li>1 · troca o sinal: −1,20</li>
+            <li>
+              2 · e<sup>−1,20</sup> ≈ 0,30
+            </li>
+            <li className="text-lg font-semibold">
+              3 · 1 ÷ (1 + 0,30) = <b className="text-[#15803D]">0,77</b>
+            </li>
+          </ol>
         </div>
         <div className="mt-4 flex items-center gap-3 rounded-xl border border-black/[.08] p-3">
           <span className="size-9 rounded-lg" style={{ background: "#F97316" }} aria-hidden />
@@ -473,22 +480,22 @@ export function Palco({ visual, valor, estado = "pergunta" }: { visual: Visual; 
   switch (visual.tipo) {
     case "cerebro":
       return <Cerebro />;
-    case "cozinha":
-      return <Cozinha />;
+    case "cores":
+      return <Cores />;
     case "historia":
       return <Historia />;
     case "ponte":
       return <Ponte />;
-    case "panqueca":
-      return <Panqueca fase={visual.fase} />;
+    case "cor":
+      return <Cor fase={visual.fase} />;
     case "soma":
       return <Soma />;
     case "ativacao":
       return <Ativacao />;
     case "revisao":
       return <Revisao />;
-    case "teste-panqueca":
-      return <TestePanqueca estado={estado} />;
+    case "teste-cor":
+      return <TesteCor fase={visual.fase} estado={estado} />;
     case "peso":
       return <Peso entrada={visual.entrada} peso={valor} noLab={visual.noLab} />;
     case "reta":

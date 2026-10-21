@@ -11,51 +11,40 @@ Valem acima de tudo o que está abaixo (detalhes no [ADR-0022](adr/0022-tutoriai
 1. **O objetivo é aprender IA.** O cérebro humano entra só como inspiração, curto e simples. Nada de aula de biologia (sem mV, tipos de sinal, neurotransmissores por nome etc.).
 2. **Só ensinar o que existe no laboratório.** Se o tutorial fala de algo, o aluno tem que conseguir ver ou mexer naquilo no sandbox. Conceitos que o laboratório ainda não tem (ex.: viés, função degrau) ficam de fora até ele ter.
 3. **Nomes técnicos de verdade**, sempre depois da intuição: entradas (vetor x), peso (w), soma ponderada (z), função de ativação, ReLU, sigmoide. Nada de apelidos inventados no lugar do nome (o "espremer" foi trocado por sigmoide).
-4. **Analogia e técnica juntas, em todo passo técnico.** O público é leigo: quem nunca viu IA por dentro lê a fórmula (z = Σ wᵢ·xᵢ) e precisa de algo do cotidiano do lado. A fórmula não sai; ela ganha um quadro **"No dia a dia"** com a Aqua ou com a rotina (escola, previsão do tempo, pedir opinião). Foi para isso que a Aqua foi criada.
+4. **Analogia e técnica juntas, em todo passo técnico.** O público é leigo: quem nunca viu IA por dentro lê a conta e precisa de algo do cotidiano do lado. A fórmula não sai; ela ganha um quadro **"No dia a dia"** com a Aqua ou com a rotina (escola, previsão do tempo, pedir opinião). Foi para isso que a Aqua foi criada.
 5. **Pode ter um pouco de história** quando ajuda a entender de onde veio a ideia (McCulloch-Pitts, perceptron, retropropagação).
 6. **Primeiro no Figma, depois no código.**
 
-## Exemplo do dia a dia: a Aqua aprendendo a cozinhar
+## Exemplo do dia a dia: a Aqua aprendendo cores (o mesmo do laboratório)
 
-Usado no tutorial 01 · O neurônio (passo 2) para explicar **ligações fortes e fracas**, e retomado nos passos de entradas e pesos. Frames no Figma: "Tutorial 01 · O neurônio · roteiro" e "Aqua · cozinhando (poses)". O autor considerou outras opções (fruta madura na feira, guarda-chuva, pênalti) e **ficou com a cozinha**.
+Usado no tutorial 01 · O neurônio, do passo 2 ao teste ([ADR-0023](adr/0023-sigmoide-em-passos-e-tutorial-01-com-o-lab.md)). Antes era a Aqua cozinhando panqueca, mas o exemplo forçava a barra ("a música" como entrada) e não aparecia no laboratório. Agora o tutorial usa **a tarefa do próprio lab**: separar laranja de azul, com os números do **detector de laranja** da montagem básica (`web/lib/rede.ts`). Frame no Figma: "Tutorial 01 · O neurônio · roteiro".
 
-**Desenhos:** duas cenas em pixel art, com a Aqua segurando a frigideira pelo cabo, no fogão (poses em [04-design-system.md, seção 7.1](04-design-system.md)). O rosto dela não muda; a emoção é um ícone acima da cabeça:
-- **1ª tentativa:** Aqua **preocupada** ("!" e gota de suor) e a panqueca **queimada**, soltando fumaça.
-- **Depois de treinar:** Aqua **confiante** (estrela, bochechas) e a panqueca **no ponto**, com brilho.
-
-**A história.** A Aqua quer acertar o ponto da panqueca. Para decidir a hora de virar, ela presta atenção em três coisas: a **cor da massa**, o **tempo no fogo** e a **música tocando**.
+**A história.** A Aqua quer separar laranja de azul. Toda cor é uma mistura de **vermelho, verde e azul** (o R, o G e o B do bloco Entrada).
 
 | Momento | O que acontece | Ligações |
 |---|---|---|
-| 1ª tentativa | Ela dá a mesma atenção a tudo, até à música. A panqueca queima. | As três com a mesma força (linhas cinza iguais) |
-| Depois de treinar | Errando e tentando de novo, ela percebe o que ajuda. A panqueca sai no ponto. | Cor da massa e tempo no fogo **fortes** (verde, grossas); música **fraca** (fina, quase sumindo) |
+| 1ª tentativa | Ela dá a mesma atenção aos três e erra ("azul?"). | As três com a mesma força (linhas cinza iguais) |
+| Depois de muitas cores | Ela acerta ("laranja!"). | Vermelho **forte a favor** (verde, grossa); azul **forte contra** (vermelha, grossa); verde **fraco** (aparece nos dois) |
 
-**O que cada parte vira na IA:**
+**Os números (passos 5 a 9)**, os mesmos que o painel de contas mostra no lab:
 
-| Na cozinha | No neurônio artificial | No laboratório |
+| Passo | Conta | "No dia a dia" |
 |---|---|---|
-| cor da massa, tempo no fogo, música | **entradas** (features, o vetor x) | bloco Entrada |
-| quanto a Aqua liga para cada coisa | **peso** (w) | número na linha |
-| a música, que não ajuda | **peso perto de 0** | linha quase invisível |
-| juntar tudo e decidir virar ou não | **soma ponderada** + **função de ativação** | painel de contas, neurônio acende |
-| treinar várias vezes | **treinamento** (ajustar os pesos) | botão Treinar (em breve) |
+| 5 · Entradas | laranja `#FF8C00` → x = (1,00; 0,55; 0,00) | toda cor da tela é uma mistura de vermelho, verde e azul |
+| 6 · Pesos | w = (2,00; 0,50; −2,00) → 2,00; 0,28; 0,00 | muito vermelho = sinal de laranja; verde vale pouco; muito azul = sinal contra |
+| 7 · Soma ponderada | 2,00 + 0,28 + 0,00 = **2,28** (a IA chama de z) | a média da escola, sem dividir |
+| 8 · Ativação | **só a ReLU**: laranja 2,28 acende; azul −1,03 passa 0 | a Aqua decide: soma negativa, nem acende |
+| 9 · Revisão | os 4 passos com esses números; "é o 1º neurônio da Camada 1 da montagem básica" | o guarda-chuva: olha, confia mais em umas coisas, junta e decide |
+
+A **sigmoide** não entra no tutorial 01: o passo 8 tem só um quadro "E o último neurônio?" que leva ao tutorial 03. A fórmula a = f(Σ wᵢ·xᵢ) fica num bloco **"Para quem quiser"**, fechado, no passo 9. Saíram Σ e "pré-ativação" do passo 7.
+
+**Teste rápido: duas perguntas fáceis, de cabeça.** Uma cor nova, **roxo** (0,50; 0,00; 1,00), no mesmo detector:
+1. Quanto dá a soma? 0,50 × 2,00 + 0,00 × 0,50 + 1,00 × −2,00 = **−1,00**.
+2. O detector acende? **Não, passa 0** (ReLU). Roxo não é laranja.
+
+**Desenhos:** duas cenas pequenas, só onde ajudam e **sem ícone de emoção na cabeça**: a Aqua separando cartões laranja e azul em dois cestos (passo 2) e a Aqua ligada a uma lâmpada acesa (passo 8). Ver [04-design-system.md, seção 7.1](04-design-system.md).
 
 **Onde a analogia quebra:** a Aqua "percebe" o que importa; a rede não percebe nada, só ajusta números para errar menos.
-
-### A mesma panqueca, com números (passos 5 a 8)
-
-Os passos técnicos usam a cena da cozinha como os números de verdade da conta. O palco mostra a conta; a coluna de texto tem o quadro **"No dia a dia"** (fundo aqua claro) e, embaixo, **"Na IA"** com o nome técnico e onde fica no laboratório.
-
-| Passo | Conta com os números da Aqua | "No dia a dia" |
-|---|---|---|
-| 5 · Entradas | x = (cor da massa 0,90; tempo no fogo 0,60; música 0,30) | a Aqua dá uma nota de 0 a 1 para cada coisa; um app de clima faz igual com temperatura, umidade e vento |
-| 6 · Pesos | w = (0,80; 0,50; −0,10) → 0,72; 0,30; −0,03 | ela não confia igual em tudo; a música quase não conta, até tira um pouco. Como pedir opinião: o amigo que cozinha bem vale mais |
-| 7 · Soma ponderada | z = 0,72 + 0,30 + (−0,03) = 0,99 | a **média da escola**, só que sem dividir no final (só no texto; o palco mostra a barra: massa + tempo = 1,02, a música tira 0,03). "Σ = some tudo" |
-| 8 · Ativação | ReLU, negativo vira 0: −0,50 → 0; 0,99 → 0,99. Sigmoide, sempre entre 0 e 1: 0 → 0,5; 0,99 → 0,73 | a sigmoide vira uma certeza, como a **previsão do tempo** ("73% de chance de chuva"): 73% de certeza de que está no ponto |
-
-No laboratório as entradas são o R, o G e o B de uma cor, não a panqueca; o texto "Na IA" diz isso em cada passo. **Fecho (passos 9 e 10).** A **revisão** junta os quatro momentos numa lista visual, com a Aqua fazendo cada um (reações observando, pesando, somando e decidindo), o número da panqueca de cada etapa e, no fim, "panqueca no ponto!" com a = f(Σ wᵢ·xᵢ). O **teste rápido** é uma panqueca nova, sem música, com os pesos que a Aqua aprendeu (x = (0,50; 0,40), w = (0,80; 0,50)): o palco mostra as caixas multiplica → soma → ativação com lacunas em z e sigmoide(z), e cada opção preenche as duas: **z = 0,60 · certeza 0,65** ✓ · z = 0,60 · certeza 0,60 · z = 0,90 · certeza 0,71. A resposta é sempre um número de 0 a 1, nada de "acende/apaga". Onde a ReLU e a sigmoide entram numa rede (meio × último neurônio) fica para a aula de camadas. Regra: **todo tutorial termina com revisão visual + teste visual**, sem perder os nomes técnicos.
-
-**Como reaproveitar.** A mesma cozinha pode voltar em outros tutoriais: o erro (panqueca queimada × no ponto) para a **perda**, e "ajustar um pouco a cada tentativa" para o **Treinar** (tutorial 05 · Como a rede aprende).
 
 ## Checklist antes de escrever
 

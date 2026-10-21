@@ -35,3 +35,4 @@ Registro das decisões de arquitetura do projeto. Formato baseado em [MADR](http
 | [0020](0020-laboratorio-em-codigo.md) | Laboratório em código a partir do teste técnico, salvando no navegador | **Aceita** (autor), detalhes propostos pela IA |
 | [0021](0021-bolinhas-cores-e-espremer.md) | Bolinhas nas linhas (GSAP), verde/vermelho para o sinal, passo do espremer explicado | **Aceita** (autor), detalhes propostos pela IA |
 | [0022](0022-tutoriais-com-a-aqua.md) | Tutoriais: trilha com a Aqua e aulas passo a passo com teste rápido | **Aceita** (autor) a aba; formato proposto pela IA, em revisão |
+| [0023](0023-sigmoide-em-passos-e-tutorial-01-com-o-lab.md) | Sigmoide em passos (lab e tutorial 03) e tutorial 01 com o exemplo do laboratório | **Aceita** (autor) |

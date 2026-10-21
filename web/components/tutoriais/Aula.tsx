@@ -6,7 +6,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Aqua, AquaReacao } from "@/components/mascote";
 import { salvarProgresso } from "@/lib/progresso-tutoriais";
 import { formatar } from "@/lib/rede";
-import { totalDePassos, type Conta, type Passo, type Tutorial } from "@/lib/tutoriais";
+import { totalDePassos, type Conta, type Passo, type Teste, type Tutorial } from "@/lib/tutoriais";
 import { AquaLampada, Palco, sigmoide, valorInicial } from "./visuais";
 
 // Uma aula, igual aos frames "Tutorial · O neurônio · Desktop" e "Tutorial · fim com teste rápido".
@@ -20,10 +20,13 @@ const BOTAO_ESCURO = "whitespace-nowrap rounded-full bg-text px-6 py-3 text-[15p
 export default function Aula({ tutorial, passoInicial }: { tutorial: Tutorial; passoInicial: number }) {
   const total = totalDePassos(tutorial);
   const [passo, setPasso] = useState(() => Math.min(Math.max(1, passoInicial), total));
-  const atual: Passo | undefined = tutorial.passos[passo - 1]; // undefined = o teste rápido
+  const atual: Passo | undefined = tutorial.passos[passo - 1]; // undefined = uma pergunta do teste rápido
+  const nTeste = passo - tutorial.passos.length - 1; // índice da pergunta, quando é o teste
+  const teste = atual ? undefined : tutorial.testes[nTeste];
+  const ultimaPergunta = nTeste === tutorial.testes.length - 1;
   const [valor, setValor] = useState(() => (atual ? valorInicial(atual.visual) : 0));
   const [escolha, setEscolha] = useState<number | null>(null);
-  const acertou = escolha !== null && Boolean(tutorial.teste.opcoes[escolha]?.certa);
+  const acertou = escolha !== null && Boolean(teste?.opcoes[escolha]?.certa);
 
   function irPara(n: number) {
     const proximo = Math.min(Math.max(1, n), total);
@@ -41,8 +44,8 @@ export default function Aula({ tutorial, passoInicial }: { tutorial: Tutorial; p
   }, [tutorial.slug, passo]);
 
   useEffect(() => {
-    if (acertou) salvarProgresso(tutorial.slug, { passo, concluido: true });
-  }, [acertou, tutorial.slug, passo]);
+    if (acertou && ultimaPergunta) salvarProgresso(tutorial.slug, { passo, concluido: true });
+  }, [acertou, ultimaPergunta, tutorial.slug, passo]);
 
   const palcoRef = useRef<HTMLElement>(null);
   const textoRef = useRef<HTMLDivElement>(null);
@@ -98,8 +101,8 @@ export default function Aula({ tutorial, passoInicial }: { tutorial: Tutorial; p
               <Palco visual={atual.visual} valor={valor} />
               <Controle passo={atual} valor={valor} onValor={setValor} />
             </>
-          ) : tutorial.teste.visual ? (
-            <Palco visual={tutorial.teste.visual} valor={0} estado={escolha === null ? "pergunta" : acertou ? "certo" : "errado"} />
+          ) : teste?.visual ? (
+            <Palco visual={teste.visual} valor={0} estado={escolha === null ? "pergunta" : acertou ? "certo" : "errado"} />
           ) : (
             <Fim tutorial={tutorial} acertou={acertou} />
           )}
@@ -108,10 +111,14 @@ export default function Aula({ tutorial, passoInicial }: { tutorial: Tutorial; p
         <section aria-live="polite" className="flex flex-col lg:min-h-0">
           <p className="text-[13px] font-semibold text-aqua-ink">
             Passo {passo} de {total}
-            {atual ? (atual.assunto ? ` · ${atual.assunto}` : "") : " · Teste rápido"}
+            {atual ? (atual.assunto ? ` · ${atual.assunto}` : "") : ` · Teste rápido${tutorial.testes.length > 1 ? ` · ${nTeste + 1} de ${tutorial.testes.length}` : ""}`}
           </p>
           <div ref={textoRef} className="flex flex-col lg:-mr-3 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-3">
-            {atual ? <TextoDoPasso passo={atual} valor={valor} /> : <TesteRapido tutorial={tutorial} escolha={escolha} onEscolha={setEscolha} acertou={acertou} />}
+            {atual ? (
+              <TextoDoPasso passo={atual} valor={valor} />
+            ) : (
+              teste && <TesteRapido teste={teste} ultima={ultimaPergunta} escolha={escolha} onEscolha={setEscolha} acertou={acertou} />
+            )}
           </div>
 
           <nav className="mt-10 flex shrink-0 items-center justify-between gap-4 pb-2 lg:mt-0 lg:pt-6">
@@ -119,9 +126,9 @@ export default function Aula({ tutorial, passoInicial }: { tutorial: Tutorial; p
               ← Anterior
             </button>
             {atual && <span className="hidden text-xs whitespace-nowrap text-text-subtle xl:inline">← → no teclado</span>}
-            {atual ? (
+            {atual || !ultimaPergunta ? (
               <button type="button" className={BOTAO_ESCURO} onClick={() => irPara(passo + 1)}>
-                Próximo →
+                {atual ? "Próximo →" : "Próxima →"}
               </button>
             ) : (
               <Link
@@ -206,7 +213,7 @@ function TextoDoPasso({ passo, valor }: { passo: Passo; valor: number }) {
       {passo.diaADia && (
         <div className="mt-6 rounded-2xl bg-aqua-50 p-5">
           <p className="flex items-center gap-2 text-[13px] font-semibold text-aqua-ink">
-            <IconePanqueca /> No dia a dia
+            <IconeCores /> No dia a dia
           </p>
           <p className="mt-2 text-[15px] leading-[1.55]">{passo.diaADia}</p>
         </div>
@@ -224,6 +231,15 @@ function TextoDoPasso({ passo, valor }: { passo: Passo; valor: number }) {
           <p className="mt-2 text-[15px] leading-[1.5] text-[#5C3D00]">{passo.quebra.texto}</p>
         </div>
       )}
+      {passo.paraQuemQuiser && (
+        <details className="group mt-6 rounded-2xl border border-black/[.08] bg-white p-5">
+          <summary className="cursor-pointer list-none text-[15px] font-semibold">
+            <span className="inline-block transition-transform group-open:rotate-90">▸</span> {passo.paraQuemQuiser.titulo}
+          </summary>
+          <p className="mt-3 font-mono text-xl font-semibold text-aqua-on">{passo.paraQuemQuiser.formula}</p>
+          {passo.paraQuemQuiser.nota && <p className="mt-2 text-[13px] text-text-subtle">{passo.paraQuemQuiser.nota}</p>}
+        </details>
+      )}
       {passo.termos && (
         <div className="mt-6">
           <p className="text-[13px] text-text-subtle">Termos deste passo</p>
@@ -234,14 +250,12 @@ function TextoDoPasso({ passo, valor }: { passo: Passo; valor: number }) {
   );
 }
 
-/** A panqueca em pixel do quadro "No dia a dia" (a mesma do palco). */
-function IconePanqueca() {
+/** Dois quadradinhos de cor, laranja e azul, no quadro "No dia a dia" (a tarefa do laboratório). */
+function IconeCores() {
   return (
-    <svg width={21} height={12} viewBox="0 0 7 4" shapeRendering="crispEdges" aria-hidden>
-      <rect x={1} y={0} width={5} height={1} fill="#E9B44C" />
-      <rect x={0} y={1} width={7} height={2} fill="#E9B44C" />
-      <rect x={1} y={3} width={5} height={1} fill="#C98A2B" />
-      <rect x={2} y={1} width={1} height={1} fill="#F6D58E" />
+    <svg width={20} height={12} viewBox="0 0 5 3" shapeRendering="crispEdges" aria-hidden>
+      <rect x={0} y={0} width={2} height={3} fill="#FF8C00" />
+      <rect x={3} y={0} width={2} height={3} fill="#378ADD" />
     </svg>
   );
 }
@@ -258,10 +272,24 @@ function CaixaConta({ conta, visual, valor }: { conta: Conta; visual: Passo["vis
         </>,
       ];
       nota = Math.abs(valor) < 0.005 ? "Peso zero: a entrada é ignorada." : undefined;
+    } else if (conta.dinamica === "sigmoide-passos") {
+      const e = Math.exp(-conta.soma);
+      linhas = [
+        <>1 · troca o sinal da soma: {formatar(-conta.soma)}</>,
+        <>
+          2 · e<sup>{formatar(-conta.soma)}</sup> ≈ {formatar(e)}
+        </>,
+        <>
+          3 · 1 ÷ (1 + {formatar(e)}) = <Resultado n={sigmoide(conta.soma)} />
+        </>,
+      ];
+      nota = "e ≈ 2,718 é um número fixo da matemática, como o π.";
     } else {
       const e = Math.exp(-valor);
       linhas = [
-        `1 ÷ (1 + e^(${formatar(-valor)}))`,
+        <>
+          1 ÷ (1 + e<sup>{formatar(-valor)}</sup>)
+        </>,
         <>
           = 1 ÷ (1 + {formatar(e)}) = <Resultado n={sigmoide(valor)} />
         </>,
@@ -326,17 +354,18 @@ function Controle({ passo, valor, onValor }: { passo: Passo; valor: number; onVa
 }
 
 function TesteRapido({
-  tutorial,
+  teste: t,
+  ultima,
   escolha,
   onEscolha,
   acertou,
 }: {
-  tutorial: Tutorial;
+  teste: Teste;
+  ultima: boolean;
   escolha: number | null;
   onEscolha: (i: number) => void;
   acertou: boolean;
 }) {
-  const t = tutorial.teste;
   return (
     <>
       <h1 className="mt-3 text-[30px] leading-[1.15] font-semibold tracking-[-0.02em] sm:text-4xl">{t.pergunta}</h1>
@@ -385,10 +414,12 @@ function TesteRapido({
             {acertou ? t.explicacao : "Quase. Volte um passo se quiser rever, ou tente outra resposta."}
           </p>
         ))}
-      <div className="mt-8 rounded-2xl border-2 border-aqua bg-aqua-50 p-5">
-        <p className="text-[13px] font-semibold text-aqua-ink">Agora no laboratório</p>
-        <p className="mt-2 text-[15px] leading-[1.5]">{t.noLab}</p>
-      </div>
+      {ultima && t.noLab && (
+        <div className="mt-8 rounded-2xl border-2 border-aqua bg-aqua-50 p-5">
+          <p className="text-[13px] font-semibold text-aqua-ink">Agora no laboratório</p>
+          <p className="mt-2 text-[15px] leading-[1.5]">{t.noLab}</p>
+        </div>
+      )}
     </>
   );
 }
@@ -408,7 +439,7 @@ function Fim({ tutorial, acertou }: { tutorial: Tutorial; acertou: boolean }) {
       >
         <p className="text-[13px] font-semibold text-text-muted">Você aprendeu</p>
         <ul className="mt-3 grid grid-cols-1 gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
-          {tutorial.teste.aprendeu.map((a) => (
+          {(tutorial.testes.at(-1)?.aprendeu ?? []).map((a) => (
             <li key={a}>✓ {a}</li>
           ))}
         </ul>

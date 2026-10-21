@@ -250,8 +250,8 @@ Propostas antigas da IA, ainda não desenhadas:
 | Dormindo | Olhos fechados (traço horizontal) e "z z" em cinza | Cards "Em breve" (Busca por significado, RAG) |
 | Pulando | Contente, com pixels soltos dos lados | CTA final "Pronto para ver por dentro?" |
 | Saída da rede | Ligado por fio aqua ao último neurônio do herói, com o valor `0,97` em cima | Herói |
-| Preocupada (cozinhando) | Aqua **normal** (sem boca). Em cima da cabeça, dois ícones: **"!"** vermelho `#FF453A` (susto) e **gota de suor** azul `#7CC4F0`. Segura a frigideira pelo cabo, que sai da porta direita; panqueca **queimada** `#3B2414` soltando fumaça cinza | Tutorial 01, passo 2 (1ª tentativa) |
-| Confiante (cozinhando) | Aqua **contente** (bochechas, sem boca) com uma **estrela** amarela `#FFD54A` em cima da cabeça; panqueca **no ponto** `#E9B44C` com **brilhos** amarelos | Tutorial 01, passo 2 (depois de treinar) |
+| Separando cores (cena) | Aqua **normal**, **sem ícone na cabeça**. Um cartão azul sai da porta direita; à frente, dois cestos: um com cartões laranja `#FF8C00`, outro com azuis `#378ADD`. Grade 28 × 13 | Tutorial 01, passo 2 |
+| Acendendo (cena) | Aqua **normal**, **sem ícone na cabeça**. Um fio aqua sai da porta direita até uma lâmpada amarela `#FFD54A` acesa, com raios laranja. Grade 22 × 13 | Tutorial 01, passo 8 |
 | Observando | Aqua normal + **lupa** cinza `#6E6E73` com lente `#D6EEFB` e cabo marrom | Revisão: entradas |
 | Pesando | Aqua normal + **balança** (travessão cinza, pratos âmbar `#E9A800`) | Revisão: pesos |
 | Somando | Aqua normal + **Σ** em `#0E7C86` | Revisão: soma ponderada |
@@ -268,7 +268,7 @@ Propostas antigas da IA, ainda não desenhadas:
 
 > ⚠️ **Em aberto:** o mascote do Claude é da Anthropic. Usar como homenagem num projeto de estudo é diferente de usar num site público; antes de publicar, rever se ele fica, troca por um personagem próprio ou ganha um aviso.
 
-**Cena da cozinha** (frame **Aqua · cozinhando (poses)** no Figma, 2026-10-20): Grade de 28 × 13: ícone de emoção (linhas 0–4), Aqua original (10 × 6) com o **cabo da frigideira saindo da porta direita**, frigideira vista de lado (bordas, fundo e a panqueca dentro), chamas e balcão. **Regra do autor: o rosto da Aqua não muda.** Ela não ganha boca nem sobrancelha; a emoção vem de um **ícone acima da cabeça**, como nos jogos ("!" e gota = preocupada, estrela = confiante). Versões descartadas: sobrancelhas e olhos em arco (rosto poluído) e depois uma boca (o autor achou horrível, e a frigideira parecia uma barra solta).
+**Cenas do tutorial 01** (2026-10-21, [ADR-0023](adr/0023-sigmoide-em-passos-e-tutorial-01-com-o-lab.md)): a Aqua original (10 × 6) mais um objeto da tarefa do laboratório (cestos de cor, lâmpada), **sem ícone de emoção na cabeça** e pequenas (unidade 3), só nos passos em que ajudam a entender. Substituem a cena da cozinha (frigideira e panqueca), que saiu junto com o exemplo da panqueca. **Regra do autor: o rosto da Aqua não muda.** Ela não ganha boca nem sobrancelha; quando há emoção, ela vem de um **ícone acima da cabeça**, como nos jogos. Versões descartadas: sobrancelhas e olhos em arco (rosto poluído) e depois uma boca (o autor achou horrível).
 
 **Regras de uso**
 - No máximo **uma Aqua por bloco de conteúdo** (card, seção), e nunca competindo com a visualização principal: ela ilustra, não explica.

@@ -859,7 +859,7 @@
   color: var(--destaque-texto);
 }
 
-/* o passo do último neurônio: a soma espremida entre 0 e 1 */
+/* o passo do último neurônio: a soma passa pela sigmoide (curva em S e a conta em 3 passos) */
 .sigmoide {
   padding: 12px 14px;
   border: 1px solid var(--destaque);
@@ -869,21 +869,105 @@
 }
 
 .sigmoide-titulo {
-  font-size: 11px;
+  font-size: 12px;
 }
 
-.sigmoide-conta {
-  margin-top: 4px;
-  font-size: 18px;
-  font-weight: 700;
+.sigmoide-curva {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 8px;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.sigmoide-curva text {
+  font-size: 9px;
+  fill: var(--text-subtle);
   font-variant-numeric: tabular-nums;
 }
 
-.sigmoide-nota {
-  margin-top: 8px;
+.sigmoide-guia {
+  stroke: #e5e5ea;
+}
+
+.sigmoide-linha {
+  fill: none;
+  stroke: var(--destaque-texto);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+
+.sigmoide-marca {
+  stroke: var(--peso-positivo);
+}
+
+.sigmoide-ponto {
+  fill: var(--peso-positivo);
+  stroke: #ffffff;
+  stroke-width: 2;
+}
+
+.sigmoide-curva .sigmoide-valor {
+  font-size: 10px;
+  font-weight: 700;
+  fill: var(--positivo);
+}
+
+.sigmoide-rotulo {
+  margin-top: 12px;
   font-size: 11px;
-  line-height: 1.45;
-  color: var(--text-muted);
+  opacity: 0.8;
+}
+
+.sigmoide-passos {
+  display: grid;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.sigmoide-passos li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sigmoide-num {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--destaque);
+  border-radius: 999px;
+  background: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--destaque-texto);
+}
+
+.sigmoide-final {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.sigmoide-final .sigmoide-num {
+  background: var(--destaque);
+  color: var(--sobre-destaque);
+}
+
+.sigmoide-link {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--destaque-texto);
+}
+
+.sigmoide-link:hover {
+  text-decoration: underline;
 }
 
 .navegar {

@@ -1,26 +1,30 @@
 // Conteúdo dos tutoriais (frames "Tutoriais · Desktop" e "Tutorial 01 · O neurônio · roteiro" no Figma).
 // Cada tutorial é uma lista de passos; cada passo muda uma coisa só no palco (a visualização à esquerda).
-// O último passo é sempre o teste rápido. As contas batem com o laboratório: no meio da rede o
-// neurônio acende (ReLU: passa a soma se ela for positiva, senão 0); no fim, a soma passa pela sigmoide.
+// No fim vem o teste rápido, com uma ou mais perguntas. As contas batem com o laboratório: no meio da
+// rede o neurônio acende (ReLU: passa a soma se ela for positiva, senão 0); no fim, a soma passa pela sigmoide.
+// O tutorial 01 usa o mesmo exemplo do lab: o detector de laranja da montagem básica.
 
 export type Visual =
   | { tipo: "cerebro" }
-  | { tipo: "cozinha" }
+  | { tipo: "cores" }
   | { tipo: "historia" }
   | { tipo: "ponte" }
-  | { tipo: "panqueca"; fase: "entradas" | "pesos" }
+  | { tipo: "cor"; fase: "entradas" | "pesos" }
   | { tipo: "soma" }
   | { tipo: "ativacao" }
   | { tipo: "revisao" }
-  | { tipo: "teste-panqueca" }
+  | { tipo: "teste-cor"; fase: "soma" | "acende" }
   | { tipo: "peso"; entrada: number; peso: number; interativo?: boolean; noLab?: boolean }
   | { tipo: "reta"; naFaixa: boolean }
   | { tipo: "curva"; soma: number; interativo?: boolean; marcos?: boolean }
   | { tipo: "painel-lab" }
   | { tipo: "montagem"; fase: "blocos" | "fios" | "todos" | "solta" | "basica" };
 
-/** A conta do passo. "peso" e "sigmoide" acompanham o controle deslizante do palco. */
-export type Conta = { linhas: string[]; nota?: string } | { dinamica: "peso" | "sigmoide" };
+/**
+ * A conta do passo. "peso" e "sigmoide" acompanham o controle deslizante do palco;
+ * "sigmoide-passos" mostra a conta da sigmoide em três passos para uma soma fixa.
+ */
+export type Conta = { linhas: string[]; nota?: string } | { dinamica: "peso" | "sigmoide" } | { dinamica: "sigmoide-passos"; soma: number };
 
 export type Passo = {
   /** Assunto do passo, ao lado do número ("Passo 5 de 10 · Neurônio artificial"). */
@@ -37,6 +41,8 @@ export type Passo = {
   conta?: Conta;
   /** "Onde a ideia quebra": toda metáfora tem um limite (docs/07-guia-de-conteudo.md). */
   quebra?: { titulo: string; texto: string };
+  /** Bloco fechado por padrão, para quem quiser ver a fórmula (o passo não depende dele). */
+  paraQuemQuiser?: { titulo: string; formula: string; nota?: string };
 };
 
 export type Teste = {
@@ -47,8 +53,9 @@ export type Teste = {
   explicacao: string;
   /** A conta que a Aqua mostra depois da resposta, certa ou errada. */
   conta?: string[];
-  aprendeu: string[];
-  noLab: string;
+  /** Só na última pergunta: o resumo do fim e o convite para o laboratório. */
+  aprendeu?: string[];
+  noLab?: string;
   /** Palco do teste. Sem ele, o palco mostra a Aqua com a lâmpada. */
   visual?: Visual;
 };
@@ -60,7 +67,8 @@ export type Tutorial = {
   descricao: string;
   minutos: number;
   passos: Passo[];
-  teste: Teste;
+  /** O teste rápido: perguntas fáceis, uma por tela, de cabeça. */
+  testes: Teste[];
 };
 
 export const tutoriais: Tutorial[] = [
@@ -68,7 +76,7 @@ export const tutoriais: Tutorial[] = [
     slug: "neuronio",
     numero: "01",
     titulo: "O neurônio",
-    descricao: "Do neurônio do seu cérebro à continha que a IA faz, com a Aqua fazendo panqueca.",
+    descricao: "Do neurônio do seu cérebro à continha que a IA faz, com a Aqua separando laranja de azul.",
     minutos: 8,
     passos: [
       {
@@ -83,13 +91,13 @@ export const tutoriais: Tutorial[] = [
       },
       {
         assunto: "A inspiração",
-        titulo: "A Aqua aprendendo a cozinhar",
+        titulo: "A Aqua aprendendo cores",
         texto: [
-          "A Aqua quer acertar o ponto da panqueca. Na 1ª vez ela presta atenção em tudo, até na música, e a panqueca queima.",
-          "A cada tentativa, as ligações que ajudam (cor da massa, tempo no fogo) ficam fortes e a que não ajuda (a música) fica fraca. No cérebro, essas ligações são sinapses.",
+          "A Aqua quer separar laranja de azul. Toda cor é uma mistura de vermelho, verde e azul. Na 1ª vez ela presta a mesma atenção nos três e erra.",
+          "A cada tentativa, as ligações que ajudam ficam fortes: muito vermelho indica laranja, muito azul indica que não é. O verde, que aparece nos dois, fica fraco. No cérebro, essas ligações são sinapses.",
         ],
         termos: ["sinapse", "ligação forte", "ligação fraca"],
-        visual: { tipo: "cozinha" },
+        visual: { tipo: "cores" },
       },
       {
         assunto: "História",
@@ -114,62 +122,69 @@ export const tutoriais: Tutorial[] = [
         assunto: "Neurônio artificial",
         titulo: "Entradas: o vetor x",
         diaADia:
-          "Antes de virar a panqueca, a Aqua olha três coisas e dá uma nota de 0 a 1 para cada: a cor da massa (0,90), o tempo no fogo (0,60) e a música (0,30). Um app de clima faz igual com temperatura, umidade e vento.",
-        naIA: "Essa lista de números é o vetor de entrada x = (x₁, x₂, x₃). Cada número é uma característica (feature). No laboratório, as entradas são o R, o G e o B da cor.",
+          "Toda cor da tela é uma mistura de vermelho, verde e azul, cada um de 0 a 1. Este laranja tem muito vermelho (1,00), um pouco de verde (0,55) e nada de azul (0,00).",
+        naIA: "Essa lista de números é o vetor de entrada x = (x₁, x₂, x₃). Cada número é uma característica (feature). É o que o bloco Entrada manda para a rede.",
         termos: ["vetor de entrada", "feature (característica)"],
-        visual: { tipo: "panqueca", fase: "entradas" },
+        visual: { tipo: "cor", fase: "entradas" },
       },
       {
         assunto: "Neurônio artificial",
         titulo: "Pesos: wᵢ · xᵢ",
         diaADia:
-          "A Aqua não confia igual em tudo: na cor da massa, muito (0,80); no tempo, mais ou menos (0,50); a música quase não conta, até tira um pouco (−0,10). É como pedir opinião: quem cozinha bem vale mais que quem chuta.",
+          "A Aqua não confia igual em tudo. Muito vermelho? Forte sinal de laranja (2,00). Verde aparece nos dois, vale pouco (0,50). Muito azul? Sinal contra (−2,00). Como pedir opinião a quem entende mais.",
         naIA: "Cada entrada xᵢ é multiplicada pelo seu peso wᵢ. Positivo reforça (verde), negativo atrapalha (vermelho), perto de 0 quase não conta.",
         termos: ["peso (w)", "produto wᵢ·xᵢ"],
-        visual: { tipo: "panqueca", fase: "pesos" },
+        visual: { tipo: "cor", fase: "pesos" },
       },
       {
         assunto: "Neurônio artificial",
         titulo: "Soma ponderada",
         diaADia:
-          "Lembra da média da escola? A prova vale mais que o trabalho: cada nota vezes o quanto ela vale, e soma tudo. Aqui é igual, só que sem dividir no final. Para a Aqua, o z diz o quanto tudo indica que é hora de virar.",
-        naIA: "O neurônio soma todos os produtos: z = Σ wᵢ·xᵢ. Esse z também se chama pré-ativação: é o número antes da função de ativação.",
-        termos: ["soma ponderada", "pré-ativação (z)"],
+          "Lembra da média da escola? A prova vale mais que o trabalho: cada nota vezes o quanto ela vale, e soma tudo. A Aqua faz igual com o vermelho, o verde e o azul. Deu 2,28: tudo indica laranja.",
+        naIA: "Multiplica cada entrada pelo seu peso e soma tudo. A IA chama essa soma de z.",
+        termos: ["soma ponderada", "z"],
         visual: { tipo: "soma" },
       },
       {
         assunto: "Neurônio artificial",
         titulo: "Função de ativação",
         diaADia:
-          "Agora a Aqua decide. Com a ReLU, se a soma deu negativa ela nem se mexe (0); se deu positiva, age com essa força. Com a sigmoide, a soma vira uma certeza de 0 a 1, como a previsão do tempo. Aqui: 73% de certeza de que está no ponto.",
-        naIA: "a = f(z). A ReLU, max(0, z), corta o negativo. A sigmoide vira qualquer z num número de 0 a 1. Onde cada uma entra numa rede fica para a aula de camadas.",
-        termos: ["função de ativação (a)", "ReLU", "sigmoide"],
+          "Agora a Aqua decide. Se a soma deu negativa, o detector nem acende: passa 0. Se deu positiva, acende com essa força. O laranja deu 2,28: acendeu!",
+        naIA: "Essa regra se chama ReLU: soma positiva passa igual, negativa vira 0. É o que os neurônios do meio fazem no laboratório.",
+        termos: ["função de ativação", "ReLU"],
         visual: { tipo: "ativacao" },
       },
       {
         assunto: "Revisão",
         titulo: "Tudo junto, com a Aqua",
         diaADia:
-          "Olhar, confiar mais em umas coisas, juntar tudo e decidir. A Aqua faz isso a cada panqueca, e você faz igual quando decide se leva o guarda-chuva: olha o céu, confia mais na previsão, junta tudo e decide.",
-        naIA: "O neurônio artificial cabe numa linha: a = f(Σ wᵢ·xᵢ). Entradas vezes pesos, soma, função de ativação. No laboratório, cada neurônio faz essa conta quando você clica em Rodar.",
+          "Olhar, confiar mais em umas coisas, juntar tudo e decidir. Você faz igual quando decide se leva o guarda-chuva: olha o céu, confia mais na previsão, junta tudo e decide.",
+        naIA: "Entradas vezes pesos, soma, e a regra decide. No laboratório, cada neurônio faz essa conta quando você clica em Rodar.",
+        paraQuemQuiser: { titulo: "Para quem quiser: a fórmula", formula: "a = f(Σ wᵢ·xᵢ)", nota: "Σ quer dizer “some tudo”; f é a regra que decide (aqui, a ReLU)." },
         termos: ["entradas", "pesos", "soma ponderada", "ativação"],
         visual: { tipo: "revisao" },
       },
     ],
-    teste: {
-      pergunta: "O que a Aqua passa adiante?",
-      subtitulo: "Quanto dá z? E a certeza da Aqua?",
-      opcoes: [
-        { texto: "z = 0,60", detalhe: "certeza 0,65", certa: true },
-        { texto: "z = 0,60", detalhe: "certeza 0,60" },
-        { texto: "z = 0,90", detalhe: "certeza 0,71" },
-      ],
-      explicacao: "Isso! 65% de certeza.",
-      conta: ["z = 0,40 + 0,20 = 0,60", "sigmoide(0,60) ≈ 0,65"],
-      aprendeu: ["De onde veio a ideia", "Entradas e pesos", "A soma ponderada", "A função de ativação"],
-      noLab: "Abra a montagem básica, clique em Rodar e use Próximo: cada neurônio faz essa mesma conta, uma parcela por vez.",
-      visual: { tipo: "teste-panqueca" },
-    },
+    testes: [
+      {
+        pergunta: "Quanto dá a soma?",
+        subtitulo: "Uma cor nova, roxo, no mesmo detector de laranja.",
+        opcoes: [{ texto: "3,00" }, { texto: "−1,00", certa: true }, { texto: "1,00" }],
+        explicacao: "Isso! Deu −1,00. O azul, com peso negativo, puxou para baixo.",
+        conta: ["0,50 × 2,00 = 1,00", "0,00 × 0,50 = 0,00", "1,00 × −2,00 = −2,00", "1,00 + 0,00 − 2,00 = −1,00"],
+        visual: { tipo: "teste-cor", fase: "soma" },
+      },
+      {
+        pergunta: "O detector acende?",
+        subtitulo: "A soma do roxo deu −1,00.",
+        opcoes: [{ texto: "Sim, passa −1,00" }, { texto: "Não, passa 0", certa: true }, { texto: "Sim, passa 1,00" }],
+        explicacao: "Isso! A soma deu negativa, então a ReLU passa 0. Para o detector de laranja, roxo não é laranja.",
+        conta: ["soma −1,00 é negativa", "ReLU: negativa vira 0"],
+        aprendeu: ["De onde veio a ideia", "Entradas e pesos", "A soma ponderada", "A função de ativação"],
+        noLab: "Abra a montagem básica, clique em Rodar e use Próximo: o 1º neurônio da Camada 1 é este detector de laranja, fazendo esta mesma conta.",
+        visual: { tipo: "teste-cor", fase: "acende" },
+      },
+    ],
   },
   {
     slug: "pesos",
@@ -227,13 +242,15 @@ export const tutoriais: Tutorial[] = [
         },
       },
     ],
-    teste: {
-      pergunta: "Uma entrada 0,50 passa por um peso −1,00. O que chega no neurônio?",
-      opcoes: [{ texto: "0,50" }, { texto: "−0,50", certa: true }, { texto: "0" }],
-      explicacao: "Isso. 0,50 × −1,00 = −0,50: a bolinha chega vermelha e puxa a soma para baixo.",
-      aprendeu: ["O peso multiplica", "Verde soma, vermelho tira", "Espessura é a força", "Duplo clique edita"],
-      noLab: "Na montagem básica, dê dois cliques num peso, troque o sinal e rode de novo. Veja a resposta mudar.",
-    },
+    testes: [
+      {
+        pergunta: "Uma entrada 0,50 passa por um peso −1,00. O que chega no neurônio?",
+        opcoes: [{ texto: "0,50" }, { texto: "−0,50", certa: true }, { texto: "0" }],
+        explicacao: "Isso. 0,50 × −1,00 = −0,50: a bolinha chega vermelha e puxa a soma para baixo.",
+        aprendeu: ["O peso multiplica", "Verde soma, vermelho tira", "Espessura é a força", "Duplo clique edita"],
+        noLab: "Na montagem básica, dê dois cliques num peso, troque o sinal e rode de novo. Veja a resposta mudar.",
+      },
+    ],
   },
   {
     slug: "sigmoide",
@@ -272,15 +289,16 @@ export const tutoriais: Tutorial[] = [
         },
       },
       {
-        titulo: "A conta por trás",
+        titulo: "A conta, passo a passo",
         texto: [
-          "Essa curva é a sigmoide, e a conta dela é 1 ÷ (1 + e^(−soma)).",
-          "O e vale mais ou menos 2,718. Quando a soma cresce, e^(−soma) encolhe até quase 0, e o resultado chega perto de 1 ÷ 1 = 1.",
+          "Primeiro a ideia: soma alta chega perto de 1, soma baixa chega perto de 0, e soma 0 dá exatamente 0,50. É a curva em S ao lado.",
+          "Agora a fórmula de verdade: 1 ÷ (1 + e⁻ˢᵒᵐᵃ). O e é um número fixo, como o π: vale mais ou menos 2,718. A calculadora faz essa parte.",
         ],
-        visual: { tipo: "curva", soma: -2, marcos: true },
-        conta: {
-          linhas: ["soma −2,00 → 1 ÷ (1 + 7,39) = 0,12", "soma 0,00 → 1 ÷ (1 + 1,00) = 0,50", "soma 4,00 → 1 ÷ (1 + 0,02) = 0,98"],
-          nota: "e ≈ 2,718 é um número fixo da matemática, como o π.",
+        visual: { tipo: "curva", soma: 3.41, marcos: true },
+        conta: { dinamica: "sigmoide-passos", soma: 3.41 },
+        quebra: {
+          titulo: "Por que o sinal troca?",
+          texto: "Por causa do menos na frente da soma. Soma alta vira e elevado a um número negativo, quase 0, e sobra 1 ÷ 1, perto de 1. Soma baixa vira um número enorme embaixo, e o resultado fica perto de 0.",
         },
       },
       {
@@ -292,13 +310,15 @@ export const tutoriais: Tutorial[] = [
         visual: { tipo: "painel-lab" },
       },
     ],
-    teste: {
-      pergunta: "Uma soma de −5 passa pela sigmoide. O que sai?",
-      opcoes: [{ texto: "Um número perto de 0", certa: true }, { texto: "−5, igual entrou" }, { texto: "Um número perto de 1" }],
-      explicacao: "Isso. Somas muito negativas caem na parte de baixo da curva: 1 ÷ (1 + 148) ≈ 0,01.",
-      aprendeu: ["A curva em S", "Sempre entre 0 e 1", "A conta com o e", "Onde aparece no lab"],
-      noLab: "Abra a montagem básica, clique em Rodar e avance até o último passo: é a sigmoide acontecendo de verdade.",
-    },
+    testes: [
+      {
+        pergunta: "Uma soma de −5 passa pela sigmoide. O que sai?",
+        opcoes: [{ texto: "Um número perto de 0", certa: true }, { texto: "−5, igual entrou" }, { texto: "Um número perto de 1" }],
+        explicacao: "Isso. Somas muito negativas caem na parte de baixo da curva: 1 ÷ (1 + 148) ≈ 0,01.",
+        aprendeu: ["A curva em S", "Sempre entre 0 e 1", "A conta com o e", "Onde aparece no lab"],
+        noLab: "Abra a montagem básica, clique em Rodar e avance até o último passo: é a sigmoide acontecendo de verdade.",
+      },
+    ],
   },
   {
     slug: "camadas-e-fios",
@@ -348,13 +368,15 @@ export const tutoriais: Tutorial[] = [
         visual: { tipo: "montagem", fase: "basica" },
       },
     ],
-    teste: {
-      pergunta: "Você arrastou a Camada 2 para a esquerda da Camada 1, sem mexer nos fios. A ordem das contas muda?",
-      opcoes: [{ texto: "Sim, agora a Camada 2 vem antes" }, { texto: "Não, quem manda é o fio", certa: true }, { texto: "A rede para de funcionar" }],
-      explicacao: "Isso. A posição na tela não importa: a ordem vem dos fios, como no Tinkercad.",
-      aprendeu: ["Entrada, Camada e Saída", "O fio dá a ordem", "Todos com todos", "Camada solta é aviso"],
-      noLab: "Crie um projeto Vazio e monte Entrada → Camada → Saída com dois fios. Depois clique em Rodar.",
-    },
+    testes: [
+      {
+        pergunta: "Você arrastou a Camada 2 para a esquerda da Camada 1, sem mexer nos fios. A ordem das contas muda?",
+        opcoes: [{ texto: "Sim, agora a Camada 2 vem antes" }, { texto: "Não, quem manda é o fio", certa: true }, { texto: "A rede para de funcionar" }],
+        explicacao: "Isso. A posição na tela não importa: a ordem vem dos fios, como no Tinkercad.",
+        aprendeu: ["Entrada, Camada e Saída", "O fio dá a ordem", "Todos com todos", "Camada solta é aviso"],
+        noLab: "Crie um projeto Vazio e monte Entrada → Camada → Saída com dois fios. Depois clique em Rodar.",
+      },
+    ],
   },
 ];
 
@@ -371,7 +393,7 @@ export function buscarTutorial(slug: string): Tutorial | undefined {
   return tutoriais.find((t) => t.slug === slug);
 }
 
-/** Número de telas do tutorial: os passos mais o teste rápido. */
+/** Número de telas do tutorial: os passos mais as perguntas do teste rápido. */
 export function totalDePassos(t: Tutorial): number {
-  return t.passos.length + 1;
+  return t.passos.length + t.testes.length;
 }

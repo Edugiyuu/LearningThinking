@@ -34,7 +34,7 @@ Fontes: [ADR-0013](adr/0013-formato-tutoriais-e-laboratorio.md), [ADR-0014](adr/
 - Ao clicar em **Rodar**, a montagem é conferida; se algo estiver errado, os blocos com problema ficam em vermelho e a mensagem aparece no painel.
 - **Camada solta** (sem fio vindo da Entrada) **não é erro, é só um aviso** *(decidido pelo autor em 2026-10-19)*: ela fica com borda tracejada âmbar, o painel avisa que ficou de fora das contas, e a rodada continua.
 - As contas aparecem **uma multiplicação de cada vez**. A **linha da vez fica destacada** (aqua), as já feitas ficam normais e as que ainda não vieram ficam apagadas. O painel mostra só aquela parcela (ex.: `0,55 × 0,50 = 0,28`), depois a próxima, e **só no fim a soma**.
-- Depois da soma: nas camadas do meio, positivo **acende** e passa adiante, negativo **apaga** e passa 0 (ReLU). Na camada ligada à Saída, a soma é **espremida entre 0 e 1** (sigmoide). Por fim, a Saída decide: abaixo de 0,50 é 0, a partir de 0,50 é 1.
+- Depois da soma: nas camadas do meio, positivo **acende** e passa adiante, negativo **apaga** e passa 0 (ReLU). Na camada ligada à Saída, a soma passa pela **sigmoide**, que a deixa entre 0 e 1: o painel mostra uma curva em S pequena com o ponto da soma e a conta em 3 passos (troca o sinal, e elevado a isso, 1 ÷ (1 + …)); a fórmula geral fica no tutorial 03 ([ADR-0023](adr/0023-sigmoide-em-passos-e-tutorial-01-com-o-lab.md)). Por fim, a Saída decide: abaixo de 0,50 é 0, a partir de 0,50 é 1.
 - O usuário avança **manualmente** (Anterior/Próximo) ou no modo **automático**.
 - Mexer na montagem (bloco, fio, peso, entrada) cancela a rodada; é preciso rodar de novo.
 
