@@ -11,7 +11,7 @@ export function TopoSite({ ativo }: { ativo?: "laboratorio" | "tutoriais" | "sob
   return (
     <header className="mx-auto flex h-20 w-full max-w-[1280px] items-center justify-between px-4 sm:px-6 xl:px-0">
       <Link href="/" className="flex items-center gap-2" aria-label="LearningThinking, início">
-        <Aqua unidade={3} />
+        <Aqua unidade={4} />
         <span className="text-lg font-semibold">LearningThinking</span>
       </Link>
       <nav className="hidden gap-10 text-[15px] text-text-muted md:flex">
