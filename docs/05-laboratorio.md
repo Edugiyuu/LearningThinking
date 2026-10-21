@@ -42,6 +42,7 @@ Fontes: [ADR-0013](adr/0013-formato-tutoriais-e-laboratorio.md), [ADR-0014](adr/
 - Botão **"Treinar"**, do zero (pesos aleatórios) **ou** a partir de uma rede já treinada (pesos salvos).
 - O usuário escolhe **quantas repetições** (ex.: 1000), e o treino corre até lá **em alta velocidade** (~x100): cálculo real → gravação → reprodução.
 - Mostra tudo passando rápido; no fim, mostra as saídas registradas durante o treinamento.
+- Detalhes (exemplos editáveis, erro ao vivo, gráfico + tabela antes/depois, passinho pequeno/médio/grande): [ADR-0024](adr/0024-treinar-com-backpropagation.md).
 - **Backward pass passo a passo** (modo "debug"): **depois da v1**, ver [ADR-0016](adr/0016-modo-debug-backward-pass.md).
 
 **O que já funciona no teste técnico:** Entrada (cor e números), Camada, Neurônio, Saída com objetivo, fios, peso na linha com duplo clique, Rodar com erros (vermelho) e avisos (âmbar) marcados e contas passo a passo (manual e automático). **No site real (`web/`, [ADR-0020](adr/0020-laboratorio-em-codigo.md)):** tudo isso, mais o layout do Figma, abas (só Redes neurais ativa) e o projeto salvo no navegador. **Ainda não:** Treinar e a lista de projetos.
@@ -49,7 +50,6 @@ Fontes: [ADR-0013](adr/0013-formato-tutoriais-e-laboratorio.md), [ADR-0014](adr/
 ### Em aberto
 
 - Busca por significado: o [ADR-0014](adr/0014-laboratorio-abas-projetos-e-erros.md) coloca a aba na v1, mas a Home e a tela Novo projeto a mostram como "Em breve" porque ela ainda não foi desenhada. Faltam os blocos e a montagem básica.
-- Formato da tela de saídas no fim do treino.
 - Mover um neurônio de uma camada para outra.
 - *Bias* (um número extra somado em cada neurônio): ainda não entrou.
 - Como o tutorial "mostra" o laboratório?
