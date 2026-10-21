@@ -16,7 +16,8 @@ O tutorial 05 · Como a rede aprende (roteiro no Figma) explica o treino em quat
 1. **Exemplos: lista pronta e editável.** A montagem básica vem com cerca de 12 cores (6 laranjas, 6 azuis) já marcadas com o objetivo da Saída (azul = 0, laranja = 1). O aluno pode adicionar e remover cores e trocar a marcação.
 2. **Durante o treino: linhas + erro caindo.** As linhas da rede mudam de cor e espessura ao vivo conforme os pesos mudam, e o painel mostra "repetição 700 de 1000 · erro 0,04" com um gráfico pequeno do erro caindo, como no tutorial 05.
 3. **No fim: gráfico + tabela.** Um gráfico do erro por repetição e uma tabela com cada cor de exemplo e a resposta **antes e depois** do treino (ex.: laranja 0,48 → 0,97). Isso fecha o "formato da tela de saídas", que estava em aberto na ADR-0015.
-4. **O aluno escolhe o tamanho do passinho (taxa de aprendizado), com 3 opções:** pequeno, médio e grande. Com o grande, o aluno pode ver a rede "errar para o outro lado" e o erro pular em vez de cair.
+4. **O aluno escolhe o tamanho do passinho (taxa de aprendizado), com 3 opções:** pequeno, médio e grande. Com o grande, o aluno vê que passo demais atrapalha: os pesos pulam longe e a rede pode travar com o erro alto.
+5. **A lista de exemplos fica recolhida** ("Exemplos · 12 cores", com as amostras de cor e um "editar"). **O resultado do fim abre numa janela flutuante** no pé do canvas, sem escurecer a tela, para ver a rede e o gráfico ao mesmo tempo (dá para minimizar e fechar). Telas: "Laboratório · Treinar · 1 antes / 2 durante / 3 fim" no Figma.
 
 ## Detalhes técnicos (propostos pela IA)
 
@@ -24,11 +25,11 @@ O tutorial 05 · Como a rede aprende (roteiro no Figma) explica o treino em quat
 - **Mesma rede do forward pass.** O treino usa a mesma montagem (`lib/rede.ts`): ReLU nas camadas do meio, sigmoide no neurônio ligado à Saída, sem *bias* (ainda não entrou no lab).
 - **Erro mostrado:** a média de |objetivo − resposta| nos exemplos, o mesmo "quanto faltou" do tutorial 05. Para o ajuste, a conta usa o erro ao quadrado, que é o padrão e dá o mesmo sentido de correção.
 - **Uma repetição** = passar por todos os exemplos uma vez (uma época). Para cada exemplo: rodar (forward), medir o erro, voltar a culpa (backward) e ajustar cada peso um passinho. A ordem dos exemplos é embaralhada a cada repetição, com semente fixa.
-- **Passinho:** pequeno, médio e grande são três taxas de aprendizado fixas. Os valores exatos (algo como 0,1 / 0,5 / 3) serão escolhidos testando na montagem básica: o médio precisa convergir em menos de 1.000 repetições e o grande precisa oscilar de forma visível.
+- **Passinho:** pequeno 0,1 · médio 0,5 · grande 15 (`PASSINHOS` em `lib/treino.ts`). Testado na montagem básica: o médio acerta as 12 cores em 30 de 30 sorteios com 1.000 repetições; o pequeno aprende mais devagar; o grande trava com o erro alto em cerca de 4 de 10 sorteios. A ideia inicial era o grande "oscilar", mas com a montagem básica o que se vê é a rede **travar** (neurônios que apagam de vez), e o texto da tela diz isso.
 - **Limite dos pesos:** os pesos treinados respeitam o mesmo limite de ±5 da edição manual (`PESO_LIMITE`), para a tela ser a mesma nos dois casos.
 
 ### Do zero e Já treinada
-- **Do zero:** sorteia os pesos entre −1 e 1 com semente. Uma rede sorteada pode nascer "morta" (todos os neurônios do meio apagados para todos os exemplos, com a resposta presa em 0,50, como a ADR-0015 já previu). Por isso o sorteio é refeito, até algumas vezes, se nenhum neurônio do meio acender para algum exemplo.
+- **Do zero:** sorteia os pesos entre −1 e 1 com semente, mas com uma regra, por causa da falta de *bias*. Sem bias, quando nenhum neurônio do meio acende para uma cor, a soma do último neurônio é 0 e a resposta fica presa em 0,50. Com um sorteio qualquer, o treino da montagem básica falhava em ~60% das vezes: um neurônio virava detector de laranja e os azuis ficavam sem nenhum. Então o sorteio é refeito até existir **um neurônio do meio puxando para cada lado** (acende mais para os exemplos daquele objetivo), e a linha de cada um até o último neurônio já começa com o **sinal do lado** dele (+ para o 1, − para o 0). Os outros pesos continuam sorteados. Com isso, o médio acertou em 30 de 30 sorteios. Uma rede com 1 neurônio só no meio continua sem conseguir separar as duas cores, e a tabela do fim mostra isso.
 - **Já treinada:** continua dos pesos atuais do projeto, incluindo os que o aluno mudou à mão. No fim do treino, os pesos novos ficam salvos no projeto (no navegador), e o Rodar passa a usá-los.
 
 ### Calcular, gravar, reproduzir
@@ -42,7 +43,7 @@ O tutorial 05 · Como a rede aprende (roteiro no Figma) explica o treino em quat
 
 ### Ordem de trabalho
 1. **Telas no Figma primeiro:** a lista de exemplos, o painel durante o treino (erro e gráfico pequeno), o passinho, e o resultado no fim (gráfico + tabela antes/depois).
-2. `lib/treino.ts` com testes: o gradiente de cada peso conferido contra a diferença numérica, e a montagem básica "Do zero" chegando a laranja > 0,9 e azul < 0,1.
+2. `lib/treino.ts` com testes (`npm test`): o gradiente de cada peso conferido contra a diferença numérica, o forward igual ao do Rodar, e a montagem básica "Do zero" acertando as 12 cores.
 3. A tela, ligando a gravação à reprodução.
 
 ## Consequências
@@ -56,11 +57,11 @@ O tutorial 05 · Como a rede aprende (roteiro no Figma) explica o treino em quat
 - Com o passinho grande, o treino pode não convergir. É de propósito, mas a tela precisa deixar claro que isso é esperado.
 
 **Riscos e mitigação**
-- **Rede morta no Do zero:** mitigada pelo sorteio repetido.
+- **Rede morta no Do zero:** mitigada pelo sorteio com um neurônio para cada lado. Quando o lab ganhar *bias*, essa regra pode sair.
 - **Exemplos mal marcados pelo aluno** (um laranja marcado como azul): a rede não acerta todos. A tabela do fim mostra isso claramente, e esse "erro que não cai" também ensina.
 
 ## Quando revisitar
 
-- Quando entrar o *bias*.
+- Quando entrar o *bias* (aí o sorteio pode voltar a ser livre).
 - Quando o modo debug do backward pass ([ADR-0016](0016-modo-debug-backward-pass.md)) sair do papel.
 - Se o treino com redes grandes ficar lento na thread principal.
