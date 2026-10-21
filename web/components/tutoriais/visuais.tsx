@@ -3,6 +3,7 @@
 import { Aqua, type PoseAqua } from "@/components/mascote";
 import { formatar } from "@/lib/rede";
 import type { Visual } from "@/lib/tutoriais";
+import { Ativacao, Cozinha, Historia, Panqueca, Ponte, Revisao, Soma, TestePanqueca, type EstadoTeste } from "./neuronio";
 
 // O "palco" dos tutoriais: a visualização à esquerda de cada passo (frame "Tutorial · O neurônio · Desktop").
 // Usa a mesma gramática do laboratório (docs/04-design-system.md, 4.4): linhas verdes/vermelhas pelo
@@ -59,8 +60,6 @@ function Etiqueta({ x, y, texto, cor = TEXTO, largura = 64, visivel = true }: { 
     </g>
   );
 }
-
-const ponto = (a: [number, number], b: [number, number], t: number): [number, number] => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
 
 /* ---------------- 01 · O neurônio do cérebro ---------------- */
 
@@ -121,167 +120,18 @@ function Rotulo({ x, y, titulo, texto }: { x: number; y: number; titulo: string;
   );
 }
 
-function Chip({ x, y, texto, fundo, cor, largura = 220 }: { x: number; y: number; texto: string; fundo: string; cor: string; largura?: number }) {
+function Cerebro() {
   return (
-    <g>
-      <rect x={x - largura / 2} y={y - 22} width={largura} height={44} rx={22} fill={fundo} />
-      <text x={x} y={y + 5} textAnchor="middle" fontSize={15} fontWeight={600} fill={cor}>{texto}</text>
-    </g>
-  );
-}
-
-/** Sinapse: o terminal de um neurônio quase encostando no dendrito do outro, com mensageiros no meio. */
-function Sinapse({ y, forte }: { y: number; forte: boolean }) {
-  const largura = forte ? 8 : 3;
-  const pontos = forte
-    ? [[318, -10], [324, 4], [330, -4], [320, 12], [327, -14], [333, 9], [322, -2]]
-    : [[322, -4], [329, 6]];
-  return (
-    <g transform={`translate(0 ${y})`}>
-      <line x1={110} y1={0} x2={272} y2={0} stroke={BIO_TRACO} strokeWidth={largura} strokeLinecap="round" />
-      <circle cx={290} r={22} fill={BIO} stroke={BIO_TRACO} strokeWidth={2.5} />
-      {pontos.map(([px, py]) => (
-        <circle key={`${px}:${py}`} cx={px} cy={py} r={3} fill={PULSO_TRACO} />
-      ))}
-      <circle cx={350} r={14} fill={BIO_FUNDO} stroke={BIO_TRACO} strokeWidth={2.5} />
-      <line x1={364} y1={0} x2={500} y2={0} stroke={BIO_TRACO} strokeWidth={largura} strokeLinecap="round" />
-    </g>
-  );
-}
-
-const PARES_CEREBRO_IA = [
-  ["dendritos", "entradas"],
-  ["sinapses", "pesos"],
-  ["corpo da célula", "soma"],
-  ["disparar", "acender (ReLU)"],
-];
-
-function Cerebro({ fase }: { fase: "partes" | "dispara" | "sinapse" | "compara" }) {
-  if (fase === "sinapse")
-    return (
-      <svg viewBox="0 0 800 520" className="h-auto w-full" role="img" aria-label="Duas sinapses: uma forte, que passa muito sinal, e uma fraca.">
-        <text x={110} y={80} fontSize={13} fontWeight={500} fill={MUDO}>sinapse: onde um neurônio quase encosta no outro</text>
-        <Sinapse y={170} forte />
-        <Rotulo x={320} y={226} titulo="ligação forte" texto="passa muito sinal" />
-        <Chip x={640} y={170} texto="na IA: peso alto" fundo={AQUA_FUNDO} cor={AQUA_TEXTO} largura={180} />
-        <Sinapse y={340} forte={false} />
-        <Rotulo x={320} y={396} titulo="ligação fraca" texto="passa pouco sinal" />
-        <Chip x={640} y={340} texto="na IA: peso baixo" fundo={AQUA_FUNDO} cor={AQUA_TEXTO} largura={180} />
-        <AquaEm x={610} y={440} unidade={6} pose="contente" />
-      </svg>
-    );
-  if (fase === "compara")
-    return (
-      <svg viewBox="0 0 800 520" className="h-auto w-full" role="img" aria-label="Comparação entre as partes do neurônio do cérebro e do neurônio da IA.">
-        <g transform="translate(171 120) scale(0.35)">
-          <NeuronioBio />
-        </g>
-        <AquaEm x={570} y={102} unidade={6} />
-        <text x={200} y={196} textAnchor="middle" fontSize={15} fontWeight={600} fill={BIO_TEXTO}>No cérebro</text>
-        <text x={600} y={196} textAnchor="middle" fontSize={15} fontWeight={600} fill={AQUA_TEXTO}>Na IA</text>
-        {PARES_CEREBRO_IA.map(([bio, ia], i) => (
-          <g key={bio}>
-            <Chip x={200} y={250 + i * 66} texto={bio} fundo={BIO_FUNDO} cor={BIO_TEXTO} />
-            <text x={400} y={256 + i * 66} textAnchor="middle" fontSize={18} fill={SUTIL}>→</text>
-            <Chip x={600} y={250 + i * 66} texto={ia} fundo={AQUA_FUNDO} cor={AQUA_TEXTO} />
-          </g>
-        ))}
-      </svg>
-    );
-  const dispara = fase === "dispara";
-  return (
-    <svg
-      viewBox="0 0 800 520"
-      className="h-auto w-full"
-      role="img"
-      aria-label={dispara ? "O neurônio dispara e um pulso corre pelo axônio." : "As partes de um neurônio: dendritos, corpo da célula e axônio."}
-    >
+    <svg viewBox="0 0 800 520" className="h-auto w-full" role="img" aria-label="As partes de um neurônio: dendritos, corpo celular e axônio. Ele dispara só se o total passar do limiar.">
       <g transform="translate(270 250)">
-        <NeuronioBio disparou={dispara} />
-        {dispara && (
-          <>
-            {[[-120, -72], [-120, 2], [-120, 72], [-156, -20]].map(([x, y]) => (
-              <circle key={`${x}:${y}`} cx={x} cy={y} r={7} fill={PULSO} stroke={PULSO_TRACO} strokeWidth={2} />
-            ))}
-            <circle cx={60} cy={0} r={11} fill={PULSO} stroke={PULSO_TRACO} strokeWidth={2.5} className="pulso-axonio" />
-          </>
-        )}
+        <NeuronioBio />
+        <circle cx={190} cy={0} r={11} fill={PULSO} stroke={PULSO_TRACO} strokeWidth={2.5} />
       </g>
-      {dispara ? (
-        <>
-          <text x={80} y={110} fontSize={13} fontWeight={500} fill={MUDO}>sinais chegando</text>
-          <text x={150} y={420} fontSize={13} fontWeight={500} fill={MUDO}>soma dos sinais</text>
-          <rect x={150} y={432} width={240} height={12} rx={6} fill="#E5E5EA" />
-          <rect x={150} y={432} width={196} height={12} rx={6} fill={PULSO_TRACO} />
-          <line x1={294} y1={424} x2={294} y2={452} stroke={TEXTO} strokeWidth={2} />
-          <text x={294} y={472} textAnchor="middle" fontSize={12} fontWeight={600} fill={TEXTO}>limite</text>
-          <text x={640} y={170} textAnchor="middle" fontSize={16} fontWeight={700} fill="#B45309">disparou!</text>
-          <text x={640} y={190} textAnchor="middle" fontSize={13} fill={MUDO}>o pulso segue adiante</text>
-        </>
-      ) : (
-        <>
-          <Rotulo x={110} y={90} titulo="dendritos" texto="recebem sinais" />
-          <Rotulo x={270} y={170} titulo="corpo da célula" texto="junta tudo" />
-          <Rotulo x={460} y={228} titulo="axônio" />
-          <text x={460} y={290} textAnchor="middle" fontSize={13} fill={MUDO}>leva o sinal adiante</text>
-          <Rotulo x={630} y={170} titulo="terminais" texto="ligam no próximo" />
-          <AquaEm x={640} y={420} unidade={6} />
-        </>
-      )}
-    </svg>
-  );
-}
-
-/* ---------------- 01 · O neurônio da IA ---------------- */
-
-const ENTRADAS = [
-  { nome: "R", valor: 0.44, peso: 0.6, y: 120 },
-  { nome: "G", valor: 1, peso: -0.4, y: 260 },
-  { nome: "B", valor: 0.93, peso: 0.5, y: 400 },
-];
-
-function Neuronio({ fase }: { fase: "entradas" | "multiplica" | "soma" | "decide" }) {
-  const ordem = ["entradas", "multiplica", "soma", "decide"].indexOf(fase);
-  const porta: [number, number] = [442, 248];
-  const soma = ENTRADAS.reduce((s, e) => s + e.valor * e.peso, 0);
-  const passa = Math.max(0, soma);
-  return (
-    <svg viewBox="0 0 800 520" className="h-auto w-full" role="img" aria-label="Um neurônio recebendo três números.">
-      {ENTRADAS.map((e) => {
-        const inicio: [number, number] = [158, e.y];
-        const meio = ponto(inicio, porta, 0.38);
-        // a bolinha sai da entrada, passa pelo peso e para antes do neurônio, sem encostar nas outras
-        const bolinha = ponto(inicio, porta, ordem === 0 ? 0.18 : ordem === 1 ? 0.64 : 1);
-        const produto = e.valor * e.peso;
-        return (
-          <g key={e.nome}>
-            <line
-              x1={inicio[0]} y1={inicio[1]} x2={porta[0]} y2={porta[1]}
-              stroke={ordem === 0 ? CINZA : corDoSinal(e.peso)}
-              strokeOpacity={ordem === 0 ? 0.4 : 0.7}
-              strokeWidth={1.5 + Math.abs(e.peso) * 3}
-              className="motion-safe:transition-[stroke] motion-safe:duration-500"
-            />
-            <text x={70} y={e.y + 5} textAnchor="end" fontSize={15} fontWeight={600} fill={MUDO}>{e.nome}</text>
-            <text x={132} y={e.y + 5} textAnchor="end" fontSize={14} fontFamily={MONO} fill={TEXTO}>{formatar(e.valor)}</text>
-            <circle cx={150} cy={e.y} r={8} fill="#FFFFFF" stroke={CINZA} strokeWidth={2} />
-            <Etiqueta x={meio[0]} y={meio[1]} texto={`× ${formatar(e.peso)}`} cor={textoDoSinal(e.peso)} largura={78} visivel={ordem >= 1} />
-            <Bolinha x={bolinha[0]} y={bolinha[1]} valor={ordem === 0 ? e.valor : produto} neutra={ordem === 0} visivel={ordem <= 1} />
-          </g>
-        );
-      })}
-      <AquaEm x={440} y={218} unidade={12} pose={ordem >= 2 ? "contente" : "normal"} />
-      <g className={ANIMA} style={{ opacity: ordem >= 2 ? 1 : 0 }}>
-        <rect x={420} y={140} width={160} height={44} rx={22} fill="#FFFFFF" stroke={AQUA} strokeWidth={2} />
-        <text x={500} y={168} textAnchor="middle" fontSize={16} fontWeight={600} fontFamily={MONO} fill={TEXTO}>
-          soma {formatar(soma)}
-        </text>
-      </g>
-      <g className={ANIMA} style={{ opacity: ordem >= 3 ? 1 : 0 }}>
-        <line x1={560} y1={248} x2={690} y2={248} stroke={AQUA} strokeWidth={3} />
-        <Bolinha x={712} y={248} valor={passa} />
-        <text x={712} y={300} textAnchor="middle" fontSize={13} fontWeight={500} fill={MUDO}>passa adiante</text>
-      </g>
+      <Rotulo x={110} y={90} titulo="dendritos" texto="recebem sinais" />
+      <Rotulo x={270} y={170} titulo="corpo celular" texto="junta tudo" />
+      <Rotulo x={460} y={228} titulo="axônio" />
+      <text x={460} y={290} textAnchor="middle" fontSize={13} fill={MUDO}>leva o sinal</text>
+      <text x={400} y={450} textAnchor="middle" fontSize={16} fontWeight={700} fill="#B45309">dispara só se o total passar do limiar</text>
     </svg>
   );
 }
@@ -619,12 +469,26 @@ export function AquaLampada({ acesa, className }: { acesa: boolean; className?: 
 
 /* ---------------- Palco ---------------- */
 
-export function Palco({ visual, valor }: { visual: Visual; valor: number }) {
+export function Palco({ visual, valor, estado = "pergunta" }: { visual: Visual; valor: number; estado?: EstadoTeste }) {
   switch (visual.tipo) {
     case "cerebro":
-      return <Cerebro fase={visual.fase} />;
-    case "neuronio":
-      return <Neuronio fase={visual.fase} />;
+      return <Cerebro />;
+    case "cozinha":
+      return <Cozinha />;
+    case "historia":
+      return <Historia />;
+    case "ponte":
+      return <Ponte />;
+    case "panqueca":
+      return <Panqueca fase={visual.fase} />;
+    case "soma":
+      return <Soma />;
+    case "ativacao":
+      return <Ativacao />;
+    case "revisao":
+      return <Revisao />;
+    case "teste-panqueca":
+      return <TestePanqueca estado={estado} />;
     case "peso":
       return <Peso entrada={visual.entrada} peso={valor} noLab={visual.noLab} />;
     case "reta":

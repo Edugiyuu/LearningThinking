@@ -70,6 +70,16 @@ O autor achou os passos 7 e 10 confusos; a IA apontou também o 8. Decidido:
 - **Passo 3 · a Aqua fantasiada de cada pesquisador** (pedido do autor): McCulloch e Pitts (duas Aquas em 1943), Rosenblatt de óculos e topete (1958), cabelo e suéter dos anos 80 (1986) e a Aqua normal em "hoje". Detalhes no [04-design-system.md](../04-design-system.md), seção 7.1.
 - **Passo 5 fica como está** (autor): é só a entrada; a nota de cada coisa não precisa ser explicada.
 
+## Código igual ao Figma (2026-10-20)
+
+Pedido do autor: o tutorial 01 em código segue o roteiro do Figma, com transições em GSAP.
+- **Os 10 passos** estão em `web/lib/tutoriais.ts` (9 passos + o teste). Cada passo pode ter `assunto` ("Passo 5 de 10 · Neurônio artificial"), `diaADia`, `naIA` e `termos`, que viram os quadros "No dia a dia", "Na IA" e "Termos deste passo". O teste ganhou `subtitulo`, opções com `detalhe` (o par z + certeza), `conta` e um `visual` próprio: o palco mostra as caixas com lacunas, que se preenchem quando o aluno acerta.
+- **Os palcos** ficam em `web/components/tutoriais/neuronio.tsx`, no mesmo tamanho do Figma (420 × 368), ampliados pelo SVG. As poses da Aqua (reações, fantasias de época e a Aqua cozinhando) estão em `web/components/mascote.tsx`, com as células copiadas dos frames do Figma.
+- **Animações com GSAP** (como as bolinhas do laboratório): a cada passo, o palco entra deslizando do lado de onde o aluno veio (da direita no Próximo, da esquerda no Anterior), as peças entram em sequência, as barras crescem (`data-cresce`), as linhas e curvas são desenhadas (`data-traco`) e o texto entra logo depois. No teste, as lacunas, a Aqua e o quadro da conta dão um pulinho (`data-pulo`).
+- **As animações sempre rodam** (pedido do autor, que tem os efeitos de animação do Windows desligados e não via nada). Exceção ao [ADR-0011](0011-acessibilidade-e-movimento.md): com "reduzir movimento" ligado, as peças só aparecem aos poucos (fade), sem deslizar nem pular; as barras e as linhas continuam sendo reveladas, porque fazem parte da explicação.
+- **A aula cabe na tela** (pedido do autor): no desktop a página tem a altura da janela. O palco encolhe para caber, e se o texto da direita for longo, só ele rola; os botões Anterior/Próximo ficam sempre visíveis embaixo. No celular continua empilhado (palco em cima, texto embaixo), com a rolagem normal.
+- **Logo da barra com `unidade={4}`** (antes 3): numa tela com escala de 125%, 3 px viram 3,75 px reais e o navegador arredonda as colunas de forma desigual, então um olho da Aqua parecia mais para o lado. Com 4 px (5 px reais) ela fica simétrica, do mesmo tamanho da Aqua de 40 × 24 do Figma.
+
 ## Consequências
 
 - O link **Tutoriais** da Home passa a funcionar.
@@ -81,6 +91,5 @@ O autor achou os passos 7 e 10 confusos; a IA apontou também o 8. Decidido:
 
 - O autor ainda não revisou o formato (passo a passo × rolagem) nem os textos.
 - **Para a aula de camadas:** explicar onde cada ativação entra na rede (ReLU nos neurônios do meio, sigmoide no último, ligado à Saída), que saiu do tutorial 01 na Revisão 3.
-- O código (`web/lib/tutoriais.ts`) ainda segue o roteiro antigo dos passos 6 a 10; muda depois da aprovação no Figma.
 - **05 · Como a rede aprende**: o conteúdo depende da decisão sobre o Treinar e o backward pass ([ADR-0016](0016-modo-debug-backward-pass.md)).
 - Se o tutorial deve abrir o laboratório já com a montagem certa (hoje leva para Novo projeto).

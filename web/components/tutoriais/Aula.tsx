@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { Aqua } from "@/components/mascote";
+import gsap from "gsap";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Aqua, AquaReacao } from "@/components/mascote";
 import { salvarProgresso } from "@/lib/progresso-tutoriais";
 import { formatar } from "@/lib/rede";
 import { totalDePassos, type Conta, type Passo, type Tutorial } from "@/lib/tutoriais";
@@ -43,6 +44,11 @@ export default function Aula({ tutorial, passoInicial }: { tutorial: Tutorial; p
     if (acertou) salvarProgresso(tutorial.slug, { passo, concluido: true });
   }, [acertou, tutorial.slug, passo]);
 
+  const palcoRef = useRef<HTMLElement>(null);
+  const textoRef = useRef<HTMLDivElement>(null);
+  useEntradaDoPasso(palcoRef, textoRef, passo);
+  usePulo(palcoRef, textoRef, escolha);
+
   useEffect(() => {
     function tecla(e: KeyboardEvent) {
       const alvo = e.target as HTMLElement;
@@ -55,7 +61,7 @@ export default function Aula({ tutorial, passoInicial }: { tutorial: Tutorial; p
   });
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col lg:h-dvh lg:min-h-0">
       <header className="grid h-16 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-4 border-b border-black/[.06] px-4 sm:px-8">
         <Link href="/tutoriais" className="text-sm whitespace-nowrap text-text-muted hover:text-text">
           ← Tutoriais
@@ -77,33 +83,38 @@ export default function Aula({ tutorial, passoInicial }: { tutorial: Tutorial; p
           </ol>
         </div>
         <Link href="/" className="justify-self-end" aria-label="LearningThinking, início">
-          <Aqua unidade={3} />
+          <Aqua unidade={4} />
         </Link>
       </header>
 
-      <main className="mx-auto grid w-full max-w-[1440px] flex-1 gap-8 px-4 py-6 sm:px-8 lg:grid-cols-[minmax(0,1fr)_476px] lg:gap-10 lg:py-8">
+      <main className="mx-auto grid w-full max-w-[1440px] flex-1 gap-8 px-4 py-6 sm:px-8 lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_476px] lg:gap-10 lg:py-8">
         <section
+          ref={palcoRef}
           aria-label="Visualização"
-          className="flex min-h-[320px] flex-col justify-center gap-6 rounded-[24px] bg-bg-subtle p-4 sm:p-8"
+          className="flex min-h-[320px] flex-col justify-center gap-6 overflow-hidden rounded-[24px] bg-bg-subtle p-4 sm:p-8 lg:min-h-0 lg:[&>svg]:min-h-0 lg:[&>svg]:flex-1"
         >
           {atual ? (
             <>
               <Palco visual={atual.visual} valor={valor} />
               <Controle passo={atual} valor={valor} onValor={setValor} />
             </>
+          ) : tutorial.teste.visual ? (
+            <Palco visual={tutorial.teste.visual} valor={0} estado={escolha === null ? "pergunta" : acertou ? "certo" : "errado"} />
           ) : (
             <Fim tutorial={tutorial} acertou={acertou} />
           )}
         </section>
 
-        <section aria-live="polite" className="flex flex-col">
+        <section aria-live="polite" className="flex flex-col lg:min-h-0">
           <p className="text-[13px] font-semibold text-aqua-ink">
             Passo {passo} de {total}
-            {atual ? "" : " · Teste rápido"}
+            {atual ? (atual.assunto ? ` · ${atual.assunto}` : "") : " · Teste rápido"}
           </p>
-          {atual ? <TextoDoPasso passo={atual} valor={valor} /> : <TesteRapido tutorial={tutorial} escolha={escolha} onEscolha={setEscolha} acertou={acertou} />}
+          <div ref={textoRef} className="flex flex-col lg:-mr-3 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-3">
+            {atual ? <TextoDoPasso passo={atual} valor={valor} /> : <TesteRapido tutorial={tutorial} escolha={escolha} onEscolha={setEscolha} acertou={acertou} />}
+          </div>
 
-          <nav className="mt-10 flex items-center justify-between gap-4 pb-2 lg:mt-auto lg:pt-10">
+          <nav className="mt-10 flex shrink-0 items-center justify-between gap-4 pb-2 lg:mt-0 lg:pt-6">
             <button type="button" className={BOTAO_SECUNDARIO} disabled={passo === 1} onClick={() => irPara(passo - 1)}>
               ← Anterior
             </button>
@@ -127,15 +138,85 @@ export default function Aula({ tutorial, passoInicial }: { tutorial: Tutorial; p
   );
 }
 
+// Animações com GSAP (como as bolinhas do laboratório, ADR-0021). Elas sempre rodam (pedido do autor).
+// Quem pediu menos movimento no sistema vê só as peças aparecendo aos poucos, sem deslizar nem
+// pular (ADR-0011): as barras e as linhas continuam sendo reveladas, porque fazem parte da explicação.
+const menosMovimento = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/**
+ * A cada passo, o palco entra deslizando do lado de onde o aluno veio, as peças dele aparecem uma
+ * depois da outra e o texto vem logo atrás. No palco, `data-cresce` faz uma barra crescer (da
+ * esquerda, ou da direita com "direita") e `data-traco` desenha uma linha do começo ao fim.
+ */
+function useEntradaDoPasso(palco: React.RefObject<HTMLElement | null>, texto: React.RefObject<HTMLDivElement | null>, passo: number) {
+  const anterior = useRef(passo);
+  useLayoutEffect(() => {
+    const lado = passo >= anterior.current ? 1 : -1;
+    anterior.current = passo;
+    const mexe = !menosMovimento();
+    const ctx = gsap.context(() => {
+      const svg = palco.current?.querySelector("svg");
+      const pecas = svg ? Array.from(svg.children) : Array.from(palco.current?.children ?? []);
+      const tl = gsap.timeline({ defaults: { ease: "power2.out" } });
+      if (svg && mexe) tl.from(svg, { x: 48 * lado, duration: 0.6, ease: "power3.out" }, 0);
+      tl.from(pecas, { opacity: 0, y: mexe ? 12 : 0, duration: 0.55, stagger: 0.05 }, 0);
+      palco.current?.querySelectorAll<SVGGraphicsElement>("[data-cresce]").forEach((el) => {
+        const direita = el.dataset.cresce === "direita";
+        tl.from(el, { scaleX: 0, transformOrigin: direita ? "right center" : "left center", duration: 0.8, ease: "power3.out" }, direita ? 0.9 : 0.4);
+      });
+      palco.current?.querySelectorAll<SVGGeometryElement>("[data-traco]").forEach((el) => {
+        const comprimento = el.getTotalLength();
+        tl.fromTo(
+          el,
+          { strokeDasharray: comprimento, strokeDashoffset: comprimento },
+          { strokeDashoffset: 0, duration: 0.9, ease: "power2.inOut", clearProps: "strokeDasharray,strokeDashoffset" },
+          0.2,
+        );
+      });
+      if (texto.current) tl.from(texto.current.children, { opacity: 0, y: mexe ? 18 : 0, duration: 0.6, stagger: 0.08 }, 0.15);
+    });
+    return () => ctx.revert();
+  }, [palco, texto, passo]);
+}
+
+/** Quando o aluno responde o teste, o que mudou (lacunas, a Aqua, o quadro da conta) dá um pulinho. */
+function usePulo(palco: React.RefObject<HTMLElement | null>, texto: React.RefObject<HTMLDivElement | null>, escolha: number | null) {
+  useLayoutEffect(() => {
+    if (escolha === null) return;
+    const pulos = [palco.current, texto.current].flatMap((raiz) => Array.from(raiz?.querySelectorAll("[data-pulo]") ?? []));
+    const ctx = gsap.context(() => {
+      if (menosMovimento()) gsap.from(pulos, { opacity: 0, duration: 0.5, stagger: 0.08 });
+      else gsap.from(pulos, { scale: 0.6, opacity: 0, transformOrigin: "center", duration: 0.5, ease: "back.out(2)", stagger: 0.08 });
+    });
+    return () => ctx.revert();
+  }, [palco, texto, escolha]);
+}
+
 function TextoDoPasso({ passo, valor }: { passo: Passo; valor: number }) {
   return (
     <>
       <h1 className="mt-3 text-[30px] leading-[1.15] font-semibold tracking-[-0.02em] sm:text-4xl">{passo.titulo}</h1>
-      <div className="mt-5 space-y-4 text-[17px] leading-[1.55] text-text-muted">
-        {passo.texto.map((t) => (
-          <p key={t}>{t}</p>
-        ))}
-      </div>
+      {passo.texto && (
+        <div className="mt-5 space-y-4 text-[17px] leading-[1.55] text-text-muted">
+          {passo.texto.map((t) => (
+            <p key={t}>{t}</p>
+          ))}
+        </div>
+      )}
+      {passo.diaADia && (
+        <div className="mt-6 rounded-2xl bg-aqua-50 p-5">
+          <p className="flex items-center gap-2 text-[13px] font-semibold text-aqua-ink">
+            <IconePanqueca /> No dia a dia
+          </p>
+          <p className="mt-2 text-[15px] leading-[1.55]">{passo.diaADia}</p>
+        </div>
+      )}
+      {passo.naIA && (
+        <div className="mt-6">
+          <p className="text-[13px] font-semibold text-text-muted">Na IA</p>
+          <p className="mt-1.5 text-[17px] leading-[1.55] text-text-muted">{passo.naIA}</p>
+        </div>
+      )}
       {passo.conta && <CaixaConta conta={passo.conta} visual={passo.visual} valor={valor} />}
       {passo.quebra && (
         <div className="mt-6 rounded-2xl bg-[#FFF7E6] p-5">
@@ -143,7 +224,25 @@ function TextoDoPasso({ passo, valor }: { passo: Passo; valor: number }) {
           <p className="mt-2 text-[15px] leading-[1.5] text-[#5C3D00]">{passo.quebra.texto}</p>
         </div>
       )}
+      {passo.termos && (
+        <div className="mt-6">
+          <p className="text-[13px] text-text-subtle">Termos deste passo</p>
+          <p className="mt-1 text-[15px] font-semibold text-aqua-ink">{passo.termos.join(" · ")}</p>
+        </div>
+      )}
     </>
+  );
+}
+
+/** A panqueca em pixel do quadro "No dia a dia" (a mesma do palco). */
+function IconePanqueca() {
+  return (
+    <svg width={21} height={12} viewBox="0 0 7 4" shapeRendering="crispEdges" aria-hidden>
+      <rect x={1} y={0} width={5} height={1} fill="#E9B44C" />
+      <rect x={0} y={1} width={7} height={2} fill="#E9B44C" />
+      <rect x={1} y={3} width={5} height={1} fill="#C98A2B" />
+      <rect x={2} y={1} width={1} height={1} fill="#F6D58E" />
+    </svg>
   );
 }
 
@@ -241,6 +340,7 @@ function TesteRapido({
   return (
     <>
       <h1 className="mt-3 text-[30px] leading-[1.15] font-semibold tracking-[-0.02em] sm:text-4xl">{t.pergunta}</h1>
+      {t.subtitulo && <p className="mt-3 text-[17px] text-text-muted">{t.subtitulo}</p>}
       <div className="mt-6 space-y-3" role="group" aria-label="Respostas">
         {t.opcoes.map((o, i) => {
           const marcada = escolha === i;
@@ -251,24 +351,40 @@ function TesteRapido({
               : "border-2 border-[#E5484D] bg-[#FEF2F2] text-text";
           return (
             <button
-              key={o.texto}
+              key={i}
               type="button"
               aria-pressed={marcada}
               disabled={acertou && !marcada}
               onClick={() => onEscolha(i)}
-              className={`flex w-full items-center justify-between rounded-[14px] border px-6 py-4 text-left text-base transition-colors disabled:opacity-50 ${estilo}`}
+              className={`flex w-full items-center justify-between gap-4 rounded-[14px] border px-6 py-4 text-left text-base transition-colors disabled:opacity-50 ${estilo}`}
             >
-              {o.texto}
+              <span className="flex items-baseline gap-6">
+                <span className={o.detalhe ? "font-mono text-[17px] font-semibold text-text" : undefined}>{o.texto}</span>
+                {o.detalhe && <span className="text-[15px]">{o.detalhe}</span>}
+              </span>
               {marcada && <span aria-hidden className={o.certa ? "font-bold text-[#0B8A5F]" : "font-bold text-[#C2282D]"}>{o.certa ? "✓" : "✕"}</span>}
             </button>
           );
         })}
       </div>
-      {escolha !== null && (
-        <p className={`mt-5 text-[15px] leading-[1.5] ${acertou ? "text-[#0B6B4A]" : "text-[#C2282D]"}`}>
-          {acertou ? t.explicacao : "Quase. Volte um passo se quiser rever, ou tente outra resposta."}
-        </p>
-      )}
+      {escolha !== null &&
+        (t.conta ? (
+          <div data-pulo className={`mt-5 flex items-center gap-5 rounded-2xl p-5 ${acertou ? "bg-[#ECFDF5]" : "bg-[#FEF2F2]"}`}>
+            <AquaReacao reacao={acertou ? "decidindo" : "preocupada"} unidade={5} rotulo={acertou ? "A Aqua com a lâmpada acesa" : "A Aqua preocupada"} />
+            <div>
+              <p className="text-[15px] font-semibold">{acertou ? t.explicacao : "Quase. A Aqua mostra a conta:"}</p>
+              {t.conta.map((l) => (
+                <p key={l} className="mt-1 font-mono text-[15px] tabular-nums">
+                  {l}
+                </p>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <p className={`mt-5 text-[15px] leading-[1.5] ${acertou ? "text-[#0B6B4A]" : "text-[#C2282D]"}`}>
+            {acertou ? t.explicacao : "Quase. Volte um passo se quiser rever, ou tente outra resposta."}
+          </p>
+        ))}
       <div className="mt-8 rounded-2xl border-2 border-aqua bg-aqua-50 p-5">
         <p className="text-[13px] font-semibold text-aqua-ink">Agora no laboratório</p>
         <p className="mt-2 text-[15px] leading-[1.5]">{t.noLab}</p>

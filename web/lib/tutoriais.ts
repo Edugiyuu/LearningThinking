@@ -1,11 +1,18 @@
-// Conteúdo dos tutoriais (frames "Tutoriais · Desktop" e "Tutorial · O neurônio · Desktop" no Figma).
+// Conteúdo dos tutoriais (frames "Tutoriais · Desktop" e "Tutorial 01 · O neurônio · roteiro" no Figma).
 // Cada tutorial é uma lista de passos; cada passo muda uma coisa só no palco (a visualização à esquerda).
 // O último passo é sempre o teste rápido. As contas batem com o laboratório: no meio da rede o
 // neurônio acende (ReLU: passa a soma se ela for positiva, senão 0); no fim, a soma passa pela sigmoide.
 
 export type Visual =
-  | { tipo: "cerebro"; fase: "partes" | "dispara" | "sinapse" | "compara" }
-  | { tipo: "neuronio"; fase: "entradas" | "multiplica" | "soma" | "decide" }
+  | { tipo: "cerebro" }
+  | { tipo: "cozinha" }
+  | { tipo: "historia" }
+  | { tipo: "ponte" }
+  | { tipo: "panqueca"; fase: "entradas" | "pesos" }
+  | { tipo: "soma" }
+  | { tipo: "ativacao" }
+  | { tipo: "revisao" }
+  | { tipo: "teste-panqueca" }
   | { tipo: "peso"; entrada: number; peso: number; interativo?: boolean; noLab?: boolean }
   | { tipo: "reta"; naFaixa: boolean }
   | { tipo: "curva"; soma: number; interativo?: boolean; marcos?: boolean }
@@ -16,8 +23,16 @@ export type Visual =
 export type Conta = { linhas: string[]; nota?: string } | { dinamica: "peso" | "sigmoide" };
 
 export type Passo = {
+  /** Assunto do passo, ao lado do número ("Passo 5 de 10 · Neurônio artificial"). */
+  assunto?: string;
   titulo: string;
-  texto: string[];
+  texto?: string[];
+  /** Quadro "No dia a dia": a analogia ao lado da conta de verdade (docs/07-guia-de-conteudo.md). */
+  diaADia?: string;
+  /** "Na IA": o nome técnico e onde fica no laboratório. */
+  naIA?: string;
+  /** "Termos deste passo": os nomes técnicos que o aluno leva. */
+  termos?: string[];
   visual: Visual;
   conta?: Conta;
   /** "Onde a ideia quebra": toda metáfora tem um limite (docs/07-guia-de-conteudo.md). */
@@ -26,10 +41,16 @@ export type Passo = {
 
 export type Teste = {
   pergunta: string;
-  opcoes: { texto: string; certa?: boolean }[];
+  subtitulo?: string;
+  /** Com `detalhe`, cada opção preenche duas lacunas de uma vez (ex.: z e a certeza). */
+  opcoes: { texto: string; detalhe?: string; certa?: boolean }[];
   explicacao: string;
+  /** A conta que a Aqua mostra depois da resposta, certa ou errada. */
+  conta?: string[];
   aprendeu: string[];
   noLab: string;
+  /** Palco do teste. Sem ele, o palco mostra a Aqua com a lâmpada. */
+  visual?: Visual;
 };
 
 export type Tutorial = {
@@ -47,87 +68,107 @@ export const tutoriais: Tutorial[] = [
     slug: "neuronio",
     numero: "01",
     titulo: "O neurônio",
-    descricao: "Do neurônio do seu cérebro à continha que a IA faz.",
-    minutos: 7,
+    descricao: "Do neurônio do seu cérebro à continha que a IA faz, com a Aqua fazendo panqueca.",
+    minutos: 8,
     passos: [
       {
-        titulo: "Começa no seu cérebro",
+        assunto: "A inspiração",
+        titulo: "A ideia veio do cérebro",
         texto: [
-          "Seu cérebro tem cerca de 86 bilhões de neurônios. Cada um é uma célula que recebe sinais de outros neurônios e decide se passa um sinal adiante.",
-          "Os dendritos recebem os sinais, o corpo da célula junta tudo e o axônio leva a resposta até os próximos neurônios.",
+          "Um neurônio do cérebro recebe sinais pelos dendritos e junta tudo no corpo celular.",
+          "Se o total passar de um limiar, ele dispara um sinal pelo axônio. Se não passar, fica quieto.",
         ],
-        visual: { tipo: "cerebro", fase: "partes" },
+        termos: ["dendritos", "corpo celular", "axônio", "limiar"],
+        visual: { tipo: "cerebro" },
       },
       {
-        titulo: "Ele dispara ou fica quieto",
+        assunto: "A inspiração",
+        titulo: "A Aqua aprendendo a cozinhar",
         texto: [
-          "Os sinais que chegam se somam no corpo da célula. Se a soma passar de um limite, o neurônio dispara: um pulso elétrico corre pelo axônio.",
-          "Se não passar, ele fica quieto. É tudo ou nada.",
+          "A Aqua quer acertar o ponto da panqueca. Na 1ª vez ela presta atenção em tudo, até na música, e a panqueca queima.",
+          "A cada tentativa, as ligações que ajudam (cor da massa, tempo no fogo) ficam fortes e a que não ajuda (a música) fica fraca. No cérebro, essas ligações são sinapses.",
         ],
-        visual: { tipo: "cerebro", fase: "dispara" },
+        termos: ["sinapse", "ligação forte", "ligação fraca"],
+        visual: { tipo: "cozinha" },
       },
       {
-        titulo: "As ligações têm força",
+        assunto: "História",
+        titulo: "Do cérebro à matemática",
         texto: [
-          "Onde um neurônio encosta no outro existe a sinapse. Algumas ligações são fortes e passam muito sinal; outras são fracas e passam pouco.",
-          "Aprender, no cérebro, é em boa parte isso: deixar algumas ligações mais fortes e outras mais fracas.",
+          "1943: McCulloch e Pitts transformam o neurônio numa conta: soma as entradas e dispara se passar de um limiar.",
+          "1958: Rosenblatt cria o perceptron, que aprende os próprios pesos.",
+          "1986: a retropropagação passa a treinar redes com várias camadas.",
         ],
-        visual: { tipo: "cerebro", fase: "sinapse" },
+        termos: ["neurônio de McCulloch-Pitts", "perceptron", "retropropagação (backpropagation)"],
+        visual: { tipo: "historia" },
       },
       {
-        titulo: "A IA copiou a ideia",
-        texto: [
-          "Nos anos 1940 e 1950, pesquisadores transformaram essa ideia em matemática. O neurônio da IA guarda só o esqueleto do original.",
-          "Entradas no lugar dos dendritos, pesos no lugar das sinapses, uma soma no lugar do corpo da célula e uma regra para acender no lugar do disparo.",
-        ],
-        visual: { tipo: "cerebro", fase: "compara" },
-        quebra: {
-          titulo: "Onde a comparação com o cérebro quebra",
-          texto: "O neurônio de verdade é uma célula viva, com química, pulsos no tempo e milhares de ligações. O da IA é só multiplicação e soma: uma inspiração, não uma cópia.",
-        },
+        assunto: "A ponte",
+        titulo: "Cérebro × IA × laboratório",
+        texto: ["O neurônio artificial guarda só a ideia do biológico. Cada parte virou um pedaço da conta, e cada pedaço aparece em algum lugar do laboratório."],
+        quebra: { titulo: "Onde a comparação quebra", texto: "O neurônio da IA não tem nada de vivo: é só multiplicação e soma." },
+        termos: ["neurônio artificial", "entradas", "pesos", "soma ponderada", "função de ativação"],
+        visual: { tipo: "ponte" },
       },
       {
-        titulo: "Agora, a versão da IA",
-        texto: [
-          "No lugar de sinais elétricos, ela recebe números. Aqui, uma cor: quanto de vermelho (R), de verde (G) e de azul (B) ela tem, de 0 a 1.",
-          "No laboratório, esses números saem do bloco Entrada. A Aqua faz o papel do neurônio.",
-        ],
-        visual: { tipo: "neuronio", fase: "entradas" },
+        assunto: "Neurônio artificial",
+        titulo: "Entradas: o vetor x",
+        diaADia:
+          "Antes de virar a panqueca, a Aqua olha três coisas e dá uma nota de 0 a 1 para cada: a cor da massa (0,90), o tempo no fogo (0,60) e a música (0,30). Um app de clima faz igual com temperatura, umidade e vento.",
+        naIA: "Essa lista de números é o vetor de entrada x = (x₁, x₂, x₃). Cada número é uma característica (feature). No laboratório, as entradas são o R, o G e o B da cor.",
+        termos: ["vetor de entrada", "feature (característica)"],
+        visual: { tipo: "panqueca", fase: "entradas" },
       },
       {
-        titulo: "Cada número é multiplicado",
-        texto: [
-          "Cada linha tem um peso, que faz o papel da sinapse: diz quão forte é aquela ligação. O número que passa por ela é multiplicado pelo peso.",
-          "Peso positivo deixa a bolinha verde; negativo, vermelha. Repare no G: 1,00 × −0,40 vira −0,40.",
-        ],
-        visual: { tipo: "neuronio", fase: "multiplica" },
-        conta: { linhas: ["R: 0,44 × 0,60 = 0,26", "G: 1,00 × −0,40 = −0,40", "B: 0,93 × 0,50 = 0,47"] },
+        assunto: "Neurônio artificial",
+        titulo: "Pesos: wᵢ · xᵢ",
+        diaADia:
+          "A Aqua não confia igual em tudo: na cor da massa, muito (0,80); no tempo, mais ou menos (0,50); a música quase não conta, até tira um pouco (−0,10). É como pedir opinião: quem cozinha bem vale mais que quem chuta.",
+        naIA: "Cada entrada xᵢ é multiplicada pelo seu peso wᵢ. Positivo reforça (verde), negativo atrapalha (vermelho), perto de 0 quase não conta.",
+        termos: ["peso (w)", "produto wᵢ·xᵢ"],
+        visual: { tipo: "panqueca", fase: "pesos" },
       },
       {
-        titulo: "Tudo é somado",
-        texto: [
-          "As três bolinhas entram no neurônio e viram um número só: a soma. É o corpo da célula juntando os sinais.",
-          "É exatamente o que o painel de contas do laboratório mostra, uma parcela de cada vez.",
-        ],
-        visual: { tipo: "neuronio", fase: "soma" },
-        conta: { linhas: ["0,26 − 0,40 + 0,47 = 0,33"] },
+        assunto: "Neurônio artificial",
+        titulo: "Soma ponderada",
+        diaADia:
+          "Lembra da média da escola? A prova vale mais que o trabalho: cada nota vezes o quanto ela vale, e soma tudo. Aqui é igual, só que sem dividir no final. Para a Aqua, o z diz o quanto tudo indica que é hora de virar.",
+        naIA: "O neurônio soma todos os produtos: z = Σ wᵢ·xᵢ. Esse z também se chama pré-ativação: é o número antes da função de ativação.",
+        termos: ["soma ponderada", "pré-ativação (z)"],
+        visual: { tipo: "soma" },
       },
       {
-        titulo: "E decide se acende",
-        texto: [
-          "É o disparo do cérebro em forma de conta: se a soma for positiva, o neurônio acende e passa a soma adiante. Se for negativa, passa 0.",
-          "Essa regra se chama ReLU. Aqui deu 0,33, então ele acende. No último neurônio da rede a regra é outra, a sigmoide (tutorial 03).",
-        ],
-        visual: { tipo: "neuronio", fase: "decide" },
-        conta: { linhas: ["0,33 é positivo → passa 0,33"], nota: "Se a soma desse −0,20, ele passaria 0." },
+        assunto: "Neurônio artificial",
+        titulo: "Função de ativação",
+        diaADia:
+          "Agora a Aqua decide. Com a ReLU, se a soma deu negativa ela nem se mexe (0); se deu positiva, age com essa força. Com a sigmoide, a soma vira uma certeza de 0 a 1, como a previsão do tempo. Aqui: 73% de certeza de que está no ponto.",
+        naIA: "a = f(z). A ReLU, max(0, z), corta o negativo. A sigmoide vira qualquer z num número de 0 a 1. Onde cada uma entra numa rede fica para a aula de camadas.",
+        termos: ["função de ativação (a)", "ReLU", "sigmoide"],
+        visual: { tipo: "ativacao" },
+      },
+      {
+        assunto: "Revisão",
+        titulo: "Tudo junto, com a Aqua",
+        diaADia:
+          "Olhar, confiar mais em umas coisas, juntar tudo e decidir. A Aqua faz isso a cada panqueca, e você faz igual quando decide se leva o guarda-chuva: olha o céu, confia mais na previsão, junta tudo e decide.",
+        naIA: "O neurônio artificial cabe numa linha: a = f(Σ wᵢ·xᵢ). Entradas vezes pesos, soma, função de ativação. No laboratório, cada neurônio faz essa conta quando você clica em Rodar.",
+        termos: ["entradas", "pesos", "soma ponderada", "ativação"],
+        visual: { tipo: "revisao" },
       },
     ],
     teste: {
-      pergunta: "Entradas 1,00 e 0,50, pesos 0,40 e 0,20. Qual é a soma?",
-      opcoes: [{ texto: "0,60" }, { texto: "0,50", certa: true }, { texto: "1,10" }],
-      explicacao: "Isso. 1,00 × 0,40 = 0,40 e 0,50 × 0,20 = 0,10. Somando: 0,50.",
-      aprendeu: ["Como o neurônio do cérebro funciona", "A sinapse virou o peso", "O neurônio da IA soma", "E decide se acende (ReLU)"],
-      noLab: "Abra a montagem básica, clique em Rodar e use Próximo: cada parcela aparece uma por vez, igual a aqui.",
+      pergunta: "O que a Aqua passa adiante?",
+      subtitulo: "Quanto dá z? E a certeza da Aqua?",
+      opcoes: [
+        { texto: "z = 0,60", detalhe: "certeza 0,65", certa: true },
+        { texto: "z = 0,60", detalhe: "certeza 0,60" },
+        { texto: "z = 0,90", detalhe: "certeza 0,71" },
+      ],
+      explicacao: "Isso! 65% de certeza.",
+      conta: ["z = 0,40 + 0,20 = 0,60", "sigmoide(0,60) ≈ 0,65"],
+      aprendeu: ["De onde veio a ideia", "Entradas e pesos", "A soma ponderada", "A função de ativação"],
+      noLab: "Abra a montagem básica, clique em Rodar e use Próximo: cada neurônio faz essa mesma conta, uma parcela por vez.",
+      visual: { tipo: "teste-panqueca" },
     },
   },
   {
