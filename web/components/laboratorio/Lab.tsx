@@ -18,6 +18,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import "@/components/laboratorio/laboratorio.css";
 
+import BackwardNode from "@/components/laboratorio/BackwardNode";
 import CamadaNode from "@/components/laboratorio/CamadaNode";
 import EntradaNode from "@/components/laboratorio/EntradaNode";
 import NeuronioNode from "@/components/laboratorio/NeuronioNode";
@@ -32,6 +33,7 @@ import { EXEMPLOS_PRONTOS, lerRede, type Exemplo } from "@/lib/treino";
 import {
   camadaNoPonto,
   continuarIds,
+  criarBackward,
   criarCamada,
   criarEntrada,
   criarNeuronio,
@@ -57,11 +59,12 @@ import {
   type Segmento,
 } from "@/lib/rede";
 
-const nodeTypes = { camada: CamadaNode, neuronio: NeuronioNode, saida: SaidaNode, entrada: EntradaNode };
+const nodeTypes = { camada: CamadaNode, neuronio: NeuronioNode, saida: SaidaNode, entrada: EntradaNode, backward: BackwardNode };
 const edgeTypes = { peso: PesoEdge };
 const TIPO_ARRASTE = "application/x-bloco";
 const INTERVALO_AUTOMATICO = 2300; // ms entre um passo e outro no modo automático (a bolinha leva 2 s)
 const ESPERA_SALVAR = 400; // ms sem mexer antes de salvar
+const ROTULOS_PADRAO = { rotulo0: "0", cor0: "#378ADD", rotulo1: "1", cor1: "#E8853A" };
 
 /** A montagem salva do projeto ou, se não houver, a que o aluno escolheu em Novo projeto. */
 function montagemDoProjeto(projeto: Projeto | null): Montagem {
@@ -126,7 +129,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
   const estrutura = useMemo(
     () =>
       JSON.stringify({
-        n: nodes.map((n) => [n.id, n.type, n.parentId, n.type === "saida" ? null : n.data]),
+        n: nodes.map((n) => [n.id, n.type, n.parentId, n.type === "saida" || n.type === "backward" ? null : n.data]),
         f: fios.map((f) => [f.source, f.target]),
         pesos,
       }),
@@ -194,8 +197,17 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
     return posicionarPesos(segmentos, caixas, vista?.linhaAgora ?? null);
   }, [pontas, edges, nodes, vista?.linhaAgora]);
 
+  const saidaDaMontagem = nodes.find((n) => n.type === "saida");
+  const rotulos = saidaDaMontagem?.type === "saida" ? saidaDaMontagem.data : ROTULOS_PADRAO;
+  const entradaDaMontagem = nodes.find((n) => n.type === "entrada");
+  const entrada = entradaDaMontagem?.type === "entrada" ? entradaDaMontagem.data : null;
+
   const lab = useMemo(
     () => ({
+      entrada,
+      dados: exemplos,
+      setDados: setExemplos,
+      rotulos,
       vista,
       erros: new Set((ativa?.erros ?? []).flatMap((e) => (e.no && e.tipo !== "aviso" ? [e.no] : []))),
       avisos: new Set((ativa?.erros ?? []).flatMap((e) => (e.no && e.tipo === "aviso" ? [e.no] : []))),
@@ -209,11 +221,9 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
       informarLinha,
       posicaoDoPeso,
     }),
-    [vista, ativa, chegou, informarLinha, posicaoDoPeso],
+    [entrada, exemplos, rotulos, vista, ativa, chegou, informarLinha, posicaoDoPeso],
   );
 
-  const saidaDaMontagem = nodes.find((n) => n.type === "saida");
-  const rotulos = saidaDaMontagem?.type === "saida" ? saidaDaMontagem.data : { rotulo0: "0", rotulo1: "1" };
   const rodarAgora = () => {
     treino.reiniciar();
     rodar();
@@ -262,6 +272,13 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
       }
       if (tipo === "entrada") setNodes((ns) => [...ns, criarEntrada(ponto.x, ponto.y)]);
       if (tipo === "saida") setNodes((ns) => [...ns, criarSaida(ponto.x, ponto.y)]);
+      if (tipo === "backward") {
+        if (nodes.some((n) => n.type === "backward")) {
+          setAviso("Use só um bloco Backward pass por montagem.");
+          return;
+        }
+        setNodes((ns) => [...ns, criarBackward(ponto.x, ponto.y)]);
+      }
 
       if (tipo === "neuronio") {
         const alvo = camadaNoPonto(nodes, ponto.x, ponto.y);
@@ -327,6 +344,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
             {bloco("camada", "Camada", "Agrupa neurônios")}
             {bloco("neuronio", "Neurônio", "Solte numa camada")}
             {bloco("saida", "Saída", "A resposta da rede")}
+            {bloco("backward", "Backward pass", "Liga na Saída · a culpa volta")}
             {aviso && <p className="aviso">{aviso}</p>}
           </aside>
 
@@ -406,6 +424,12 @@ function IconeBloco({ tipo }: { tipo: string }) {
         <>
           <circle cx="12" cy="12" r="9" fill="#fff" stroke="#0E7C86" strokeWidth="1.5" />
           <circle cx="12" cy="12" r="4" fill="#0E7C86" />
+        </>
+      )}
+      {tipo === "backward" && (
+        <>
+          <circle cx="12" cy="12" r="10" fill="#0E7C86" />
+          <path d="M15 7.5 L8.5 12 L15 16.5 Z" fill="#fff" />
         </>
       )}
     </svg>

@@ -40,7 +40,7 @@ export function useTreino({ ler, aplicar, exemplos }: { ler: () => RedeLida | st
       return;
     }
     if (exemplos.length === 0) {
-      setAviso("Coloque pelo menos uma cor nos exemplos.");
+      setAviso("Coloque pelo menos uma cor nos Dados.");
       return;
     }
     setAviso(null);
@@ -154,14 +154,14 @@ function Antes({ treino, exemplos, setExemplos, rotulos }: { treino: Treino; exe
       <div className="exemplos">
         <div className="exemplos-topo">
           <span>
-            <b>Exemplos</b> · {exemplos.length} {exemplos.length === 1 ? "cor" : "cores"}
+            <b>Dados</b> · {exemplos.length} {exemplos.length === 1 ? "cor" : "cores"}
           </span>
           <button className="exemplos-editar" aria-expanded={editando} onClick={() => setEditando(!editando)}>
             {editando ? "pronto ▾" : "editar ▸"}
           </button>
         </div>
         {!editando ? (
-          <div className="exemplos-amostras" aria-label="Cores de exemplo">
+          <div className="exemplos-amostras" aria-label="Cores dos Dados">
             {[1, 0].flatMap((c) =>
               exemplos.filter((e) => e.objetivo === c).map((e, i) => <span key={`${c}-${i}`} style={{ background: e.cor }} title={`${e.cor} · ${c === 1 ? rotulos.rotulo1 : rotulos.rotulo0}`} />),
             )}
@@ -173,7 +173,7 @@ function Antes({ treino, exemplos, setExemplos, rotulos }: { treino: Treino; exe
                 <input
                   type="color"
                   value={e.cor.toLowerCase()}
-                  aria-label={`Cor do exemplo ${i + 1}`}
+                  aria-label={`Cor ${i + 1} dos Dados`}
                   onChange={(ev) => setExemplos(exemplos.map((x, j) => (j === i ? { ...x, cor: ev.target.value.toUpperCase() } : x)))}
                 />
                 <button
@@ -183,7 +183,7 @@ function Antes({ treino, exemplos, setExemplos, rotulos }: { treino: Treino; exe
                 >
                   {e.objetivo === 1 ? rotulos.rotulo1 : rotulos.rotulo0} · {e.objetivo}
                 </button>
-                <button className="exemplos-tirar" aria-label={`Tirar o exemplo ${i + 1}`} onClick={() => setExemplos(exemplos.filter((_, j) => j !== i))}>
+                <button className="exemplos-tirar" aria-label={`Tirar a cor ${i + 1} dos Dados`} onClick={() => setExemplos(exemplos.filter((_, j) => j !== i))}>
                   ×
                 </button>
               </li>

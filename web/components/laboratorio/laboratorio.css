@@ -677,6 +677,125 @@
   font-size: 11px;
 }
 
+/* ---------- Bloco Backward pass (ADR-0025) ---------- */
+.backward {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 190px;
+  padding: 10px;
+  border: 1.5px solid var(--destaque);
+  border-radius: 14px;
+  background: var(--bg);
+}
+
+.backward.selecionada {
+  box-shadow: 0 0 0 2px rgba(94, 211, 219, 0.35);
+}
+
+.backward > .nodrag {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.backward-titulo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--destaque-texto);
+}
+
+.backward-icone {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--destaque-texto);
+  font-size: 8px;
+  color: #ffffff;
+}
+
+.backward-rotulo {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.backward-opcoes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.backward-opcoes button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: var(--bg-subtle);
+  font-size: 11px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.backward-opcoes button.ativa {
+  border-color: var(--text);
+  background: var(--bg);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.backward-opcoes i,
+.backward-nova i {
+  display: inline-block;
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.backward-origem {
+  font-size: 11px;
+  color: var(--destaque-texto);
+}
+
+.backward-nova {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px;
+  border-radius: 8px;
+  background: rgba(245, 165, 36, 0.12);
+  font-size: 11px;
+  color: #8a5a00;
+}
+
+.backward-nova b {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.backward-adicionar {
+  padding: 6px 10px;
+  font-size: 11px;
+}
+
+.backward-nota {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.backward-modo.apagado {
+  opacity: 0.4;
+}
+
 /* ---------- Painel de contas (direita) ---------- */
 .painel {
   display: flex;

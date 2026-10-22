@@ -20,6 +20,8 @@ export default function SaidaNode({ id, data, selected }: NodeProps<SaidaNodeTyp
   return (
     <div className={`saida ${selected ? "selecionada" : ""} ${erros.has(id) ? "com-erro" : ""}`}>
       <Handle id="entrada" type="target" position={Position.Left} className="porta" style={{ top: 18 }} />
+      {/* só liga no Backward pass (ADR-0025) */}
+      <Handle id="saida" type="source" position={Position.Right} className="porta" style={{ top: 18 }} />
       <div className="saida-titulo">Saída</div>
 
       {saida ? (

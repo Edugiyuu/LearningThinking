@@ -1,8 +1,8 @@
 // Testes do backward pass passo a passo (ADR-0025). Rodar com: npm test
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { voltarCulpa, sinalDaMudanca, type PassoVolta } from "./backward";
-import { montagemBasica } from "./rede";
+import { pesoSalvo, voltarCulpa, sinalDaMudanca, type PassoVolta } from "./backward";
+import { criarBackward, fioPermitido, montagemBasica } from "./rede";
 import { EXEMPLOS_PRONTOS, corParaEntradas, lerRede, retropropagar, sortearPesos } from "./treino";
 
 const basica = () => {
@@ -83,4 +83,27 @@ test("o sinal fala do tamanho do peso, não do sinal dele", () => {
   assert.equal(sinalDaMudanca(-1, -0.998, -0.004), "-");
   assert.equal(sinalDaMudanca(0.5, 0.505, -0.01), "+");
   assert.equal(sinalDaMudanca(2, 2, 0), "=");
+});
+
+test("com + ou −, o peso salvo anda pelo menos 0,01", () => {
+  assert.equal(pesoSalvo(0.5, 0.5048), 0.51); // G: 0,505 arredondaria para 0,50
+  assert.equal(pesoSalvo(-1, -0.998), -0.99); // R: −0,998 arredondaria para −1,00
+  assert.equal(pesoSalvo(-1.5, -1.508), -1.51); // já anda sozinho
+  assert.equal(pesoSalvo(2, 2), 2); // sem culpa, fica igual
+  assert.equal(pesoSalvo(5, 5.003), 5); // no limite, não passa de 5
+});
+
+test("o Backward pass só liga na Saída", () => {
+  const m = montagemBasica();
+  const b = criarBackward(1000, 40);
+  const nodes = [...m.nodes, b];
+  const saida = nodes.find((n) => n.type === "saida")!;
+  const camada = nodes.find((n) => n.type === "camada")!;
+  const entrada = nodes.find((n) => n.type === "entrada")!;
+  const liga = (source: string, target: string) => fioPermitido(nodes, m.fios, { source, target, sourceHandle: null, targetHandle: null });
+  assert.equal(liga(saida.id, b.id), true);
+  assert.equal(liga(camada.id, b.id), false);
+  assert.equal(liga(entrada.id, b.id), false);
+  assert.equal(liga(saida.id, camada.id), false);
+  assert.equal(liga(b.id, saida.id), false);
 });

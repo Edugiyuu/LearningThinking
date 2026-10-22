@@ -28,7 +28,7 @@ export type PassoVolta =
       antes: number;
       /** Para onde o peso andaria, sem arredondar (a lupa mostra). */
       depois: number;
-      /** O que o Salvar grava: arredondado em 2 casas e dentro de ±5, como na edição à mão. */
+      /** O que o Salvar grava (pesoSalvo): 2 casas, e anda pelo menos 0,01 se a linha mudou. */
       salvo: number;
       sinal: Sinal;
     }
@@ -36,6 +36,17 @@ export type PassoVolta =
   | { tipo: "fim"; pesos: Pesos; respostaAntes: number; respostaDepois: number; erroAntes: number; erroDepois: number };
 
 export type OpcoesVolta = { rede: Rede; pesos: Pesos; entradas: number[]; objetivo: number; passinho?: number };
+
+/**
+ * O que o Salvar grava: 2 casas e dentro de ±5, como na edição à mão. Se a linha mudou
+ * (+ ou −) mas o passinho é menor que 0,01, o peso anda 0,01 na direção da mudança, para
+ * o aluno ver que ela mudou (0,50 → 0,505 grava 0,51; ADR-0025).
+ */
+export function pesoSalvo(antes: number, depois: number): number {
+  const salvo = limitarPeso(depois);
+  if (depois === antes || salvo !== limitarPeso(antes)) return salvo;
+  return limitarPeso(limitarPeso(antes) + 0.01 * Math.sign(depois - antes));
+}
 
 /** + se o tamanho do peso cresce, − se diminui, = se a culpa é zero (ADR-0025). */
 export function sinalDaMudanca(antes: number, depois: number, culpa: number): Sinal {
@@ -89,7 +100,7 @@ export function voltarCulpa({ rede, pesos, entradas, objetivo, passinho = PASSIN
       const culpaLinha = culpa * passou;
       const antes = pesos[l.id] ?? 0;
       const depois = Math.max(-PESO_LIMITE, Math.min(PESO_LIMITE, antes - passinho * culpaLinha));
-      const salvo = limitarPeso(depois);
+      const salvo = pesoSalvo(antes, depois);
       novos[l.id] = salvo;
       passos.push({
         tipo: "culpa-linha",
