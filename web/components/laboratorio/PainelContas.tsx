@@ -39,6 +39,28 @@ export default function PainelContas({ rodada, atual, erros, automatico, irPara,
         )}
       </div>
 
+      {/* Fixos no topo: a conta abaixo muda de altura a cada passo, e os botões não podem pular (ADR-0025). */}
+      {rodada && (
+        <>
+          <div className="navegar">
+            <button className="botao" disabled={atual === 0} onClick={() => irPara(atual - 1)}>
+              ← Anterior
+            </button>
+            <button className="botao escuro" disabled={atual === total - 1} onClick={() => irPara(atual + 1)}>
+              Próximo →
+            </button>
+          </div>
+          <div className="alternar">
+            <button className={!automatico ? "ativo" : ""} onClick={() => setAutomatico(false)}>
+              Passo a passo
+            </button>
+            <button className={automatico ? "ativo" : ""} onClick={() => setAutomatico(true)}>
+              Automático
+            </button>
+          </div>
+        </>
+      )}
+
       {graves.length > 0 && (
         <div className="erros">
           {graves.map((e, i) => (
@@ -61,27 +83,6 @@ export default function PainelContas({ rodada, atual, erros, automatico, irPara,
       )}
 
       {rodada && passo && <ContasDoPasso rodada={rodada} atual={atual} passo={passo} textoResposta={textoResposta} />}
-
-      {rodada && (
-        <>
-          <div className="navegar">
-            <button className="botao" disabled={atual === 0} onClick={() => irPara(atual - 1)}>
-              ← Anterior
-            </button>
-            <button className="botao escuro" disabled={atual === total - 1} onClick={() => irPara(atual + 1)}>
-              Próximo →
-            </button>
-          </div>
-          <div className="alternar">
-            <button className={!automatico ? "ativo" : ""} onClick={() => setAutomatico(false)}>
-              Passo a passo
-            </button>
-            <button className={automatico ? "ativo" : ""} onClick={() => setAutomatico(true)}>
-              Automático
-            </button>
-          </div>
-        </>
-      )}
 
       {treinar}
     </aside>
