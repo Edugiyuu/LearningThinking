@@ -54,6 +54,8 @@ Fontes: [ADR-0013](adr/0013-formato-tutoriais-e-laboratorio.md), [ADR-0014](adr/
 - *Bias* (um número extra somado em cada neurônio): ainda não entrou.
 - Como o tutorial "mostra" o laboratório?
 - **Backward pass à mão** (decidido pelo autor em 2026-10-22, liga com a [ADR-0016](adr/0016-modo-debug-backward-pass.md)): um bloco **Backward pass** ligado na Saída. Com ele, o Rodar faz a ida (forward) e depois volta a culpa passo a passo; sem ele, só o forward, como hoje. A culpa aparece só na linha da vez, e a conta no painel Contas. Dentro do bloco, uma opção: **mostrar** o aprendizado (os pesos não mudam) ou **salvar** o aprendizado (cada peso anda um passinho). Decidido na [ADR-0025](adr/0025-bloco-backward-pass.md), com telas no Figma. Falta o código.
+- **Aprendizado por reforço** (ideia do autor em 2026-10-22, para uma ADR futura, não agora): treinar com recompensa e punição em vez de gabarito. Proposta da IA: numa aba própria, porque precisa de ambiente, ações e pontuação ao longo do tempo (ex.: a Aqua aprendendo a pegar algo que cai); para separar cores, o supervisionado já é o mais adequado.
+- **Mais de duas respostas** (ideia do autor em 2026-10-22, para uma ADR futura, depois do backward): por exemplo azul (0), laranja (1) e roxo (2). Pede vários neurônios finais e a softmax no lugar da sigmoide (classificação multiclasse); mexe na Saída, no Rodar, no Treinar, no backward e nos tutoriais.
 - **Aba de configuração** (ideias do autor em 2026-10-21 e 2026-10-22, para uma ADR futura): ligar e desligar o que aparece na tela, por exemplo:
   - esconder os números dos pesos, para o canvas não ficar cheio;
   - desligar a mensagem que explica o resultado no passo final do Rodar.
