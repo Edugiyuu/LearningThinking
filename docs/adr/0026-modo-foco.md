@@ -12,18 +12,19 @@ Na volta, o aluno viu "erro 0,03 → × 0,03 → culpa 0,001" e não entendeu de
 ## Decisões do autor
 
 1. **Um botão "Modo Foco" embaixo de Anterior / Próximo**, no topo do painel Contas. Liga e desliga a qualquer momento do Rodar.
-2. **Vale na ida e na volta.** Com o foco ligado, a conta da vez aparece num **quadro pop-up** (uma lousa) por cima do canvas apagado: o neurônio, depois a linha com o peso, depois o que chega no próximo neurônio. Na volta, o mesmo caminho ao contrário, com a culpa.
+2. **Vale na ida e na volta.** Com o foco ligado, a conta da vez aparece num **quadro pop-up** (uma **lousa clara**, quadro branco com moldura cinza) por cima do canvas apagado: o neurônio, depois a linha com o peso, depois o que chega no próximo neurônio. Na volta, o mesmo caminho ao contrário, com a culpa.
 3. **A Aqua fica pequena, no canto do quadro, apontando para ele** como uma professora, para o foco ficar no quadro.
 4. **Na volta, a explicação mostra:**
    - **de onde vem a culpa**, cada número com nome (erro × inclinação da sigmoide × o que passou);
    - **a culpa com sinal** (+0,060 / −0,060), em vez de só o tamanho. Pelo sinal o aluno deduz a direção: culpa + → o peso desce; culpa − → o peso sobe.
+   - **o teste "e se?"**: duas linhas, "peso sobe ↑ → resposta sobe ↑ → longe do certo ✗" e "peso desce ↓ → resposta desce ↓ → perto do certo ✓", com "culpa + = subir piora". A linha escolhida fica acesa. É a resposta a "por que culpa + faz o peso descer", com pouco texto.
 
 ## Detalhes propostos pela IA (a confirmar no Figma)
 
 - Na ida não há culpa: o quadro mostra "o que passou × peso = chega no próximo neurônio".
-- Na volta, a cadeia com nome em cada número: erro × inclinação da sigmoide = culpa da Saída × o que passou = culpa da linha, e embaixo "culpa + → o peso desce".
+- Na volta, a cadeia com nome em cada número: erro × inclinação da sigmoide = culpa da Saída × o que passou = culpa da linha; embaixo, o teste "e se?".
 - O quadro mostra as três partes em três tempos (neurônio → linha e peso → resultado), e os botões Anterior / Próximo continuam no painel.
-- Telas: "Laboratório · Modo Foco · 1 ida (quadro)" e "· 2 volta (quadro)".
+- Telas: "Laboratório · Modo Foco · 1 ida (lousa clara)" e "· 2 volta (lousa clara, e se?)".
 
 ## Consequências
 
