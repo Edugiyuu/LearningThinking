@@ -129,3 +129,44 @@ export function voltarCulpa({ rede, pesos, entradas, objetivo, passinho = PASSIN
   });
   return passos;
 }
+
+/* ---------- O que a volta já mostrou na tela ---------- */
+
+export type LinhaDaVolta = Extract<PassoVolta, { tipo: "culpa-linha" }>;
+
+/** O que aparece no canvas quando a volta está no passo `atual` (como a vistaDaRodada da ida). */
+export type VistaVolta = {
+  /** A linha da vez, com o tamanho da bolinha de culpa (0 a 1, comparado com a maior culpa da volta). */
+  linhaAgora: (LinhaDaVolta & { passo: number; tamanho: number }) | null;
+  /** O sinal das linhas por onde a culpa já passou. */
+  sinais: Map<string, Sinal>;
+  /** Neurônios que passaram 0: a culpa para neles. */
+  parados: Set<string>;
+  neuronioAgora: string | null;
+  erro: Extract<PassoVolta, { tipo: "erro" }> | null;
+  fim: Extract<PassoVolta, { tipo: "fim" }> | null;
+};
+
+export function vistaDaVolta(passos: PassoVolta[], atual: number): VistaVolta {
+  const maior = Math.max(0, ...passos.map((p) => (p.tipo === "culpa-linha" ? Math.abs(p.culpa) : 0)));
+  const vista: VistaVolta = { linhaAgora: null, sinais: new Map(), parados: new Set(), neuronioAgora: null, erro: null, fim: null };
+  passos.slice(0, atual + 1).forEach((p, i) => {
+    if (p.tipo === "erro") vista.erro = p;
+    if (p.tipo === "fim") vista.fim = p;
+    if (p.tipo === "culpa-neuronio" && p.apagado) vista.parados.add(p.neuronio);
+    if (p.tipo === "culpa-linha") {
+      vista.sinais.set(p.linha, p.sinal);
+      if (i === atual) vista.linhaAgora = { ...p, passo: i, tamanho: maior > 0 ? Math.abs(p.culpa) / maior : 0 };
+    }
+  });
+  const agora = passos[atual];
+  vista.neuronioAgora = agora?.tipo === "culpa-neuronio" || agora?.tipo === "culpa-linha" ? agora.neuronio : null;
+  return vista;
+}
+
+/** A culpa é pequena: 3 casas (0,016), sem o sinal, porque quem diz o lado é o + − =. */
+export function formatarCulpa(n: number): string {
+  // como no formatar: 0,0155 vira 0,01549999… no computador e arredondaria para baixo
+  const milesimos = Math.round(Number((Math.abs(n) * 1000).toPrecision(12)));
+  return (milesimos / 1000).toFixed(3).replace(".", ",");
+}

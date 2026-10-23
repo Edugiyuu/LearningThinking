@@ -29,7 +29,8 @@ import { ResultadoTreino, SecaoTreinar, useTreino } from "@/components/laborator
 import { LabContexto } from "@/components/laboratorio/contexto";
 import { Aqua } from "@/components/mascote";
 import { lerMontagem, salvarMontagem, type Projeto } from "@/lib/projetos";
-import { EXEMPLOS_PRONTOS, lerRede, type Exemplo } from "@/lib/treino";
+import { EXEMPLOS_PRONTOS, corParaEntradas, lerRede, type Exemplo } from "@/lib/treino";
+import { vistaDaVolta, voltarCulpa, type PassoVolta } from "@/lib/backward";
 import {
   camadaNoPonto,
   continuarIds,
@@ -76,8 +77,28 @@ function montagemDoProjeto(projeto: Projeto | null): Montagem {
   return projeto?.inicio === "vazio" ? montagemVazia() : montagemBasica();
 }
 
-/** A rodada (ou os erros) vale só para a montagem em que o aluno clicou em Rodar. */
-type Execucao = { estrutura: string; rodada: Rodada | null; erros: Erro[]; atual: number };
+/**
+ * A rodada (ou os erros) vale só para a montagem em que o aluno clicou em Rodar.
+ * Com o Backward pass, a volta vem depois da ida (ADR-0025); com Salvar, os pesos entram no fim.
+ */
+type Execucao = {
+  estrutura: string;
+  rodada: Rodada | null;
+  erros: Erro[];
+  atual: number;
+  volta: PassoVolta[] | null;
+  modo: "mostrar" | "salvar";
+  salvou: boolean;
+};
+
+/** Só o que muda as contas (não a posição nem a seleção); mexer nisso cancela a rodada. */
+function estruturaDe(nodes: NoDaRede[], fios: Fio[], pesos: Pesos) {
+  return JSON.stringify({
+    n: nodes.map((n) => [n.id, n.type, n.parentId, n.type === "saida" || n.type === "backward" ? null : n.data]),
+    f: fios.map((f) => [f.source, f.target]),
+    pesos,
+  });
+}
 type Salvamento = "salvo" | "salvando" | "nao-salvo";
 
 function Laboratorio({ projeto }: { projeto: Projeto | null }) {
@@ -125,20 +146,18 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
     },
   });
 
-  // só o que muda as contas (não a posição nem a seleção); mexer nisso cancela a rodada
-  const estrutura = useMemo(
-    () =>
-      JSON.stringify({
-        n: nodes.map((n) => [n.id, n.type, n.parentId, n.type === "saida" || n.type === "backward" ? null : n.data]),
-        f: fios.map((f) => [f.source, f.target]),
-        pesos,
-      }),
-    [nodes, fios, pesos],
-  );
+  const estrutura = useMemo(() => estruturaDe(nodes, fios, pesos), [nodes, fios, pesos]);
   const ativa = execucao?.estrutura === estrutura ? execucao : null;
   const rodada = ativa?.rodada ?? null;
   const atual = ativa?.atual ?? 0;
-  const vista = useMemo(() => (rodada ? vistaDaRodada(rodada, atual) : null), [rodada, atual]);
+  // a volta vem depois de todos os passos da ida: na volta, a ida fica parada no último passo
+  const passosDaIda = rodada?.passos.length ?? 0;
+  const voltaPassos = ativa?.volta ?? null;
+  const vista = useMemo(() => (rodada ? vistaDaRodada(rodada, Math.min(atual, passosDaIda - 1)) : null), [rodada, atual, passosDaIda]);
+  const volta = useMemo(
+    () => (voltaPassos && atual >= passosDaIda ? vistaDaVolta(voltaPassos, atual - passosDaIda) : null),
+    [voltaPassos, atual, passosDaIda],
+  );
 
   // as linhas não são guardadas: são recalculadas a partir dos blocos, fios e da rodada.
   // Durante o treino, elas mostram os pesos da repetição que está passando.
@@ -157,25 +176,55 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
     else if (formato !== formatoDoTreino.current) parar();
   }, [formato, emAndamento, parar]);
 
-  // modo automático: avança sozinho até o último passo
-  const total = rodada?.passos.length ?? 0;
-  useEffect(() => {
-    if (!automatico || !rodada || atual >= total - 1) return;
-    const t = setTimeout(() => setExecucao((e) => (e ? { ...e, atual: e.atual + 1 } : e)), INTERVALO_AUTOMATICO);
-    return () => clearTimeout(t);
-  }, [automatico, rodada, atual, total]);
+  const total = passosDaIda + (voltaPassos?.length ?? 0);
 
   const rodar = () => {
     const { rodada, erros } = prepararRodada(nodes, fios, pesos);
     setChegou(null);
-    setExecucao({ estrutura, rodada, erros, atual: 0 });
+    setExecucao({ estrutura, rodada, erros, atual: 0, ...(rodada ? prepararVolta() : { volta: null, modo: "mostrar" }), salvou: false });
   };
 
-  // voltar um passo não repete a viagem: a parcela daquele passo já aparece dentro do neurônio
+  /**
+   * Backward pass (ADR-0025): a volta só acontece com o bloco ligado na Saída, a Entrada de cor
+   * e a resposta certa da cor nos Dados. Sem isso, o Rodar faz só a ida.
+   */
+  const prepararVolta = (): Pick<Execucao, "volta" | "modo"> => {
+    const bloco = nodes.find((n) => n.type === "backward");
+    const ligado = bloco && fios.some((f) => f.target === bloco.id && nodes.find((n) => n.id === f.source)?.type === "saida");
+    const cor = entrada?.tipo === "cor" ? entrada.cor.toUpperCase() : null;
+    const certa = cor ? exemplos.find((d) => d.cor.toUpperCase() === cor) : undefined;
+    const lida = lerRede(nodes, fios, pesos);
+    if (!bloco || bloco.type !== "backward" || !ligado || !cor || !certa || !lida) return { volta: null, modo: "mostrar" };
+    return {
+      volta: voltarCulpa({ rede: lida.rede, pesos: lida.pesos, entradas: corParaEntradas(cor), objetivo: certa.objetivo }),
+      modo: bloco.data.modo,
+    };
+  };
+
+  // voltar um passo não repete a viagem: a parcela daquele passo já aparece dentro do neurônio.
+  // Com Salvar, chegar no fim da volta grava os pesos novos (uma vez só) e a rodada continua aberta.
   const irPara = (p: number) => {
     if (p < atual) setChegou(p);
+    const fim = voltaPassos?.at(-1);
+    if (ativa && fim?.tipo === "fim" && ativa.modo === "salvar" && !ativa.salvou && p === total - 1) {
+      const novos = { ...pesos, ...fim.pesos };
+      setPesos(novos);
+      setExecucao({ ...ativa, atual: p, salvou: true, estrutura: estruturaDe(nodes, fios, novos) });
+      return;
+    }
     setExecucao((e) => (e ? { ...e, atual: p } : e));
   };
+
+  // modo automático: avança sozinho até o último passo
+  const irParaRef = useRef(irPara);
+  useEffect(() => {
+    irParaRef.current = irPara;
+  });
+  useEffect(() => {
+    if (!automatico || !rodada || atual >= total - 1) return;
+    const t = setTimeout(() => irParaRef.current(atual + 1), INTERVALO_AUTOMATICO);
+    return () => clearTimeout(t);
+  }, [automatico, rodada, atual, total]);
 
   // onde fica o número de cada peso: as linhas contam as pontas, e o laboratório
   // escolhe um ponto de cada uma sem encostar em outro número nem ficar embaixo de um bloco
@@ -208,6 +257,8 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
       dados: exemplos,
       setDados: setExemplos,
       rotulos,
+      volta,
+      modoVolta: ativa?.modo ?? "mostrar",
       vista,
       erros: new Set((ativa?.erros ?? []).flatMap((e) => (e.no && e.tipo !== "aviso" ? [e.no] : []))),
       avisos: new Set((ativa?.erros ?? []).flatMap((e) => (e.no && e.tipo === "aviso" ? [e.no] : []))),
@@ -221,7 +272,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
       informarLinha,
       posicaoDoPeso,
     }),
-    [entrada, exemplos, rotulos, vista, ativa, chegou, informarLinha, posicaoDoPeso],
+    [entrada, exemplos, rotulos, volta, vista, ativa, chegou, informarLinha, posicaoDoPeso],
   );
 
   const rodarAgora = () => {
@@ -381,13 +432,26 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
               <span>
                 <i className="legenda-negativo" /> peso negativo
               </span>
-              <span className="legenda-dica">Duplo clique no número muda o peso</span>
+              {volta ? (
+                <>
+                  <span>
+                    <i className="legenda-culpa" /> culpa voltando
+                  </span>
+                  <span className="legenda-sinais">
+                    <b className="sinal mais">+</b> mais forte <b className="sinal menos">−</b> mais fraca <b className="sinal igual">=</b> igual
+                  </span>
+                </>
+              ) : (
+                <span className="legenda-dica">Duplo clique no número muda o peso</span>
+              )}
             </div>
             <ResultadoTreino treino={treino} rotulos={rotulos} rodarAgora={rodarAgora} />
           </div>
 
           <PainelContas
             rodada={rodada}
+            volta={voltaPassos}
+            modoVolta={ativa?.modo ?? "mostrar"}
             atual={atual}
             erros={ativa?.erros ?? []}
             automatico={automatico}

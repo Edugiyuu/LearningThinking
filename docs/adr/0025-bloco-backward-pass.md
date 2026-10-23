@@ -1,6 +1,6 @@
 # ADR-0025 · Bloco Backward pass: a culpa voltando passo a passo
 
-- **Status:** Aceita (decisões de produto do autor; detalhes propostos pela IA e confirmados)
+- **Status:** Aceita e implementada (decisões de produto do autor; detalhes propostos pela IA e confirmados)
 - **Data:** 2026-10-22
 - **Decisores:** Eduardo (autor), com propostas da IA
 - **Tira do papel:** [ADR-0016](0016-modo-debug-backward-pass.md) (modo "debug" do backward pass)
@@ -56,6 +56,13 @@ No Figma:
 - "Laboratório · Backward pass · 3 bloco com a resposta certa" (o bloco com o gabarito: cor que já está nos Dados e cor nova).
 
 Exemplo usado nas telas: montagem básica, cor azul #378ADD com objetivo azul (0). A rede responde 0,12, a linha do neurônio de baixo até a Saída leva culpa 0,016 (−1,50 → −1,51), o neurônio de cima passou 0 e fica igual, e o erro cai de 0,12 para 0,11.
+
+## Como ficou no código (2026-10-23)
+
+- `web/lib/backward.ts`: `voltarCulpa` (os passos da volta), `vistaDaVolta` (o que a tela mostra em cada passo), `sinalDaMudanca`, `pesoSalvo` e `formatarCulpa` (3 casas). Testes em `backward.test.ts`, incluindo a culpa igual à do Treinar.
+- `BackwardNode.tsx` (o bloco), `ContasDaVolta.tsx` (o painel da volta), `PesoEdge.tsx` (bolinha de culpa, sinal no número e lupa), `NeuronioNode.tsx` (contorno tracejado onde a culpa para) e `SaidaNode.tsx` (termômetro).
+- A volta vem depois de todos os passos da ida, no mesmo Anterior/Próximo. Com Salvar, os pesos entram no projeto ao chegar no último passo, uma vez só, e a rodada continua aberta.
+- A culpa aparece com 3 casas (0,016); os pesos, com 2.
 
 ## Consequências
 

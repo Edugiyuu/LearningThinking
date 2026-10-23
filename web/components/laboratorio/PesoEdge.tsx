@@ -5,6 +5,9 @@ import gsap from "gsap";
 import { BaseEdge, EdgeLabelRenderer, getStraightPath, type Edge, type EdgeProps } from "@xyflow/react";
 import { formatar, limitarPeso, NEURONIO_TAMANHO, type EstadoLinha, type Vista } from "@/lib/rede";
 import { useLab } from "@/components/laboratorio/contexto";
+import { MarcaSinal } from "@/components/laboratorio/ContasDaVolta";
+
+const LUPA: Record<"+" | "-" | "=", string> = { "+": "mais forte", "-": "mais fraca", "=": "igual" };
 
 type PesoData = { peso: number; editando: boolean; posicao: number; estado: EstadoLinha; conta?: Vista["contaAgora"] };
 
@@ -13,7 +16,7 @@ type PesoData = { peso: number; editando: boolean; posicao: number; estado: Esta
  * Durante a rodada, a linha da conta atual fica destacada e as que ainda não vieram ficam apagadas.
  */
 export default function PesoEdge({ id, sourceX, sourceY, targetX, targetY, data }: EdgeProps<Edge<PesoData>>) {
-  const { editarPeso, salvarPeso, chegou, bolinhaChegou, informarLinha, posicaoDoPeso } = useLab();
+  const { editarPeso, salvarPeso, chegou, bolinhaChegou, informarLinha, posicaoDoPeso, volta, modoVolta } = useLab();
   const [path] = getStraightPath({ sourceX, sourceY, targetX, targetY });
   const peso = data?.peso ?? 0;
   const estado = data?.estado ?? "normal";
@@ -23,6 +26,12 @@ export default function PesoEdge({ id, sourceX, sourceY, targetX, targetY, data 
   const cor = peso >= 0 ? "var(--peso-positivo)" : "var(--peso-negativo)";
   const largura = 0.75 + Math.min(Math.abs(peso), 3) * 1.1;
   const conta = estado === "agora" ? data?.conta : null;
+  // na volta (ADR-0025): a linha da vez leva a bolinha de culpa e a lupa; as que já passaram ganham o sinal
+  const daVolta = volta?.linhaAgora?.linha === id ? volta.linhaAgora : null;
+  const sinal = volta?.sinais.get(id);
+  const estiloVolta = daVolta
+    ? { stroke: "var(--destaque)", strokeWidth: 2.5, strokeLinecap: "round" as const }
+    : { stroke: cor, strokeWidth: largura, strokeOpacity: sinal ? 0.7 : 0.22 };
 
   // o laboratório junta as pontas de todas as linhas para os números não se encavalarem
   useEffect(() => {
@@ -35,7 +44,9 @@ export default function PesoEdge({ id, sourceX, sourceY, targetX, targetY, data 
         path={path}
         interactionWidth={14}
         style={
-          estado === "agora"
+          volta
+            ? estiloVolta
+            : estado === "agora"
             ? { stroke: "var(--destaque)", strokeWidth: 2.5, strokeLinecap: "round" }
             : { stroke: cor, strokeWidth: largura, strokeOpacity: estado === "apagada" ? 0.22 : 0.7 }
         }
@@ -53,7 +64,27 @@ export default function PesoEdge({ id, sourceX, sourceY, targetX, targetY, data 
           chegar={() => bolinhaChegou(conta.passo)}
         />
       )}
+      {daVolta && daVolta.culpa !== 0 && (
+        <BolinhaDeCulpa
+          key={daVolta.passo}
+          // a culpa anda ao contrário da ida: do centro do neurônio de destino até a origem
+          de={{ x: targetX + NEURONIO_TAMANHO / 2, y: targetY }}
+          para={{ x: sourceX, y: sourceY }}
+          raio={4 + 7 * daVolta.tamanho}
+        />
+      )}
       <EdgeLabelRenderer>
+        {daVolta && (
+          <div className="lupa nodrag nopan" style={{ transform: `translate(-50%, 22px) translate(${x}px, ${y}px)` }}>
+            <div className="lupa-pesos">
+              {formatar(daVolta.antes)} → {formatar(daVolta.salvo)}
+            </div>
+            <span className={`lupa-sinal ${daVolta.sinal === "+" ? "mais" : daVolta.sinal === "-" ? "menos" : "igual"}`}>
+              {daVolta.sinal === "-" ? "−" : daVolta.sinal} {LUPA[daVolta.sinal]}
+            </span>
+            {modoVolta === "mostrar" && daVolta.sinal !== "=" && <div className="lupa-nota">andaria assim</div>}
+          </div>
+        )}
         <div
           className={`peso nodrag nopan ${peso >= 0 ? "positivo" : "negativo"} ${estado}`}
           style={{ transform: `translate(-50%, -50%) translate(${x}px, ${y}px)` }}
@@ -64,7 +95,8 @@ export default function PesoEdge({ id, sourceX, sourceY, targetX, targetY, data 
             <EditorDePeso inicial={peso} salvar={(v) => salvarPeso(id, v)} cancelar={() => editarPeso(null)} />
           ) : (
             <>
-              {estado === "agora" && "× "}
+              {sinal && <MarcaSinal sinal={sinal} />}
+              {estado === "agora" && !volta && "× "}
               {formatar(peso)}
             </>
           )}
@@ -164,6 +196,40 @@ function Bolinha({
     </g>
   );
 }
+
+/**
+ * A bolinha de culpa (ADR-0025): aqua, do tamanho da culpa da linha, anda do neurônio de
+ * destino até a origem, o caminho contrário da bolinha da ida.
+ */
+function BolinhaDeCulpa({ de, para, raio }: { de: Ponto; para: Ponto; raio: number }) {
+  const ref = useRef<SVGCircleElement>(null);
+  const [semMovimento] = useState(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  const linha = useRef({ de, para });
+  useLayoutEffect(() => {
+    linha.current = { de, para };
+  });
+
+  useEffect(() => {
+    const c = ref.current;
+    if (!c) return;
+    const prog = { p: semMovimento ? 1 : 0 };
+    const colocar = () => {
+      const { de, para } = linha.current;
+      c.setAttribute("cx", String(de.x + (para.x - de.x) * prog.p));
+      c.setAttribute("cy", String(de.y + (para.y - de.y) * prog.p));
+    };
+    colocar();
+    if (semMovimento) return;
+    const tl = gsap.to(prog, { p: 1, duration: DURACAO_CULPA, ease: "power1.inOut", onUpdate: colocar });
+    return () => {
+      tl.kill();
+    };
+  }, [semMovimento]);
+
+  return <circle ref={ref} r={raio} className="bolinha-culpa" aria-hidden />;
+}
+
+const DURACAO_CULPA = 1.2; // segundos do neurônio até a origem da linha
 
 function EditorDePeso({ inicial, salvar, cancelar }: { inicial: number; salvar: (v: number) => void; cancelar: () => void }) {
   const [texto, setTexto] = useState(String(inicial));

@@ -5,8 +5,10 @@ import { formatar, type NeuronioNode as NeuronioNodeType } from "@/lib/rede";
 import { useLab } from "@/components/laboratorio/contexto";
 
 export default function NeuronioNode({ id, selected }: NodeProps<NeuronioNodeType>) {
-  const { vista, chegou } = useLab();
-  const agora = vista?.neuronioAgora === id;
+  const { vista, chegou, volta } = useLab();
+  // na volta, o neurônio da vez é onde a culpa está; "parado" é o que passou 0 e segurou a culpa (ADR-0025)
+  const agora = volta ? volta.neuronioAgora === id : vista?.neuronioAgora === id;
+  const parado = volta?.parados.has(id);
 
   // depois da ativação mostra o valor que passa adiante; antes, a soma das bolinhas que já entraram
   const ativado = vista?.valores.get(id);
@@ -17,7 +19,7 @@ export default function NeuronioNode({ id, selected }: NodeProps<NeuronioNodeTyp
   const sinal = valor === undefined ? "" : valor > 0 ? "positivo" : valor < 0 ? "negativo" : "zero";
 
   return (
-    <div className={`neuronio ${sinal} ${selected ? "selecionado" : ""} ${agora ? "agora" : ""}`}>
+    <div className={`neuronio ${sinal} ${selected ? "selecionado" : ""} ${agora ? "agora" : ""} ${parado ? "parado" : ""}`}>
       {/* a chave muda com o número: cada bolinha que entra dá um pulinho no valor */}
       {valor !== undefined && (
         <span key={formatar(valor)} className="neuronio-valor">

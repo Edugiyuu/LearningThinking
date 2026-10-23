@@ -1,7 +1,7 @@
 // Testes do backward pass passo a passo (ADR-0025). Rodar com: npm test
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { pesoSalvo, voltarCulpa, sinalDaMudanca, type PassoVolta } from "./backward";
+import { formatarCulpa, pesoSalvo, sinalDaMudanca, vistaDaVolta, voltarCulpa, type PassoVolta } from "./backward";
 import { criarBackward, fioPermitido, montagemBasica } from "./rede";
 import { EXEMPLOS_PRONTOS, corParaEntradas, lerRede, retropropagar, sortearPesos } from "./treino";
 
@@ -106,4 +106,25 @@ test("o Backward pass só liga na Saída", () => {
   assert.equal(liga(entrada.id, b.id), false);
   assert.equal(liga(saida.id, camada.id), false);
   assert.equal(liga(b.id, saida.id), false);
+});
+
+test("a vista da volta acompanha os passos", () => {
+  const { rede, pesos } = basica();
+  const passos = voltarCulpa({ rede, pesos, entradas: corParaEntradas("#378ADD"), objetivo: 0 });
+  const [cimaN, baixoN, finalN] = rede.neuronios;
+  const iLinha = passos.findIndex((p) => p.tipo === "culpa-linha" && p.linha === `${baixoN.id}->${finalN.id}`);
+  const v = vistaDaVolta(passos, iLinha);
+  assert.equal(v.linhaAgora?.linha, `${baixoN.id}->${finalN.id}`);
+  assert.equal(v.linhaAgora?.tamanho, 1); // é a linha com mais culpa
+  assert.equal(v.sinais.get(`${cimaN.id}->${finalN.id}`), "="); // a de cima já passou
+  assert.equal(v.neuronioAgora, finalN.id);
+  assert.ok(v.erro && !v.fim);
+  assert.equal(v.parados.size, 0); // a culpa ainda não chegou na Camada 1
+
+  const noFim = vistaDaVolta(passos, passos.length - 1);
+  assert.equal(noFim.linhaAgora, null);
+  assert.ok(noFim.parados.has(cimaN.id));
+  assert.equal(noFim.sinais.size, 8);
+  assert.equal(Math.round((noFim.fim?.erroDepois ?? 0) * 100), 11);
+  assert.equal(formatarCulpa(-0.0155), "0,016");
 });

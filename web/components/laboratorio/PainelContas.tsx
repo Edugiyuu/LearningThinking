@@ -3,9 +3,14 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { formatar, type Erro, type Passo, type Rodada } from "@/lib/rede";
+import type { PassoVolta } from "@/lib/backward";
+import ContasDaVolta from "@/components/laboratorio/ContasDaVolta";
 
 type Props = {
   rodada: Rodada | null;
+  /** Os passos da volta (Backward pass, ADR-0025), que vêm depois dos da ida. */
+  volta: PassoVolta[] | null;
+  modoVolta: "mostrar" | "salvar";
   atual: number;
   erros: Erro[];
   automatico: boolean;
@@ -20,9 +25,11 @@ type Props = {
 };
 
 /** Painel da direita: as contas, uma multiplicação de cada vez, e o Treinar. */
-export default function PainelContas({ rodada, atual, erros, automatico, irPara, setAutomatico, textoResposta, treinar, soTreinar }: Props) {
-  const total = rodada?.passos.length ?? 0;
-  const passo = rodada?.passos[atual];
+export default function PainelContas({ rodada, volta, modoVolta, atual, erros, automatico, irPara, setAutomatico, textoResposta, treinar, soTreinar }: Props) {
+  const daIda = rodada?.passos.length ?? 0;
+  const total = daIda + (volta?.length ?? 0);
+  const naVolta = !!volta && atual >= daIda;
+  const passo = naVolta ? undefined : rodada?.passos[atual];
   const graves = erros.filter((e) => e.tipo !== "aviso");
   const avisos = erros.filter((e) => e.tipo === "aviso");
 
@@ -40,6 +47,13 @@ export default function PainelContas({ rodada, atual, erros, automatico, irPara,
       </div>
 
       {/* Fixos no topo: a conta abaixo muda de altura a cada passo, e os botões não podem pular (ADR-0025). */}
+      {rodada && volta && (
+        <div className="direcao" aria-label="Direção das contas">
+          <span className={naVolta ? "feita" : "agora"}>Forward {naVolta ? "✓" : `· ${atual + 1} de ${daIda}`}</span>
+          <span className={naVolta ? "agora" : ""}>◀ Backward {naVolta ? `· ${atual - daIda + 1} de ${volta.length}` : ""}</span>
+        </div>
+      )}
+
       {rodada && (
         <>
           <div className="navegar">
@@ -83,6 +97,7 @@ export default function PainelContas({ rodada, atual, erros, automatico, irPara,
       )}
 
       {rodada && passo && <ContasDoPasso rodada={rodada} atual={atual} passo={passo} textoResposta={textoResposta} />}
+      {rodada && volta && naVolta && <ContasDaVolta rodada={rodada} passos={volta} atual={atual - daIda} modo={modoVolta} />}
 
       {treinar}
     </aside>
