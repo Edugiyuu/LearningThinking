@@ -37,6 +37,16 @@ Na conversa ficou claro que:
 
 Proposto pela IA e confirmado: trocar a marcação de uma cor que já está nos Dados muda também a lista de Dados (é uma lista só); "estar nos Dados" é ter exatamente o mesmo código de cor; as telas 1 e 2 seguem o desenho do bloco do frame "Laboratório · Backward pass · 3 bloco com a resposta certa".
 
+### O bloco vira o lugar do aprendizado (decidido em 2026-10-23)
+
+11. **Os Dados moram no bloco Backward pass**, e não mais no painel do Treinar. Ficam recolhidos (amostras + "editar ▸"), e o "+ cor" usa a cor da Entrada, já com a resposta marcada (sem digitar RGB).
+12. **O Treinar depende do bloco.** Treinar é o backward repetido sobre os Dados; sem o bloco ligado na Saída, a rede só responde, e não há Treinar. Sai o botão "Treinar" do topo.
+13. **Os controles do Treinar ficam no bloco**, compactos: passinho (P / M / G), repetições, velocidade, Do zero / Já treinada e o botão. Durante o treino, o contador, o gráfico do erro e Pausar/Parar aparecem no painel da direita; o fim continua na janela flutuante da [ADR-0024](0024-treinar-com-backpropagation.md).
+14. **A montagem básica vem sem o bloco.**
+15. **O passo da volta no painel fica curto:** "culpa → anda → peso antes → depois" (o peso anda passinho × culpa). Sai o "× passou" e os avisos de Mostrar e de arredondamento. O fim da volta vira um resumo ("3 mais fortes · 2 mais fracas · 7 iguais · erro"), com "ver todos os pesos". O aviso do mínimo de 0,01 só aparece (na lupa) quando a regra agiu de verdade.
+
+Os Dados continuam salvos na montagem do projeto; só a tela muda de lugar.
+
 ## Detalhes propostos pela IA (confirmados pelo autor)
 
 - O termômetro é **horizontal, dentro do bloco Saída**.

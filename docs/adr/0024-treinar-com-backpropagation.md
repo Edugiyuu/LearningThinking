@@ -3,6 +3,7 @@
 - **Status:** Aceita (decisões de produto do autor; detalhes técnicos propostos pela IA)
 - **Data:** 2026-10-21
 - **Decisores:** Eduardo (autor), com propostas da IA
+- **Atualização (2026-10-23):** pela [ADR-0025](0025-bloco-backward-pass.md), os exemplos (agora "Dados") e os controles do Treinar passam para o bloco Backward pass, e o Treinar só existe com esse bloco ligado na Saída. O resto desta ADR (a conta, gravar e reproduzir, o resultado) continua valendo.
 - **Complementa:** [ADR-0015](0015-aba-redes-neurais-montagem.md) (treino como botão, repetições, x100) e [ADR-0016](0016-modo-debug-backward-pass.md) (backward pass passo a passo, adiado)
 
 ## Contexto
