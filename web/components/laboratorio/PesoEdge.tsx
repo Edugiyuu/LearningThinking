@@ -83,6 +83,13 @@ export default function PesoEdge({ id, sourceX, sourceY, targetX, targetY, data 
               {daVolta.sinal === "-" ? "−" : daVolta.sinal} {LUPA[daVolta.sinal]}
             </span>
             {modoVolta === "mostrar" && daVolta.sinal !== "=" && <div className="lupa-nota">andaria assim</div>}
+            {/* a regra do mínimo de 0,01 só aparece quando ela agiu de verdade (ADR-0025) */}
+            {daVolta.sinal !== "=" && limitarPeso(daVolta.depois) === limitarPeso(daVolta.antes) && (
+              <div className="lupa-nota">
+                pela conta: {daVolta.depois < 0 ? "−" : ""}
+                {Math.abs(daVolta.depois).toFixed(3).replace(".", ",")} · anda o mínimo de 0,01
+              </div>
+            )}
           </div>
         )}
         <div

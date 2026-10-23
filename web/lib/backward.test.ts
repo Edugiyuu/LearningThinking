@@ -128,3 +128,8 @@ test("a vista da volta acompanha os passos", () => {
   assert.equal(Math.round((noFim.fim?.erroDepois ?? 0) * 100), 11);
   assert.equal(formatarCulpa(-0.0155), "0,016");
 });
+
+test("culpa pequena demais para 3 casas não vira 0,000", () => {
+  assert.equal(formatarCulpa(0.0003), "menos de 0,001");
+  assert.equal(formatarCulpa(0), "0,000");
+});

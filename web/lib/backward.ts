@@ -33,7 +33,7 @@ export type PassoVolta =
       sinal: Sinal;
     }
   /** Os pesos do Salvar e a resposta rodando de novo com eles. */
-  | { tipo: "fim"; pesos: Pesos; respostaAntes: number; respostaDepois: number; erroAntes: number; erroDepois: number };
+  | { tipo: "fim"; pesos: Pesos; objetivo: number; respostaAntes: number; respostaDepois: number; erroAntes: number; erroDepois: number };
 
 export type OpcoesVolta = { rede: Rede; pesos: Pesos; entradas: number[]; objetivo: number; passinho?: number };
 
@@ -122,6 +122,7 @@ export function voltarCulpa({ rede, pesos, entradas, objetivo, passinho = PASSIN
   passos.push({
     tipo: "fim",
     pesos: novos,
+    objetivo,
     respostaAntes: ida.saida,
     respostaDepois: depois,
     erroAntes: Math.abs(objetivo - ida.saida),
@@ -168,5 +169,7 @@ export function vistaDaVolta(passos: PassoVolta[], atual: number): VistaVolta {
 export function formatarCulpa(n: number): string {
   // como no formatar: 0,0155 vira 0,01549999… no computador e arredondaria para baixo
   const milesimos = Math.round(Number((Math.abs(n) * 1000).toPrecision(12)));
+  // culpa existe mas some com 3 casas: dizer que é pequena, em vez de mostrar 0,000
+  if (milesimos === 0 && n !== 0) return "menos de 0,001";
   return (milesimos / 1000).toFixed(3).replace(".", ",");
 }

@@ -4,15 +4,16 @@ import { useState } from "react";
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
 import type { BackwardData, BackwardNode as BackwardNodeType, NoDaRede } from "@/lib/rede";
 import { useLab } from "@/components/laboratorio/contexto";
+import { ControlesDoTreino, DadosDoBloco } from "@/components/laboratorio/Treinar";
 
 /**
- * Bloco Backward pass (ADR-0025): liga na Saída e guarda a resposta certa (o gabarito) da
- * cor que está na Entrada. A resposta certa vem dos Dados do Treinar; uma cor nova pode ser
- * adicionada aos Dados aqui mesmo. Frame "Laboratório · Backward pass · 3 bloco com a resposta certa".
+ * Bloco Backward pass (ADR-0025): o lugar do aprendizado. Liga na Saída e tem a resposta certa
+ * da cor da Entrada (vinda dos Dados), a volta à mão (Mostrar/Salvar), os Dados e o Treinar.
+ * Frames "Laboratório · Backward pass · 3" e "· 4 bloco com Dados e Treinar" no Figma.
  */
 export default function BackwardNode({ id, data, selected }: NodeProps<BackwardNodeType>) {
   const { setNodes } = useReactFlow<NoDaRede>();
-  const { entrada, dados, setDados, rotulos, erros } = useLab();
+  const { entrada, dados, setDados, rotulos, erros, treino } = useLab();
   // a escolha de uma cor nova vale só para aquela cor: trocou a cor, começa sem escolha
   const [escolha, setEscolha] = useState<{ cor: string; objetivo: 0 | 1 } | null>(null);
 
@@ -77,6 +78,7 @@ export default function BackwardNode({ id, data, selected }: NodeProps<BackwardN
           </>
         )}
 
+        <div className="backward-secao">Volta à mão (Rodar)</div>
         <div className={`alternar backward-modo ${pronto ? "" : "apagado"}`}>
           <button className={data.modo === "mostrar" ? "ativo" : ""} disabled={!pronto} onClick={() => mudarModo("mostrar")}>
             Mostrar
@@ -90,6 +92,12 @@ export default function BackwardNode({ id, data, selected }: NodeProps<BackwardN
             {data.modo === "mostrar" ? "Mostrar: só vê a culpa. Os pesos não mudam." : "Salvar: no fim, cada peso anda um passinho de verdade."}
           </p>
         )}
+
+        <hr className="backward-divisor" />
+        <DadosDoBloco dados={dados} setDados={setDados} rotulos={rotulos} corDaEntrada={cor} />
+
+        <hr className="backward-divisor" />
+        <ControlesDoTreino treino={treino} />
       </div>
     </div>
   );

@@ -682,7 +682,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  width: 190px;
+  width: 220px;
   padding: 10px;
   border: 1.5px solid var(--destaque);
   border-radius: 14px;
@@ -1766,7 +1766,7 @@
 }
 
 .termometro-texto .negativo,
-.volta-valor.negativo {
+.volta-cadeia .negativo {
   color: var(--negativo);
 }
 
@@ -1816,37 +1816,6 @@
   color: #ffffff;
 }
 
-.volta-lista {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.volta-item {
-  display: grid;
-  grid-template-columns: 18px 1fr auto;
-  align-items: center;
-  gap: 2px 6px;
-  padding: 4px 6px;
-  border-radius: 8px;
-  font-size: 12px;
-  color: var(--text-muted);
-}
-
-.volta-item.agora {
-  padding: 8px;
-  border: 1px solid var(--destaque);
-  background: var(--destaque-fundo);
-  color: var(--text);
-}
-
-.volta-item .sinal {
-  margin: 0;
-}
-
 .volta-icone {
   width: 12px;
   height: 12px;
@@ -1860,22 +1829,6 @@
 
 .volta-icone.culpa {
   background: var(--destaque);
-}
-
-.volta-valor {
-  font-variant-numeric: tabular-nums;
-  color: var(--text);
-}
-
-.volta-detalhe {
-  grid-column: 1 / -1;
-  margin: 4px 0 0;
-  font-size: 12px;
-  color: var(--text);
-}
-
-.volta-detalhe p {
-  margin: 2px 0;
 }
 
 .volta-fim {
@@ -1916,4 +1869,208 @@
   border-radius: 10px;
   background: var(--bg-subtle);
   font-size: 12px;
+}
+
+/* ---------- O bloco como lugar do aprendizado: Dados e Treinar (ADR-0025) ---------- */
+.backward-secao,
+.treino-bloco-titulo {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.backward-divisor {
+  width: 100%;
+  margin: 2px 0;
+  border: none;
+  border-top: 1px solid var(--border);
+}
+
+.dados,
+.treino-bloco {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dados-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.dados-topo b {
+  color: var(--text);
+}
+
+.dados .exemplos-lista {
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.dados-mais {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  font-size: 11px;
+}
+
+.dados-mais > span {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-muted);
+}
+
+.dados-mais i {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.dados-mais .botao {
+  padding: 4px 6px;
+  font-size: 11px;
+}
+
+.treino-bloco-rotulo {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.treino-bloco .alternar button {
+  font-size: 11px;
+}
+
+.treino-bloco .treinar-campos {
+  gap: 6px;
+}
+
+.treino-bloco .botao.principal {
+  padding: 7px 10px;
+  font-size: 12px;
+}
+
+/* painel da volta: trilha de símbolos + cartão curto */
+.volta-trilha-rotulo {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.volta-trilha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.volta-trilha span {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  cursor: default;
+}
+
+.volta-trilha .sinal {
+  margin: 0;
+}
+
+.volta-trilha span.agora {
+  box-shadow: 0 0 0 2px var(--destaque);
+}
+
+.volta-cartao {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--destaque);
+  border-radius: 12px;
+  background: var(--destaque-fundo);
+}
+
+.volta-cartao-topo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.volta-cartao-topo .sinal {
+  margin: 0;
+}
+
+.volta-cartao-topo > span {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.volta-cadeia {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px;
+  margin: 0;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.volta-cadeia i {
+  margin-right: 4px;
+  font-style: normal;
+  color: var(--destaque);
+}
+
+.volta-cadeia span {
+  color: var(--text-muted);
+}
+
+.volta-cadeia b {
+  color: var(--text);
+}
+
+.volta-pe {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-subtle);
+}
+
+.volta-contagem {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.volta-contagem .sinal {
+  margin: 0;
+}
+
+.volta-resultado {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.volta-resultado > span:first-child {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.volta-todos summary {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--destaque-texto);
+  cursor: pointer;
+}
+
+.volta-todos .volta-tabela {
+  margin-top: 8px;
 }

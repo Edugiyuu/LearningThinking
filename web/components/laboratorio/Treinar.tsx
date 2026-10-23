@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { useEffect, useRef, useState } from "react";
 import { formatar, type Pesos } from "@/lib/rede";
 import { sortearPesos, treinar, type Exemplo, type Gravacao, type Passinho, type RedeLida } from "@/lib/treino";
 
@@ -112,23 +112,14 @@ export function useTreino({ ler, aplicar, exemplos }: { ler: () => RedeLida | st
 
 type Rotulos = { rotulo0: string; rotulo1: string };
 
-export function SecaoTreinar({
-  treino,
-  exemplos,
-  setExemplos,
-  rotulos,
-  secaoRef,
-  rodarAgora,
-}: {
-  treino: Treino;
-  exemplos: Exemplo[];
-  setExemplos: (e: Exemplo[]) => void;
-  rotulos: Rotulos;
-  secaoRef: RefObject<HTMLElement | null>;
-  rodarAgora: () => void;
-}) {
+/**
+ * O painel durante e depois do treino. Antes do treino, os controles e os Dados ficam no
+ * bloco Backward pass (ADR-0025): sem o bloco, não há Treinar.
+ */
+export function SecaoTreinar({ treino, exemplos, rodarAgora }: { treino: Treino; exemplos: Exemplo[]; rodarAgora: () => void }) {
+  if (treino.fase === "pronto") return null;
   return (
-    <section ref={secaoRef} className={`treinar ${treino.fase === "pronto" ? "" : "treinar-sozinho"}`} aria-labelledby="treinar-titulo">
+    <section className="treinar treinar-sozinho" aria-labelledby="treinar-titulo">
       <div className="treinar-topo">
         <h2 id="treinar-titulo">Treinar</h2>
         {treino.emAndamento && (
@@ -138,78 +129,112 @@ export function SecaoTreinar({
         )}
         {treino.fase === "fim" && <span className="treinar-selo concluido">✓ concluído</span>}
       </div>
-      {treino.fase === "pronto" && <Antes treino={treino} exemplos={exemplos} setExemplos={setExemplos} rotulos={rotulos} />}
       {treino.emAndamento && <Durante treino={treino} exemplos={exemplos.length} />}
       {treino.fase === "fim" && <Fim treino={treino} rodarAgora={rodarAgora} />}
     </section>
   );
 }
 
-function Antes({ treino, exemplos, setExemplos, rotulos }: { treino: Treino; exemplos: Exemplo[]; setExemplos: (e: Exemplo[]) => void; rotulos: Rotulos }) {
-  const { config, setConfig } = treino;
+/* ---------- No bloco Backward pass (ADR-0025) ---------- */
+
+/**
+ * Os Dados: recolhidos (amostras), ou abertos para editar. "+ cor da Entrada" pega a cor que
+ * está na Entrada agora, sem digitar RGB, e o aluno diz de que lado ela é.
+ */
+export function DadosDoBloco({
+  dados,
+  setDados,
+  rotulos,
+  corDaEntrada,
+}: {
+  dados: Exemplo[];
+  setDados: (e: Exemplo[]) => void;
+  rotulos: Rotulos;
+  corDaEntrada: string | null;
+}) {
   const [editando, setEditando] = useState(false);
-  const de = (c: 0 | 1) => exemplos.filter((e) => e.objetivo === c).length;
+  const de = (c: 0 | 1) => dados.filter((e) => e.objetivo === c).length;
+  const jaTem = !!corDaEntrada && dados.some((d) => d.cor.toUpperCase() === corDaEntrada);
   return (
-    <>
-      <div className="exemplos">
-        <div className="exemplos-topo">
-          <span>
-            <b>Dados</b> · {exemplos.length} {exemplos.length === 1 ? "cor" : "cores"}
-          </span>
-          <button className="exemplos-editar" aria-expanded={editando} onClick={() => setEditando(!editando)}>
-            {editando ? "pronto ▾" : "editar ▸"}
-          </button>
-        </div>
-        {!editando ? (
+    <div className="dados">
+      <div className="dados-topo">
+        <span>
+          <b>Dados</b> · {dados.length} {dados.length === 1 ? "cor" : "cores"}
+        </span>
+        <button className="exemplos-editar" aria-expanded={editando} onClick={() => setEditando(!editando)}>
+          {editando ? "pronto ▾" : "editar ▸"}
+        </button>
+      </div>
+      {!editando ? (
+        <>
           <div className="exemplos-amostras" aria-label="Cores dos Dados">
             {[1, 0].flatMap((c) =>
-              exemplos.filter((e) => e.objetivo === c).map((e, i) => <span key={`${c}-${i}`} style={{ background: e.cor }} title={`${e.cor} · ${c === 1 ? rotulos.rotulo1 : rotulos.rotulo0}`} />),
+              dados.filter((e) => e.objetivo === c).map((e, i) => <span key={`${c}-${i}`} style={{ background: e.cor }} title={`${e.cor} · ${c === 1 ? rotulos.rotulo1 : rotulos.rotulo0}`} />),
             )}
           </div>
-        ) : (
+          <p className="backward-nota">
+            {rotulos.rotulo1} (1): {de(1)} · {rotulos.rotulo0} (0): {de(0)}
+          </p>
+        </>
+      ) : (
+        <>
           <ul className="exemplos-lista">
-            {exemplos.map((e, i) => (
+            {dados.map((e, i) => (
               <li key={i}>
                 <input
                   type="color"
                   value={e.cor.toLowerCase()}
                   aria-label={`Cor ${i + 1} dos Dados`}
-                  onChange={(ev) => setExemplos(exemplos.map((x, j) => (j === i ? { ...x, cor: ev.target.value.toUpperCase() } : x)))}
+                  onChange={(ev) => setDados(dados.map((x, j) => (j === i ? { ...x, cor: ev.target.value.toUpperCase() } : x)))}
                 />
                 <button
                   className={`exemplos-marca marca-${e.objetivo}`}
                   title="Trocar a marcação"
-                  onClick={() => setExemplos(exemplos.map((x, j) => (j === i ? { ...x, objetivo: x.objetivo === 1 ? 0 : 1 } : x)))}
+                  onClick={() => setDados(dados.map((x, j) => (j === i ? { ...x, objetivo: x.objetivo === 1 ? 0 : 1 } : x)))}
                 >
                   {e.objetivo === 1 ? rotulos.rotulo1 : rotulos.rotulo0} · {e.objetivo}
                 </button>
-                <button className="exemplos-tirar" aria-label={`Tirar a cor ${i + 1} dos Dados`} onClick={() => setExemplos(exemplos.filter((_, j) => j !== i))}>
+                <button className="exemplos-tirar" aria-label={`Tirar a cor ${i + 1} dos Dados`} onClick={() => setDados(dados.filter((_, j) => j !== i))}>
                   ×
                 </button>
               </li>
             ))}
-            <li>
-              <button className="exemplos-mais" onClick={() => setExemplos([...exemplos, { cor: "#FF8C00", objetivo: 1 }])}>
-                + cor
-              </button>
-            </li>
           </ul>
-        )}
-      </div>
-      <p className="treinar-nota esquerda">
-        {rotulos.rotulo1} (1): {de(1)} · {rotulos.rotulo0} (0): {de(0)}. {editando ? "Clique na marcação para trocar." : "Em “editar”, mude a lista."}
-      </p>
+          {corDaEntrada && !jaTem ? (
+            <div className="dados-mais">
+              <span>
+                <i style={{ background: corDaEntrada }} /> + cor da Entrada como
+              </span>
+              {([0, 1] as const).map((o) => (
+                <button key={o} className="botao" onClick={() => setDados([...dados, { cor: corDaEntrada, objetivo: o }])}>
+                  {o === 1 ? rotulos.rotulo1 : rotulos.rotulo0} · {o}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="backward-nota">{corDaEntrada ? "A cor da Entrada já está nos Dados." : "Para acrescentar, use a Entrada de cor."}</p>
+          )}
+          <p className="backward-nota">Clique na marcação para trocar 0 ↔ 1.</p>
+        </>
+      )}
+    </div>
+  );
+}
 
-      <div className="treinar-rotulo forte">Tamanho do passinho</div>
+/** Os controles do treino, compactos, dentro do bloco. Durante o treino, o painel mostra o erro caindo. */
+export function ControlesDoTreino({ treino }: { treino: Treino }) {
+  const { config, setConfig } = treino;
+  return (
+    <div className="treino-bloco">
+      <b className="treino-bloco-titulo">Treinar</b>
+      <span className="treino-bloco-rotulo">Passinho</span>
       <div className="alternar tres">
         {(Object.keys(NOME_PASSINHO) as Passinho[]).map((p) => (
-          <button key={p} className={config.passinho === p ? "ativo" : ""} onClick={() => setConfig({ passinho: p })}>
+          <button key={p} className={config.passinho === p ? "ativo" : ""} onClick={() => setConfig({ passinho: p })} title="Quanto cada peso muda por vez. Grande demais: a rede pode travar.">
             {NOME_PASSINHO[p]}
           </button>
         ))}
       </div>
-      <p className="treinar-nota esquerda">Quanto cada peso muda por vez. Grande demais: os pesos pulam longe e a rede pode travar.</p>
-
       <div className="treinar-campos">
         <label>
           <span>Repetições</span>
@@ -230,22 +255,21 @@ function Antes({ treino, exemplos, setExemplos, rotulos }: { treino: Treino; exe
           </select>
         </label>
       </div>
-      <div className="treinar-rotulo">Começar de</div>
+      <span className="treino-bloco-rotulo">Começar de</span>
       <div className="alternar">
-        <button className={config.doZero ? "ativo" : ""} onClick={() => setConfig({ doZero: true })}>
+        <button className={config.doZero ? "ativo" : ""} onClick={() => setConfig({ doZero: true })} title="Sorteia os pesos">
           Do zero
         </button>
-        <button className={!config.doZero ? "ativo" : ""} onClick={() => setConfig({ doZero: false })}>
+        <button className={!config.doZero ? "ativo" : ""} onClick={() => setConfig({ doZero: false })} title="Continua dos pesos atuais">
           Já treinada
         </button>
       </div>
-      <p className="treinar-nota esquerda">Do zero sorteia os pesos. Já treinada continua dos atuais.</p>
       {treino.aviso && <p className="erros">{treino.aviso}</p>}
-      <button className="botao principal treinar-botao" onClick={treino.comecar}>
+      <button className="botao principal" onClick={treino.comecar} disabled={treino.fase !== "pronto"}>
         Treinar {config.repeticoes.toLocaleString("pt-BR")} {config.repeticoes === 1 ? "vez" : "vezes"}
       </button>
-      <p className="treinar-nota">No fim, você vê o erro e as respostas de antes e depois.</p>
-    </>
+      {treino.fase !== "pronto" && <p className="backward-nota">O treino aparece no painel da direita.</p>}
+    </div>
   );
 }
 

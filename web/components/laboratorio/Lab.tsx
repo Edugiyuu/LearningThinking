@@ -113,7 +113,6 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
   const [chegou, setChegou] = useState<number | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const [salvamento, setSalvamento] = useState<Salvamento>(projeto ? "salvo" : "nao-salvo");
-  const treinarRef = useRef<HTMLElement>(null);
   const { screenToFlowPosition, zoomIn, zoomOut } = useReactFlow<NoDaRede>();
 
   // fios de blocos apagados somem sozinhos
@@ -140,6 +139,9 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
     exemplos,
     aplicar: aplicarPesos,
     ler: () => {
+      // treinar é o backward repetido sobre os Dados: sem o bloco ligado na Saída, não há treino (ADR-0025)
+      const bloco = nodes.find((n) => n.type === "backward");
+      if (!bloco || !fios.some((f) => f.target === bloco.id)) return "Para treinar, ligue o Backward pass na Saída.";
       const entrada = nodes.find((n) => n.type === "entrada");
       if (entrada?.type === "entrada" && entrada.data.tipo !== "cor") return "Por enquanto o treino usa a Entrada de cor. Troque a Entrada para Cor.";
       return lerRede(nodes, fios, pesos) ?? "A montagem tem um problema. Clique em Rodar para ver o que falta.";
@@ -259,6 +261,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
       rotulos,
       volta,
       modoVolta: ativa?.modo ?? "mostrar",
+      treino,
       vista,
       erros: new Set((ativa?.erros ?? []).flatMap((e) => (e.no && e.tipo !== "aviso" ? [e.no] : []))),
       avisos: new Set((ativa?.erros ?? []).flatMap((e) => (e.no && e.tipo === "aviso" ? [e.no] : []))),
@@ -272,7 +275,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
       informarLinha,
       posicaoDoPeso,
     }),
-    [entrada, exemplos, rotulos, volta, vista, ativa, chegou, informarLinha, posicaoDoPeso],
+    [entrada, exemplos, rotulos, volta, treino, vista, ativa, chegou, informarLinha, posicaoDoPeso],
   );
 
   const rodarAgora = () => {
@@ -379,9 +382,6 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
           </div>
 
           <div className="lab-topo-direita">
-            <button className="botao lab-botao" onClick={() => treinarRef.current?.scrollIntoView({ behavior: "smooth" })}>
-              Treinar
-            </button>
             <button className="botao principal lab-botao" onClick={rodar} disabled={treino.emAndamento}>
               <span aria-hidden>▶</span> {rodada ? "Rodar de novo" : "Rodar"}
             </button>
@@ -459,7 +459,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
             setAutomatico={setAutomatico}
             textoResposta={textoResposta}
             soTreinar={treino.fase !== "pronto"}
-            treinar={<SecaoTreinar treino={treino} exemplos={exemplos} setExemplos={setExemplos} rotulos={rotulos} secaoRef={treinarRef} rodarAgora={rodarAgora} />}
+            treinar={<SecaoTreinar treino={treino} exemplos={exemplos} rodarAgora={rodarAgora} />}
           />
         </div>
       </div>
