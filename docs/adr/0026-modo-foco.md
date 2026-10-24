@@ -51,6 +51,8 @@ Na volta, o aluno viu "erro 0,03 → × 0,03 → culpa 0,001" e não entendeu de
 - **Zero do fim sai antes (opção B, escolhida pelo autor em 2026-10-24):** em 0,50 × 0,25, o primeiro passo mostra "0,50 = 0,5 → 5" e a Aqua diz "Zero no fim não muda o número"; a conta vira 5 × 25, com 3 casas = 0,125. O quadro "· 3 ver conta" do Figma foi refeito assim (5 passos).
 - O quadro da ida mostra o valor de todas as linhas, também das que ainda não passaram no painel ("mostrar tudo").
 - Na volta, a Saída mostra "respondeu" e "certo"; num neurônio do meio, a cadeia é "culpa que chegou × inclinação da ReLU = culpa do neurônio".
+- **2026-10-24, segunda leva:** `mapaDaRede` e `ondeEstamos` (`lib/foco.ts`, com teste) montam a lousa "Onde estamos" a partir da própria rodada (Entrada, cada camada, Saída), em qualquer montagem. A Aqua anda por transição de CSS (desligada com *reduced motion*) e o aviso "Próxima camada!" fica 2,6 s. O fim da ida mostra a rede toda (`RedeToda`). Na volta, a cadeia curta e "número correto". Os nomes levam a camada ("Camada 1 · neurônio 1"); só a soma usa o nome curto. Em telas baixas (até 820 px de altura) o quadro fica mais compacto e cabe sem rolar em 1280 × 720.
+- Na volta, a lousa segue a culpa neurônio por neurônio; por isso a Aqua pode voltar da Entrada para a Camada 1 quando começa o próximo neurônio.
 
 ## Consequências
 

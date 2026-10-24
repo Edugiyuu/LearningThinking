@@ -1,8 +1,20 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { PassoVolta } from "@/lib/backward";
-import { contaArmada, culpaComSinal, quadroDaIda, quadroDaVolta, type CorpoConta, type LinhaArmada, type ParteDaSoma, } from "@/lib/foco";
+import {
+  contaArmada,
+  culpaComSinal,
+  mapaDaRede,
+  ondeEstamos,
+  quadroDaIda,
+  quadroDaVolta,
+  type CorpoConta,
+  type LinhaArmada,
+  type MapaDaRede,
+  type OndeEstamos,
+  type ParteDaSoma,
+} from "@/lib/foco";
 import { formatar, type Rodada } from "@/lib/rede";
 import { Aqua } from "@/components/mascote";
 
@@ -15,8 +27,10 @@ type Props = {
   onFechar: () => void;
 };
 
-/** "Entrada R" → "R"; "Camada 1 · neurônio 2" → "neurônio 2". */
+/** "Entrada R" → "R"; "Camada 1 · neurônio 2" → "neurônio 2" (na soma, onde a camada já está no título). */
 const curto = (nome: string) => nome.replace(/^Entrada /, "").replace(/^.* · /, "");
+/** Com a camada, para não confundir o neurônio 1 de uma camada com o de outra (ADR-0026, item 7). */
+const completo = (nome: string) => nome.replace(/^Entrada /, "");
 
 /** A conta do "ver conta": os dois números como aparecem no quadro, com o nome de cada um. */
 type Conta = { a: string; b: string; nomeA: string; nomeB: string; nomeResultado: string; casas: number; fim?: ReactNode };
@@ -44,8 +58,11 @@ export default function QuadroFoco({ rodada, volta, atual, textoResposta, onFech
 
   // nomes curtos: o último neurônio é a "Saída", como no painel da volta
   const finais = new Set(rodada.passos.flatMap((p) => (p.tipo === "ativacao" && p.final ? [p.neuronio] : [])));
-  const nomeNeuronio = (id: string) => (finais.has(id) ? "Saída" : curto(rodada.nomes.get(id) ?? id));
-  const origem = new Map(rodada.passos.flatMap((p) => (p.tipo === "termo" ? [[p.linha, curto(p.nome)] as const] : [])));
+  const nomeNeuronio = (id: string) => (finais.has(id) ? "Saída" : completo(rodada.nomes.get(id) ?? id));
+  const origem = new Map(rodada.passos.flatMap((p) => (p.tipo === "termo" ? [[p.linha, completo(p.nome)] as const] : [])));
+
+  const mapa = mapaDaRede(rodada);
+  const onde = ondeEstamos(rodada, mapa, volta, atual);
 
   const etapa = naVolta ? `BACKWARD · PASSO ${atual - daIda + 1} DE ${volta.length}` : `FORWARD · PASSO ${atual + 1} DE ${daIda}`;
 
@@ -59,13 +76,10 @@ export default function QuadroFoco({ rodada, volta, atual, textoResposta, onFech
         {naVolta ? (
           <Volta passos={volta} atual={atual - daIda} nomeNeuronio={nomeNeuronio} origem={origem} verConta={setConta} />
         ) : (
-          <Ida rodada={rodada} atual={atual} nomeNeuronio={nomeNeuronio} textoResposta={textoResposta} verConta={setConta} />
+          <Ida rodada={rodada} mapa={mapa} atual={atual} nomeNeuronio={nomeNeuronio} textoResposta={textoResposta} verConta={setConta} />
         )}
       </div>
-      <div className="foco-aqua" aria-hidden>
-        <span className="foco-varinha" />
-        <Aqua unidade={5} />
-      </div>
+      <LousaOndeEstamos mapa={mapa} onde={onde} />
       {conta && <VerConta key={`${conta.a}×${conta.b}`} conta={conta} onFechar={() => setConta(null)} />}
     </div>
   );
@@ -75,12 +89,14 @@ export default function QuadroFoco({ rodada, volta, atual, textoResposta, onFech
 
 function Ida({
   rodada,
+  mapa,
   atual,
   nomeNeuronio,
   textoResposta,
   verConta,
 }: {
   rodada: Rodada;
+  mapa: MapaDaRede;
   atual: number;
   nomeNeuronio: (id: string) => string;
   textoResposta: Props["textoResposta"];
@@ -91,9 +107,10 @@ function Ida({
   if (q.tipo === "saida") {
     return (
       <>
-        <h2 className="foco-titulo">A Saída decide a resposta</h2>
-        <p className="foco-grande">{textoResposta(q.saida, q.valor, q.resposta)}</p>
-        <p className="foco-nota">Abaixo de 0,50 a resposta é 0; a partir de 0,50 é 1.</p>
+        <h2 className="foco-titulo">A rede toda</h2>
+        <p className="foco-nota esquerda">A entrada passou pelas camadas e virou a resposta: {textoResposta(q.saida, q.valor, q.resposta)}.</p>
+        <RedeToda mapa={mapa} />
+        <p className="foco-nota esquerda">Linha verde: peso positivo · vermelha: negativo · mais grossa: peso maior.</p>
       </>
     );
   }
@@ -102,7 +119,7 @@ function Ida({
   const funcao = q.final ? "sigmoide" : "ReLU";
   return (
     <>
-      <h2 className="foco-titulo">{agora ? `${curto(agora.nome)} → ${destino}` : `${destino}: soma e ${funcao}`}</h2>
+      <h2 className="foco-titulo">{agora ? `${completo(agora.nome)} → ${destino}` : `${destino}: soma e ${funcao}`}</h2>
       <div className="foco-corpo">
         <div>
           <DiagramaIda partes={q.partes} destino={destino} valor={q.ativando ? q.valor : null} />
@@ -121,7 +138,7 @@ function Ida({
                     verConta({
                       a: formatar(agora.entrada),
                       b: formatar(agora.peso),
-                      nomeA: `o que ${curto(agora.nome)} passou`,
+                      nomeA: `o que ${completo(agora.nome)} passou`,
                       nomeB: "peso da linha",
                       nomeResultado: "parte desta linha",
                       casas: 2,
@@ -155,17 +172,17 @@ function DiagramaIda({ partes, destino, valor }: { partes: ParteDaSoma[]; destin
   const dy = altura / 2;
   const yDe = (i: number) => altura / 2 + (i - (partes.length - 1) / 2) * passo;
   return (
-    <svg className="foco-diagrama" viewBox={`0 0 420 ${altura}`} role="img" aria-label={`As linhas que chegam em ${destino}`}>
+    <svg className="foco-diagrama" viewBox={`0 0 440 ${altura}`} role="img" aria-label={`As linhas que chegam em ${destino}`}>
       {partes.map((p, i) => {
         const y = yDe(i);
         const cor = p.peso < 0 ? "var(--erro)" : "var(--positivo)";
         return (
           <g key={p.linha} className={p.agora ? "agora" : "apagada"}>
-            <line x1={78} y1={y} x2={318} y2={dy} stroke={cor} strokeWidth={p.agora ? 5 : 2.5} strokeLinecap="round" />
+            <line x1={118} y1={y} x2={338} y2={dy} stroke={cor} strokeWidth={p.agora ? 5 : 2.5} strokeLinecap="round" />
             {p.agora && (
               <>
-                <circle cx={78 + (318 - 78) * 0.35} cy={y + (dy - y) * 0.35} r={7} className="foco-bolinha" />
-                <g transform={`translate(${78 + (318 - 78) * 0.6} ${y + (dy - y) * 0.6 + 20})`}>
+                <circle cx={118 + (338 - 118) * 0.35} cy={y + (dy - y) * 0.35} r={7} className="foco-bolinha" />
+                <g transform={`translate(${118 + (338 - 118) * 0.6} ${y + (dy - y) * 0.6 + 20})`}>
                   <rect x={-44} y={-13} width={88} height={26} rx={13} className={`foco-pilula ${p.peso < 0 ? "negativo" : "positivo"}`} />
                   <text textAnchor="middle" y={4.5}>
                     peso {formatar(p.peso)}
@@ -173,21 +190,21 @@ function DiagramaIda({ partes, destino, valor }: { partes: ParteDaSoma[]; destin
                 </g>
               </>
             )}
-            <circle cx={50} cy={y} r={28} className="foco-no" />
-            <text x={50} y={y + 5} textAnchor="middle" className="foco-no-valor">
+            <circle cx={90} cy={y} r={28} className="foco-no" />
+            <text x={90} y={y + 5} textAnchor="middle" className="foco-no-valor">
               {formatar(p.entrada)}
             </text>
-            <text x={50} y={y + 44} textAnchor="middle" className="foco-no-nome">
-              {curto(p.nome)}
+            <text x={90} y={y + 44} textAnchor="middle" className="foco-no-nome">
+              {completo(p.nome)}
             </text>
           </g>
         );
       })}
-      <circle cx={354} cy={dy} r={34} className="foco-no destino" />
-      <text x={354} y={dy + 6} textAnchor="middle" className="foco-no-valor">
+      <circle cx={374} cy={dy} r={34} className="foco-no destino" />
+      <text x={374} y={dy + 6} textAnchor="middle" className="foco-no-valor">
         {valor === null ? "Σ" : formatar(valor)}
       </text>
-      <text x={354} y={dy + 52} textAnchor="middle" className="foco-no-nome destino">
+      <text x={374} y={dy + 52} textAnchor="middle" className="foco-no-nome destino">
         {destino}
       </text>
     </svg>
@@ -231,6 +248,120 @@ function SomaDoNeuronio({
   );
 }
 
+/** Fim da ida (ADR-0026, item 8): a rede toda, com o valor de cada nó e cada linha com a cor e a espessura do peso. */
+function RedeToda({ mapa }: { mapa: MapaDaRede }) {
+  const largura = 720;
+  const passo = 64;
+  const maior = Math.max(...mapa.colunas.map((c) => c.nos.length));
+  const altura = maior * passo + 50;
+  const x = (c: number) => 70 + (c * (largura - 140)) / Math.max(1, mapa.colunas.length - 1);
+  const pos = new Map<string, { x: number; y: number }>();
+  mapa.colunas.forEach((c, i) => c.nos.forEach((n, j) => pos.set(n.id, { x: x(i), y: 40 + (j - (c.nos.length - 1) / 2) * passo + (maior * passo) / 2 - passo / 2 })));
+  const ultima = mapa.colunas.length - 1;
+  return (
+    <svg className="foco-rede" viewBox={`0 0 ${largura} ${altura}`} role="img" aria-label="A rede toda, da Entrada até a Saída">
+      {mapa.linhas.map((l) => {
+        const a = pos.get(l.de);
+        const b = pos.get(l.para);
+        if (!a || !b) return null;
+        return (
+          <line
+            key={l.linha}
+            x1={a.x}
+            y1={a.y}
+            x2={b.x}
+            y2={b.y}
+            stroke={l.peso < 0 ? "var(--erro)" : "var(--positivo)"}
+            strokeWidth={1.5 + Math.min(5, Math.abs(l.peso) * 2)}
+            strokeLinecap="round"
+            opacity={0.7}
+          />
+        );
+      })}
+      {mapa.colunas.map((c, i) => (
+        <g key={c.nome + i}>
+          <text x={x(i)} y={14} textAnchor="middle" className="foco-no-nome destino">
+            {c.nome}
+          </text>
+          {c.nos.map((n) => {
+            const p = pos.get(n.id)!;
+            return (
+              <g key={n.id}>
+                <circle cx={p.x} cy={p.y} r={i === ultima ? 26 : 22} className={`foco-no ${i === ultima ? "destino" : ""}`} />
+                <text x={p.x} y={p.y + 5} textAnchor="middle" className="foco-no-valor pequeno">
+                  {formatar(n.valor)}
+                </text>
+                {i === 0 && (
+                  <text x={p.x - 32} y={p.y + 4} textAnchor="end" className="foco-no-nome">
+                    {n.nome}
+                  </text>
+                )}
+              </g>
+            );
+          })}
+        </g>
+      ))}
+    </svg>
+  );
+}
+
+/**
+ * A lousa "Onde estamos" (ADR-0026, item 11), embaixo do quadro: as colunas da rede, a da vez
+ * marcada, o nó da vez aceso e a Aqua em cima. Quando a ida passa para a próxima camada, a Aqua
+ * anda até lá (a transição do CSS) e a lousa avisa por um instante.
+ */
+function LousaOndeEstamos({ mapa, onde }: { mapa: MapaDaRede; onde: OndeEstamos }) {
+  const anterior = useRef(onde.coluna);
+  const [aviso, setAviso] = useState<string | null>(null);
+  // o mapa é refeito a cada passo: o efeito olha só os nomes das colunas
+  const colunas = mapa.colunas.map((c) => c.nome).join("|");
+  useEffect(() => {
+    const de = anterior.current;
+    anterior.current = onde.coluna;
+    if (onde.sentido !== "ida" || onde.coluna !== de + 1 || de === 0) return;
+    const nomes = colunas.split("|");
+    setAviso(`Próxima camada! Os resultados da ${nomes[de]} viram as entradas da ${nomes[onde.coluna]}.`);
+  }, [onde.coluna, onde.sentido, colunas]);
+  useEffect(() => {
+    if (!aviso) return;
+    const t = setTimeout(() => setAviso(null), 2600);
+    return () => clearTimeout(t);
+  }, [aviso]);
+
+  const n = mapa.colunas.length;
+  const pct = (c: number) => `${((c + 0.5) / n) * 100}%`;
+  return (
+    <div className="foco-onde" aria-label={`Onde estamos: ${onde.frase}`}>
+      <div className="foco-onde-topo">
+        <span>Onde estamos</span>
+        <b>{aviso ?? onde.frase}</b>
+      </div>
+      <div className="foco-onde-mapa">
+        {onde.seta && (
+          <span
+            className={`foco-onde-seta ${onde.sentido}`}
+            style={{ left: pct(Math.min(onde.seta.de, onde.seta.para)), width: `${(1 / n) * 100}%` }}
+            aria-hidden
+          />
+        )}
+        {mapa.colunas.map((c, i) => (
+          <div key={c.nome + i} className={`foco-onde-coluna ${i === onde.coluna ? "agora" : ""}`} style={{ left: pct(i) }}>
+            <div className="foco-onde-nos">
+              {c.nos.map((no) => (
+                <i key={no.id} className={no.id === onde.no ? "aceso" : ""} />
+              ))}
+            </div>
+            <small>{c.nome}</small>
+          </div>
+        ))}
+        <span className="foco-onde-aqua" style={{ left: pct(onde.coluna) }} aria-hidden>
+          <Aqua unidade={3} />
+        </span>
+      </div>
+    </div>
+  );
+}
+
 /* ---------- Volta ---------- */
 
 function Volta({
@@ -257,7 +388,7 @@ function Volta({
           elos={[
             { n: formatar(q.resposta), nome: "respondeu" },
             { op: "·" },
-            { n: String(q.objetivo), nome: "certo" },
+            { n: String(q.objetivo), nome: "número correto" },
             { op: "→" },
             { n: formatar(q.erro), nome: "erro", destaque: true },
           ]}
@@ -333,7 +464,10 @@ function Volta({
       <DiagramaVolta de={de} para={nome} passou={q.passou} peso={q.antes} final={q.final} resposta={q.resposta} objetivo={q.objetivo} />
       <Cadeia
         elos={[
-          ...origemDaCulpa(q.final, q.chegou, q.inclinacao, q.culpaNeuronio, true).map((e) => ("destaque" in e ? { ...e, destaque: false } : e)),
+          // cadeia curta (ADR-0026, item 9): o erro × inclinação já apareceu no passo anterior e fica no "ver conta"
+          ...origemDaCulpa(q.final, q.chegou, q.inclinacao, q.culpaNeuronio, true)
+            .slice(4)
+            .map((e) => ("destaque" in e ? { ...e, destaque: false } : e)),
           { op: "×" },
           { n: formatar(q.passou), nome: "o que passou" },
           { op: "=" },
@@ -406,45 +540,45 @@ function DiagramaVolta({
 }) {
   const cor = peso < 0 ? "var(--erro)" : "var(--positivo)";
   return (
-    <svg className="foco-diagrama volta" viewBox="0 0 560 134" role="img" aria-label={`A culpa volta de ${para} para ${de}`}>
-      <line x1={92} y1={56} x2={468} y2={56} stroke={cor} strokeWidth={5} strokeLinecap="round" />
-      <path d="M 106 56 l 14 -9 v 18 z" className="foco-seta" />
-      <circle cx={360} cy={56} r={10} className="foco-culpa" />
-      <text x={360} y={34} textAnchor="middle" className="foco-culpa-nome">
+    <svg className="foco-diagrama volta" viewBox="0 0 640 134" role="img" aria-label={`A culpa volta de ${para} para ${de}`}>
+      <line x1={132} y1={56} x2={508} y2={56} stroke={cor} strokeWidth={5} strokeLinecap="round" />
+      <path d="M 146 56 l 14 -9 v 18 z" className="foco-seta" />
+      <circle cx={400} cy={56} r={10} className="foco-culpa" />
+      <text x={400} y={34} textAnchor="middle" className="foco-culpa-nome">
         culpa
       </text>
-      <g transform="translate(270 82)">
+      <g transform="translate(310 82)">
         <rect x={-44} y={-13} width={88} height={26} rx={13} className={`foco-pilula ${peso < 0 ? "negativo" : "positivo"}`} />
         <text textAnchor="middle" y={4.5}>
           peso {formatar(peso)}
         </text>
       </g>
-      <circle cx={50} cy={56} r={40} className="foco-no" />
-      <text x={50} y={62} textAnchor="middle" className="foco-no-valor">
+      <circle cx={90} cy={56} r={40} className="foco-no" />
+      <text x={90} y={62} textAnchor="middle" className="foco-no-valor">
         {formatar(passou)}
       </text>
-      <text x={50} y={118} textAnchor="middle" className="foco-no-nome">
+      <text x={90} y={118} textAnchor="middle" className="foco-no-nome">
         {de}
       </text>
-      <circle cx={510} cy={56} r={40} className="foco-no destino" />
+      <circle cx={550} cy={56} r={40} className="foco-no destino" />
       {final ? (
         <>
-          <text x={510} y={50} textAnchor="middle" className="foco-no-nome">
+          <text x={550} y={50} textAnchor="middle" className="foco-no-nome">
             respondeu
           </text>
-          <text x={510} y={70} textAnchor="middle" className="foco-no-valor">
+          <text x={550} y={70} textAnchor="middle" className="foco-no-valor">
             {formatar(resposta)}
           </text>
         </>
       ) : (
-        <circle cx={510} cy={56} r={9} className="foco-culpa" />
+        <circle cx={550} cy={56} r={9} className="foco-culpa" />
       )}
-      <text x={510} y={114} textAnchor="middle" className="foco-no-nome destino">
+      <text x={550} y={114} textAnchor="middle" className="foco-no-nome destino">
         {para}
       </text>
       {final && (
-        <text x={510} y={128} textAnchor="middle" className="foco-certo">
-          certo: {objetivo}
+        <text x={550} y={128} textAnchor="middle" className="foco-certo">
+          número correto: {objetivo}
         </text>
       )}
     </svg>

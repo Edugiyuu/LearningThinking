@@ -1,7 +1,7 @@
 // Testes do Modo Foco (ADR-0026). Rodar com: npm test
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { contaArmada, culpaComSinal, quadroDaIda, quadroDaVolta } from "./foco";
+import { contaArmada, culpaComSinal, mapaDaRede, ondeEstamos, quadroDaIda, quadroDaVolta } from "./foco";
 import { voltarCulpa } from "./backward";
 import { montagemBasica, prepararRodada } from "./rede";
 import { corParaEntradas, lerRede } from "./treino";
@@ -82,4 +82,28 @@ test("a culpa com sinal", () => {
   assert.equal(culpaComSinal(0.125), "+0,125");
   assert.equal(culpaComSinal(-0.05), "−0,050");
   assert.equal(culpaComSinal(0.0002), "menos de 0,001 (+)");
+});
+
+test("o mapa da rede tem Entrada, as camadas e a Saída, e acompanha a ida e a volta", () => {
+  const m = montagemBasica();
+  const { rodada } = prepararRodada(m.nodes, m.fios, m.pesos);
+  assert.ok(rodada);
+  const mapa = mapaDaRede(rodada);
+  assert.equal(mapa.colunas[0].nome, "Entrada");
+  assert.equal(mapa.colunas.at(-1)!.nome, "Saída");
+  assert.equal(mapa.colunas[0].nos.length, 3);
+  // na ida, a coluna nunca volta
+  let antes = 0;
+  rodada.passos.forEach((_, i) => {
+    const o = ondeEstamos(rodada, mapa, null, i);
+    assert.ok(o.coluna >= antes);
+    antes = o.coluna;
+  });
+  // a volta começa na Saída e termina na Entrada (no meio ela vai neurônio por neurônio)
+  const lida = lerRede(m.nodes, m.fios, m.pesos);
+  assert.ok(lida);
+  const volta = voltarCulpa({ rede: lida.rede, pesos: lida.pesos, entradas: corParaEntradas("#378ADD"), objetivo: 0 });
+  const daIda = rodada.passos.length;
+  assert.equal(ondeEstamos(rodada, mapa, volta, daIda).coluna, mapa.colunas.length - 1);
+  assert.equal(ondeEstamos(rodada, mapa, volta, daIda + volta.length - 1).coluna, 0);
 });

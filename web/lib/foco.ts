@@ -296,3 +296,85 @@ export function contaArmada(a: string, b: string, casas: number): TelaConta[] {
   }
   return telas;
 }
+
+/* ---------- Onde estamos: a lousa de baixo (e a rede toda no fim da ida) ---------- */
+
+/** Um nó do mapa: uma entrada (chave "entrada#0") ou um neurônio, com o valor que ele passa adiante. */
+export type NoDoMapa = { id: string; nome: string; valor: number };
+export type ColunaDoMapa = { nome: string; nos: NoDoMapa[] };
+/** Uma linha do mapa, para desenhar a rede toda: de onde, para onde e o peso. */
+export type LinhaDoMapa = { linha: string; de: string; para: string; peso: number };
+export type MapaDaRede = { colunas: ColunaDoMapa[]; linhas: LinhaDoMapa[]; coluna: Map<string, number> };
+
+/**
+ * As colunas da rede na ordem da ida: Entrada, cada camada e a Saída (a camada do último
+ * neurônio, como no painel). Sai da própria rodada, então vale para qualquer montagem.
+ */
+export function mapaDaRede(rodada: Rodada): MapaDaRede {
+  const entradas: NoDoMapa[] = [];
+  const camadas: { titulo: string; nos: NoDoMapa[] }[] = [];
+  const linhas: LinhaDoMapa[] = [];
+  const vistos = new Set<string>();
+  let final: string | null = null;
+  for (const p of rodada.passos) {
+    if (p.tipo === "termo") {
+      const de = p.linha.slice(0, p.linha.lastIndexOf("->"));
+      linhas.push({ linha: p.linha, de, para: p.neuronio, peso: p.peso });
+      if (de.includes("#") && !vistos.has(de)) {
+        vistos.add(de);
+        entradas.push({ id: de, nome: p.nome.replace(/^Entrada /, ""), valor: p.entrada });
+      }
+    }
+    if (p.tipo === "ativacao") {
+      const nome = rodada.nomes.get(p.neuronio) ?? p.neuronio;
+      const titulo = nome.includes(" · ") ? nome.slice(0, nome.indexOf(" · ")) : nome;
+      const no = { id: p.neuronio, nome: nome.replace(/^.* · /, ""), valor: p.valor };
+      const ultima = camadas.at(-1);
+      if (ultima && ultima.titulo === titulo) ultima.nos.push(no);
+      else camadas.push({ titulo, nos: [no] });
+      if (p.final) final = p.neuronio;
+    }
+  }
+  const colunas: ColunaDoMapa[] = [
+    { nome: "Entrada", nos: entradas },
+    ...camadas.map((c) => ({ nome: c.nos.some((n) => n.id === final) ? "Saída" : c.titulo, nos: c.nos })),
+  ];
+  const coluna = new Map<string, number>();
+  colunas.forEach((c, i) => c.nos.forEach((n) => coluna.set(n.id, i)));
+  return { colunas, linhas, coluna };
+}
+
+export type OndeEstamos = {
+  /** A coluna onde a Aqua fica. */
+  coluna: number;
+  /** O nó aceso (o neurônio da vez ou de onde vem a linha da volta). */
+  no: string | null;
+  /** A seta: de qual coluna para qual, e em que sentido. */
+  seta: { de: number; para: number } | null;
+  sentido: "ida" | "volta";
+  frase: string;
+};
+
+const artigo = (nome: string) => `a ${nome}`;
+
+/** Onde a conta da vez está na rede, para a lousa "Onde estamos" (ADR-0026, item 11). */
+export function ondeEstamos(rodada: Rodada, mapa: MapaDaRede, volta: PassoVolta[] | null, atual: number): OndeEstamos {
+  const ultima = mapa.colunas.length - 1;
+  const nome = (c: number) => mapa.colunas[c]?.nome ?? "";
+  const daIda = rodada.passos.length;
+  if (!volta || atual < daIda) {
+    const p = rodada.passos[atual];
+    if (!p || p.tipo === "saida") return { coluna: ultima, no: null, seta: null, sentido: "ida", frase: "a resposta saiu da Saída" };
+    const c = mapa.coluna.get(p.neuronio) ?? ultima;
+    return { coluna: c, no: p.neuronio, seta: { de: c - 1, para: c }, sentido: "ida", frase: `os números estão indo para ${artigo(nome(c))}` };
+  }
+  const p = volta[atual - daIda];
+  if (!p || p.tipo === "erro") return { coluna: ultima, no: null, seta: null, sentido: "volta", frase: "a culpa começa na Saída" };
+  if (p.tipo === "fim") return { coluna: 0, no: null, seta: null, sentido: "volta", frase: "a culpa chegou na Entrada: fim da volta" };
+  if (p.tipo === "culpa-neuronio") {
+    const c = mapa.coluna.get(p.neuronio) ?? ultima;
+    return { coluna: c, no: p.neuronio, seta: c < ultima ? { de: c + 1, para: c } : null, sentido: "volta", frase: `a culpa chegou ${c === ultima ? "na Saída" : `na ${nome(c)}`}` };
+  }
+  const c = mapa.coluna.get(p.de) ?? 0;
+  return { coluna: c, no: p.de, seta: { de: c + 1, para: c }, sentido: "volta", frase: `a culpa está voltando ${c + 1 === ultima ? "da Saída" : `da ${nome(c + 1)}`}` };
+}

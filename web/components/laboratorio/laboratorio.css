@@ -2125,15 +2125,18 @@
   inset: 0 320px 0 0;
   z-index: 20;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 24px 24px 64px;
+  gap: 18px;
+  padding: 24px;
   background: rgba(29, 29, 31, 0.45);
 }
 
 .foco-quadro {
   position: relative;
-  width: min(860px, 100%);
+  width: 100%;
+  min-height: 0;
   max-height: 100%;
   overflow-x: hidden;
   overflow-y: auto;
@@ -2185,7 +2188,7 @@
 }
 
 .foco-diagrama.volta {
-  max-width: 560px;
+  max-width: 760px;
   margin: 0 auto 8px;
 }
 
@@ -2452,23 +2455,148 @@
   color: #1e9e5a;
 }
 
-/* a Aqua pequena, no canto do quadro, apontando */
-.foco-aqua {
-  position: absolute;
-  left: max(16px, calc(50% - 450px));
-  bottom: 14px;
+/* a lousa Onde estamos, embaixo do quadro (ADR-0026, item 11) */
+.foco-onde {
+  flex-shrink: 0;
+  width: min(560px, 100%);
+  padding: 10px 18px 8px;
+  border: 6px solid #c7c7cc;
+  border-radius: 10px;
+  background: #fff;
 }
 
-.foco-varinha {
+.foco-onde-topo {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.foco-onde-topo span {
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.foco-onde-topo b {
+  font-weight: 600;
+  text-align: right;
+  color: var(--destaque-texto);
+}
+
+.foco-onde-mapa {
+  position: relative;
+  height: 84px;
+}
+
+.foco-onde-coluna {
   position: absolute;
-  left: 44px;
-  bottom: 14px;
-  width: 3px;
-  height: 60px;
-  border-radius: 2px;
-  background: #8e8e93;
-  transform: rotate(18deg);
-  transform-origin: bottom;
+  top: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transform: translateX(-50%);
+  font-size: 11px;
+  color: #aeaeb2;
+}
+
+.foco-onde-nos {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 4px;
+  border: 1.5px dashed transparent;
+  border-radius: 8px;
+  align-items: center;
+}
+
+.foco-onde-nos i {
+  width: 11px;
+  height: 11px;
+  border: 1.5px solid #c7c7cc;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.foco-onde-coluna.agora {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.foco-onde-coluna.agora .foco-onde-nos {
+  border-color: var(--destaque-texto);
+}
+
+.foco-onde-coluna.agora .foco-onde-nos i {
+  border-color: var(--text);
+}
+
+.foco-onde-nos i.aceso {
+  border-color: var(--text);
+  background: var(--destaque-texto);
+}
+
+.foco-onde-seta {
+  position: absolute;
+  top: 41px;
+  height: 2.5px;
+  background: var(--destaque-texto);
+}
+
+.foco-onde-seta::after {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: calc(50% - 6px);
+  border: 6px solid transparent;
+  border-top-width: 6px;
+  border-bottom-width: 6px;
+}
+
+.foco-onde-seta.ida::after {
+  border-left: 10px solid var(--destaque-texto);
+  border-right: 0;
+}
+
+.foco-onde-seta.volta::after {
+  border-right: 10px solid var(--destaque-texto);
+  border-left: 0;
+}
+
+.foco-onde-aqua {
+  position: absolute;
+  top: 0;
+  margin-left: 26px;
+  line-height: 0;
+  /* a Aqua anda até a próxima coluna */
+  transition: left 0.9s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .foco-onde-aqua {
+    transition: none;
+  }
+}
+
+/* fim da ida: a rede toda */
+.foco-rede {
+  display: block;
+  width: 100%;
+  max-height: 250px;
+  margin: 8px 0;
+}
+
+.foco-no-valor.pequeno {
+  font-size: 14px;
+}
+
+.foco-nota.esquerda {
+  text-align: left;
 }
 
 /* ---------- Ver conta: a conta armada por cima do quadro ---------- */
@@ -2655,5 +2783,56 @@
 @media (max-width: 900px) {
   .foco-corpo {
     grid-template-columns: 1fr;
+  }
+}
+
+/* tela de PC mais baixa (ex.: 1280 × 720): o mesmo layout, mais compacto, sem rolar */
+@media (max-height: 820px) {
+  .foco {
+    gap: 12px;
+    padding: 16px 24px;
+  }
+
+  .foco-quadro {
+    padding: 18px 28px 20px;
+  }
+
+  .foco-titulo {
+    margin: 2px 0 6px;
+    font-size: 19px;
+  }
+
+  .foco-diagrama.volta {
+    max-width: 560px;
+  }
+
+  .foco-cadeia {
+    margin: 2px 0;
+  }
+
+  .foco-elo b {
+    font-size: 19px;
+  }
+
+  .foco-elo.destaque b {
+    font-size: 22px;
+  }
+
+  .foco-ese {
+    margin-top: 8px;
+    padding-top: 8px;
+  }
+
+  .foco-ese-linha {
+    margin-top: 4px;
+    padding: 6px 12px;
+  }
+
+  .foco-onde {
+    padding: 6px 16px 4px;
+  }
+
+  .foco-onde-mapa {
+    height: 74px;
   }
 }
