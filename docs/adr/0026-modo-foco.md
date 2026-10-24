@@ -29,13 +29,14 @@ Na volta, o aluno viu "erro 0,03 → × 0,03 → culpa 0,001" e não entendeu de
    - nome completo: "Camada 1 · neurônio 1";
    - **mini-mapa** no topo do quadro (Entrada → Camada 1 → Saída), com a camada da vez marcada, o neurônio da vez aceso e a Aqua pequena em cima da camada da vez; na volta, a seta do mini-mapa aponta para trás;
    - **ao mudar de camada, a Aqua anda** no mini-mapa até a próxima coluna (cerca de 1 s), com o aviso "Os resultados da Camada 1 viram as entradas da Saída" e o que cada neurônio passou. Depois o quadro mostra a conta, como antes.
+8. **No fim da ida, a rede toda, de forma visual** (decidido em 2026-10-24): o último passo do quadro mostra Entrada (a cor e R G B), cada camada e a Saída com a resposta, os valores dentro dos neurônios e as linhas com a cor e a espessura do peso. A Aqua fica em cima da Saída.
 
 ## Detalhes propostos pela IA (a confirmar no Figma)
 
 - Na ida não há culpa: o quadro mostra "o que passou × peso = chega no próximo neurônio".
 - Na volta, a cadeia com nome em cada número: erro × inclinação da sigmoide = culpa da Saída × o que passou = culpa da linha; embaixo, o teste "e se?".
 - O quadro mostra as três partes em três tempos (neurônio → linha e peso → resultado), e os botões Anterior / Próximo continuam no painel.
-- Telas: "Laboratório · Modo Foco · 1 ida (lousa clara)" e "· 2 volta (lousa clara, e se?)". Mais "· 3 ver conta (conta armada)" (os 6 passos de 0,50 × 0,25) e "· 4 ver conta com negativo" (4,00 × −0,50, com a navegação do pop-up) e "· 4 ver conta, passo 6 (onde entra)". Mais "· 5 mudando de camada (a Aqua anda)", em 3 tempos; os quadros 1 e 2 ganharam o mini-mapa. O "· 1 ida" agora é "(lousa clara, soma toda)".
+- Telas: "Laboratório · Modo Foco · 1 ida (lousa clara)" e "· 2 volta (lousa clara, e se?)". Mais "· 3 ver conta (conta armada)" (os 6 passos de 0,50 × 0,25) e "· 4 ver conta com negativo" (4,00 × −0,50, com a navegação do pop-up) e "· 4 ver conta, passo 6 (onde entra)". Mais "· 5 mudando de camada (a Aqua anda)", em 3 tempos; os quadros 1 e 2 ganharam o mini-mapa. E "· 6 fim da ida (a rede toda)". O "· 1 ida" agora é "(lousa clara, soma toda)".
 - Exemplo das telas, com números fáceis (pedido do autor): o neurônio 2 passou 4,00, peso −0,50, a Saída respondeu 0,50 e o certo é 0. Ida: 4,00 × −0,50 = −2,00. Volta: 0,50 × 0,25 = +0,125 × 4,00 = +0,50; o peso desce 0,25 (passinho 0,5): −0,50 → −0,75.
 
 ## Como ficou no código (2026-10-24)
