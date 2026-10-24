@@ -2135,11 +2135,12 @@
 
 .foco-quadro {
   position: relative;
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
   width: 100%;
   min-height: 0;
-  max-height: 100%;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden;
   padding: 28px 36px 32px;
   border: 10px solid #c7c7cc;
   border-radius: 12px;
@@ -2180,14 +2181,36 @@
   align-items: start;
 }
 
-/* o desenho cresce com a largura, mas nunca passa da altura que sobra: o quadro cabe sem rolar */
 .foco-diagrama {
   display: block;
   width: 100%;
   max-width: 420px;
   height: auto;
-  max-height: calc(100vh - 560px);
-  min-height: 90px;
+}
+
+/*
+ * O quadro vai até a lousa de baixo e o conteúdo fica no meio da altura. A letra tem um tamanho
+ * só para todos os passos: muda com a altura da tela (as media queries no fim), nunca por passo.
+ */
+.foco-caixa {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.foco-conteudo {
+  width: 100%;
+}
+
+/* passos com pouca coisa (erro, culpa chegando, fim): no centro, sem sobrar espaço de um lado só */
+.foco-centro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 .foco-diagrama.volta {
@@ -2590,8 +2613,7 @@
 .foco-rede {
   display: block;
   width: 100%;
-  max-height: calc(100vh - 420px);
-  min-height: 140px;
+  max-height: 300px;
   margin: 8px 0;
 }
 
@@ -2838,5 +2860,38 @@
 
   .foco-onde-mapa {
     height: 74px;
+  }
+}
+
+/* tela de PC mais alta: tudo um pouco maior, igual em todos os passos */
+@media (min-height: 860px) {
+  .foco-titulo {
+    font-size: 28px;
+  }
+
+  .foco-elo b {
+    font-size: 26px;
+  }
+
+  .foco-elo.destaque b {
+    font-size: 32px;
+  }
+
+  .foco-elo small,
+  .foco-nota,
+  .foco-ese-linha {
+    font-size: 15px;
+  }
+
+  .foco-diagrama {
+    max-width: 520px;
+  }
+
+  .foco-diagrama.volta {
+    max-width: 840px;
+  }
+
+  .foco-rede {
+    max-height: 380px;
   }
 }

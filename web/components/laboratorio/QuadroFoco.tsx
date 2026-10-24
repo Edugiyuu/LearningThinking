@@ -73,11 +73,15 @@ export default function QuadroFoco({ rodada, volta, atual, textoResposta, onFech
           ×
         </button>
         <div className="foco-etapa">{etapa}</div>
-        {naVolta ? (
-          <Volta passos={volta} atual={atual - daIda} nomeNeuronio={nomeNeuronio} origem={origem} verConta={setConta} />
-        ) : (
-          <Ida rodada={rodada} mapa={mapa} atual={atual} nomeNeuronio={nomeNeuronio} textoResposta={textoResposta} verConta={setConta} />
-        )}
+        <div className="foco-caixa">
+          <div className="foco-conteudo">
+            {naVolta ? (
+              <Volta passos={volta} atual={atual - daIda} nomeNeuronio={nomeNeuronio} origem={origem} verConta={setConta} />
+            ) : (
+              <Ida rodada={rodada} mapa={mapa} atual={atual} nomeNeuronio={nomeNeuronio} textoResposta={textoResposta} verConta={setConta} />
+            )}
+          </div>
+        </div>
       </div>
       <LousaOndeEstamos mapa={mapa} onde={onde} />
       {conta && <VerConta key={`${conta.a}×${conta.b}`} conta={conta} onFechar={() => setConta(null)} />}
@@ -383,7 +387,7 @@ function Volta({
 
   if (q.tipo === "erro") {
     return (
-      <>
+      <div className="foco-centro">
         <h2 className="foco-titulo">Quanto a rede errou</h2>
         <Cadeia
           elos={[
@@ -395,17 +399,17 @@ function Volta({
           ]}
         />
         <p className="foco-nota">Agora a culpa volta pela rede, da Saída até a Entrada.</p>
-      </>
+      </div>
     );
   }
 
   if (q.tipo === "fim") {
     return (
-      <>
+      <div className="foco-centro">
         <h2 className="foco-titulo">Fim da volta</h2>
         <Cadeia elos={[{ n: formatar(q.erroAntes), nome: "erro antes" }, { op: "→" }, { n: formatar(q.erroDepois), nome: "erro depois", destaque: true }]} />
         <p className="foco-nota">Cada peso andou um passinho contra a sua culpa. O resumo está no painel.</p>
-      </>
+      </div>
     );
   }
 
@@ -437,19 +441,19 @@ function Volta({
   if (q.tipo === "neuronio") {
     if (q.apagado) {
       return (
-        <>
+        <div className="foco-centro">
           <h2 className="foco-titulo">{nome} passou 0</h2>
           <p className="foco-grande">A culpa para aqui: as linhas dele ficam iguais.</p>
           <p className="foco-nota">Com a ReLU, quem passou 0 não mudou a resposta. Então não tem culpa.</p>
-        </>
+        </div>
       );
     }
     return (
-      <>
+      <div className="foco-centro">
         <h2 className="foco-titulo">A culpa chega {q.final ? "na Saída" : `no ${nome}`}</h2>
         <Cadeia elos={origemDaCulpa(q.final, q.chegou, q.inclinacao, q.culpa, true)} />
         {q.final && <p className="foco-nota">Perto de 0 ou de 1 a sigmoide é quase plana: a culpa encolhe.</p>}
-      </>
+      </div>
     );
   }
 
