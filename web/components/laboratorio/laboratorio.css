@@ -2180,11 +2180,14 @@
   align-items: start;
 }
 
+/* o desenho cresce com a largura, mas nunca passa da altura que sobra: o quadro cabe sem rolar */
 .foco-diagrama {
   display: block;
   width: 100%;
   max-width: 420px;
   height: auto;
+  max-height: calc(100vh - 560px);
+  min-height: 90px;
 }
 
 .foco-diagrama.volta {
@@ -2587,7 +2590,8 @@
 .foco-rede {
   display: block;
   width: 100%;
-  max-height: 250px;
+  max-height: calc(100vh - 420px);
+  min-height: 140px;
   margin: 8px 0;
 }
 

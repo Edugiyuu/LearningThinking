@@ -334,7 +334,8 @@ function LousaOndeEstamos({ mapa, onde }: { mapa: MapaDaRede; onde: OndeEstamos 
     <div className="foco-onde" aria-label={`Onde estamos: ${onde.frase}`}>
       <div className="foco-onde-topo">
         <span>Onde estamos</span>
-        <b>{aviso ?? onde.frase}</b>
+        {/* o aviso de camada nova é só da ida: na volta, a frase da volta */}
+        <b>{(onde.sentido === "ida" && aviso) || onde.frase}</b>
       </div>
       <div className="foco-onde-mapa">
         {onde.seta && (
