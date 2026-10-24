@@ -553,6 +553,7 @@ function Corpo({ corpo, conta, primeira }: { corpo: CorpoConta; conta: Conta; pr
             <div key={k}>
               <span>
                 {it.de}
+                {it.semZero && ` = ${it.semZero}`}
                 {primeira && <small>{k === 0 ? conta.nomeA : conta.nomeB}</small>}
               </span>
               <i aria-hidden>→</i>

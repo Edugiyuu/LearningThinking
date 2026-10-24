@@ -20,7 +20,7 @@ Na volta, o aluno viu "erro 0,03 → × 0,03 → culpa 0,001" e não entendeu de
    - **o teste "e se?"**: duas linhas, "peso sobe ↑ → resposta sobe ↑ → longe do certo ✗" e "peso desce ↓ → resposta desce ↓ → perto do certo ✓", com "culpa + = subir piora". A linha escolhida fica acesa. É a resposta a "por que culpa + faz o peso descer", com pouco texto.
 5. **"ver conta" em cada conta do quadro** (decidido em 2026-10-23): abre um **pop-up por cima do quadro, só com aquela conta** (ex.: 0,50 × 0,25 = 0,125), **montada no papel** (conta armada), número por número, para quem não é bom em matemática.
    - **A Aqua ensina** a conta (um personagem só).
-   - **Vírgula do jeito da escola:** tira a vírgula (50 × 25), faz a conta armada algarismo por algarismo, soma as linhas (1250), conta as casas (2 + 2 = 4) e põe a vírgula (0,1250 = 0,125).
+   - **Vírgula do jeito da escola:** tira o zero do fim e a vírgula (0,50 = 0,5 → 5; 0,25 → 25), faz a conta armada algarismo por algarismo, soma as linhas (125), conta as casas (1 + 2 = 3) e põe a vírgula (0,125).
    - **Número negativo** (proposto pela IA, confirmado): a conta é feita sem o sinal e o sinal volta no último passo (+ × − = −; sinais diferentes dão −, iguais dão +). Zeros no fim depois da vírgula saem antes (4,00 = 4; 0,50 = 0,5).
    - **Cada número tem nome em toda tela da conta:** uma legenda fixa embaixo do título (ex.: "4,00 = o que o neurônio 2 passou · −0,50 = peso da linha") e o nome embaixo do número no primeiro e no último passo (pedido do autor: sem nome, o −0,50 não dizia que era o peso).
    - **Cada passo é uma tela do mesmo pop-up**, com ← Anterior / Próximo → e bolinhas de progresso; no último passo o botão vira "Voltar ao quadro".
@@ -45,7 +45,7 @@ Na volta, o aluno viu "erro 0,03 → × 0,03 → culpa 0,001" e não entendeu de
 - `QuadroFoco.tsx`: o quadro (lousa clara) e o "ver conta". Ele cobre a paleta e o canvas; o painel com Anterior / Próximo continua à vista. Esc fecha o "ver conta" e depois o quadro.
 - `PainelContas.tsx`: o botão "Modo Foco" embaixo de Anterior / Próximo.
 - Os números do "ver conta" são os que aparecem no quadro (2 casas; a culpa, 3). A conta armada arredonda no fim para as casas do lab.
-- **Diferente do Figma (decisão da IA, a confirmar):** o zero do fim depois da vírgula sai sempre, também em 0,50 × 0,25 (vira 5 × 25, com 3 casas = 0,125). No Figma, essa conta usava 50 × 25. Assim as duas contas seguem a mesma regra e têm menos passos.
+- **Zero do fim sai antes (opção B, escolhida pelo autor em 2026-10-24):** em 0,50 × 0,25, o primeiro passo mostra "0,50 = 0,5 → 5" e a Aqua diz "Zero no fim não muda o número"; a conta vira 5 × 25, com 3 casas = 0,125. O quadro "· 3 ver conta" do Figma foi refeito assim (5 passos).
 - O quadro da ida mostra o valor de todas as linhas, também das que ainda não passaram no painel ("mostrar tudo").
 - Na volta, a Saída mostra "respondeu" e "certo"; num neurônio do meio, a cadeia é "culpa que chegou × inclinação da ReLU = culpa do neurônio".
 

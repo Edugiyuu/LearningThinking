@@ -129,14 +129,15 @@ export type TelaConta = { titulo: string; fala: string; corpo: CorpoConta };
 
 export type CorpoConta =
   | { tipo: "sinal"; a: string; b: string }
-  | { tipo: "tirar"; itens: { de: string; para: string; casas: number }[] }
+  | { tipo: "tirar"; itens: { de: string; semZero?: string; para: string; casas: number }[] }
   | { tipo: "armada"; linhas: LinhaArmada[]; barras: number[] }
   | { tipo: "virgula"; casas: number[]; resultado: string; /** Com as casas que o lab mostra (2,0 → 2,00). */ fica: string }
   | { tipo: "arredonda"; de: string; para: string }
   | { tipo: "sinalVolta"; regra: string; resultado: string }
   | { tipo: "zero"; resultado: string };
 
-type Numero = { negativo: boolean; inteiro: string; casas: number; texto: string };
+/** `curto` é o número sem o zero do fim (0,50 → 0,5; 4,00 → 4). */
+type Numero = { negativo: boolean; inteiro: string; casas: number; texto: string; curto: string };
 
 /** "−0,50" → 5 com 1 casa: o zero do fim depois da vírgula não muda o número. */
 function lerNumero(texto: string): Numero {
@@ -145,7 +146,7 @@ function lerNumero(texto: string): Numero {
   const [ip, fp = ""] = sem.split(",");
   const frac = fp.replace(/0+$/, "");
   const inteiro = (ip + frac).replace(/^0+(?=\d)/, "");
-  return { negativo, inteiro, casas: frac.length, texto: sem };
+  return { negativo, inteiro, casas: frac.length, texto: sem, curto: frac ? `${ip},${frac}` : ip };
 }
 
 /** Escreve o inteiro com `casas` casas decimais, como no lab: 1250 e 4 casas → 0,1250. */
@@ -194,12 +195,16 @@ export function contaArmada(a: string, b: string, casas: number): TelaConta[] {
     return telas;
   }
 
+  // zero no fim sai antes da vírgula (opção B do autor): 0,50 = 0,5 → 5
+  const comZero = [x, y].filter((n) => n.curto !== n.texto);
   telas.push({
     titulo: "Primeiro, sem a vírgula",
-    fala: `A vírgula volta no fim. Por enquanto: ${x.inteiro} × ${y.inteiro}.`,
+    fala:
+      (comZero.length ? `Zero no fim não muda o número: ${comZero.map((n) => `${n.texto} = ${n.curto}`).join(" · ")}. ` : "A vírgula volta no fim. ") +
+      `Por enquanto: ${x.inteiro} × ${y.inteiro}.`,
     corpo: {
       tipo: "tirar",
-      itens: [x, y].map((n) => ({ de: n.texto, para: n.inteiro, casas: n.casas })),
+      itens: [x, y].map((n) => ({ de: n.texto, semZero: n.curto !== n.texto ? n.curto : undefined, para: n.inteiro, casas: n.casas })),
     },
   });
 
