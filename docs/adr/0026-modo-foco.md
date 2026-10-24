@@ -30,6 +30,7 @@ Na volta, o aluno viu "erro 0,03 → × 0,03 → culpa 0,001" e não entendeu de
    - **mini-mapa** no topo do quadro (Entrada → Camada 1 → Saída), com a camada da vez marcada, o neurônio da vez aceso e a Aqua pequena em cima da camada da vez; na volta, a seta do mini-mapa aponta para trás;
    - **ao mudar de camada, a Aqua anda** no mini-mapa até a próxima coluna (cerca de 1 s), com o aviso "Os resultados da Camada 1 viram as entradas da Saída" e o que cada neurônio passou. Depois o quadro mostra a conta, como antes.
 8. **No fim da ida, a rede toda, de forma visual** (decidido em 2026-10-24): o último passo do quadro mostra Entrada (a cor e R G B), cada camada e a Saída com a resposta, os valores dentro dos neurônios e as linhas com a cor e a espessura do peso. A Aqua fica em cima da Saída.
+9. **Tela da linha na volta mais limpa** (decidido em 2026-10-24, o autor achou a tela poluída): a cadeia fica curta, só "culpa da Saída × o que passou = culpa da linha". O "erro × inclinação = culpa da Saída" aparece só no passo anterior (a culpa chegando na Saída); na linha, ele continua no "ver conta" embaixo da culpa da Saída. Mudanças do autor no Figma, a seguir no código: "certo: 0" vira **"número correto: 0"**, maior, e a Aqua do canto fica um pouco maior.
 
 ## Detalhes propostos pela IA (a confirmar no Figma)
 
