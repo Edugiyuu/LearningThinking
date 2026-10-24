@@ -2162,7 +2162,7 @@
 }
 
 .foco-etapa {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   letter-spacing: 0.04em;
   color: var(--destaque-texto);
@@ -2170,7 +2170,7 @@
 
 .foco-titulo {
   margin: 6px 0 12px;
-  font-size: 22px;
+  font-size: 28px;
   font-weight: 700;
 }
 
@@ -2196,13 +2196,45 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  justify-content: center;
   min-height: 0;
   overflow-y: auto;
 }
 
+/* título em cima, o desenho cresce no meio, a conta e o e se? embaixo (o espaço vai para o desenho) */
 .foco-conteudo {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
   width: 100%;
+  min-height: 0;
+}
+
+.foco-conteudo > .foco-diagrama,
+.foco-conteudo > .foco-rede,
+.foco-corpo .foco-diagrama {
+  flex: 1 1 0;
+  width: 100%;
+  max-width: none;
+  min-height: 120px;
+  max-height: none;
+  margin: 0 auto;
+}
+
+.foco-corpo {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.foco-corpo > div:first-child {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.foco-centro {
+  flex: 1;
+  justify-content: center;
 }
 
 /* passos com pouca coisa (erro, culpa chegando, fim): no centro, sem sobrar espaço de um lado só */
@@ -2310,19 +2342,19 @@
 }
 
 .foco-elo b {
-  font-size: 22px;
+  font-size: 30px;
   font-variant-numeric: tabular-nums;
 }
 
 .foco-elo small {
-  max-width: 96px;
-  font-size: 12px;
+  max-width: 130px;
+  font-size: 15px;
   line-height: 1.25;
   color: var(--text-muted);
 }
 
 .foco-elo.destaque b {
-  font-size: 26px;
+  font-size: 36px;
   color: var(--destaque-texto);
 }
 
@@ -2332,7 +2364,7 @@
 
 .foco-op {
   padding-top: 4px;
-  font-size: 20px;
+  font-size: 26px;
   color: #aeaeb2;
 }
 
@@ -2342,7 +2374,7 @@
   padding: 0;
   border: none;
   background: none;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--destaque-texto);
 }
@@ -2355,7 +2387,7 @@
 .foco-nota {
   margin: 12px 0 0;
   text-align: center;
-  font-size: 14px;
+  font-size: 17px;
   color: var(--text-muted);
 }
 
@@ -2449,6 +2481,7 @@
 }
 
 .foco-ese-linha {
+  font-size: 17px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -2825,7 +2858,7 @@
 
   .foco-titulo {
     margin: 2px 0 6px;
-    font-size: 19px;
+    font-size: 24px;
   }
 
   .foco-diagrama.volta {
@@ -2837,11 +2870,11 @@
   }
 
   .foco-elo b {
-    font-size: 19px;
+    font-size: 26px;
   }
 
   .foco-elo.destaque b {
-    font-size: 22px;
+    font-size: 30px;
   }
 
   .foco-ese {
@@ -2866,32 +2899,19 @@
 /* tela de PC mais alta: tudo um pouco maior, igual em todos os passos */
 @media (min-height: 860px) {
   .foco-titulo {
-    font-size: 28px;
-  }
-
-  .foco-elo b {
-    font-size: 26px;
-  }
-
-  .foco-elo.destaque b {
     font-size: 32px;
   }
 
+  .foco-elo b {
+    font-size: 34px;
+  }
+
+  .foco-elo.destaque b {
+    font-size: 42px;
+  }
+
   .foco-elo small,
-  .foco-nota,
-  .foco-ese-linha {
-    font-size: 15px;
-  }
-
-  .foco-diagrama {
-    max-width: 520px;
-  }
-
-  .foco-diagrama.volta {
-    max-width: 840px;
-  }
-
-  .foco-rede {
-    max-height: 380px;
+  .foco-nota {
+    font-size: 17px;
   }
 }
