@@ -14,6 +14,9 @@ type Props = {
   atual: number;
   erros: Erro[];
   automatico: boolean;
+  /** Modo Foco (ADR-0026): a conta da vez aparece num quadro por cima do canvas. */
+  foco: boolean;
+  setFoco: (ligado: boolean) => void;
   irPara: (passo: number) => void;
   setAutomatico: (ligado: boolean) => void;
   /** "0,71 → laranja (1)", com o objetivo que o aluno deu à Saída. */
@@ -25,7 +28,7 @@ type Props = {
 };
 
 /** Painel da direita: as contas, uma multiplicação de cada vez, e o Treinar. */
-export default function PainelContas({ rodada, volta, modoVolta, atual, erros, automatico, irPara, setAutomatico, textoResposta, treinar, soTreinar }: Props) {
+export default function PainelContas({ rodada, volta, modoVolta, atual, erros, automatico, foco, setFoco, irPara, setAutomatico, textoResposta, treinar, soTreinar }: Props) {
   const daIda = rodada?.passos.length ?? 0;
   const total = daIda + (volta?.length ?? 0);
   const naVolta = !!volta && atual >= daIda;
@@ -64,6 +67,11 @@ export default function PainelContas({ rodada, volta, modoVolta, atual, erros, a
               Próximo →
             </button>
           </div>
+          <button className={`modo-foco ${foco ? "ligado" : ""}`} aria-pressed={foco} onClick={() => setFoco(!foco)}>
+            <i aria-hidden />
+            Modo Foco
+            <span>{foco ? "ligado" : "desligado"}</span>
+          </button>
           <div className="alternar">
             <button className={!automatico ? "ativo" : ""} onClick={() => setAutomatico(false)}>
               Passo a passo

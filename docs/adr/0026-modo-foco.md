@@ -1,6 +1,6 @@
 # ADR-0026 · Modo Foco no Rodar
 
-- **Status:** Aceita (decisões do autor), falta o Figma e o código
+- **Status:** Aceita e implementada (decisões do autor; detalhes propostos pela IA e confirmados no Figma)
 - **Data:** 2026-10-23
 - **Decisores:** Eduardo (autor), com propostas da IA
 - **Usa:** [ADR-0025](0025-bloco-backward-pass.md) (a volta do Backward pass)
@@ -33,6 +33,16 @@ Na volta, o aluno viu "erro 0,03 → × 0,03 → culpa 0,001" e não entendeu de
 - O quadro mostra as três partes em três tempos (neurônio → linha e peso → resultado), e os botões Anterior / Próximo continuam no painel.
 - Telas: "Laboratório · Modo Foco · 1 ida (lousa clara)" e "· 2 volta (lousa clara, e se?)". Mais "· 3 ver conta (conta armada)" (os 6 passos de 0,50 × 0,25) e "· 4 ver conta com negativo" (4,00 × −0,50, com a navegação do pop-up) e "· 4 ver conta, passo 6 (onde entra)". O "· 1 ida" agora é "(lousa clara, soma toda)".
 - Exemplo das telas, com números fáceis (pedido do autor): o neurônio 2 passou 4,00, peso −0,50, a Saída respondeu 0,50 e o certo é 0. Ida: 4,00 × −0,50 = −2,00. Volta: 0,50 × 0,25 = +0,125 × 4,00 = +0,50; o peso desce 0,25 (passinho 0,5): −0,50 → −0,75.
+
+## Como ficou no código (2026-10-24)
+
+- `web/lib/foco.ts`: `quadroDaIda` (todas as linhas do neurônio, a da vez acesa, e a soma), `quadroDaVolta` (de onde vem a culpa e o teste "e se?"), `culpaComSinal` e `contaArmada` (as telas do "ver conta"). Testes em `foco.test.ts`, incluindo a conta armada batendo com a conta do computador.
+- `QuadroFoco.tsx`: o quadro (lousa clara) e o "ver conta". Ele cobre a paleta e o canvas; o painel com Anterior / Próximo continua à vista. Esc fecha o "ver conta" e depois o quadro.
+- `PainelContas.tsx`: o botão "Modo Foco" embaixo de Anterior / Próximo.
+- Os números do "ver conta" são os que aparecem no quadro (2 casas; a culpa, 3). A conta armada arredonda no fim para as casas do lab.
+- **Diferente do Figma (decisão da IA, a confirmar):** o zero do fim depois da vírgula sai sempre, também em 0,50 × 0,25 (vira 5 × 25, com 3 casas = 0,125). No Figma, essa conta usava 50 × 25. Assim as duas contas seguem a mesma regra e têm menos passos.
+- O quadro da ida mostra o valor de todas as linhas, também das que ainda não passaram no painel ("mostrar tudo").
+- Na volta, a Saída mostra "respondeu" e "certo"; num neurônio do meio, a cadeia é "culpa que chegou × inclinação da ReLU = culpa do neurônio".
 
 ## Consequências
 

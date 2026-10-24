@@ -25,6 +25,7 @@ import NeuronioNode from "@/components/laboratorio/NeuronioNode";
 import SaidaNode from "@/components/laboratorio/SaidaNode";
 import PesoEdge from "@/components/laboratorio/PesoEdge";
 import PainelContas from "@/components/laboratorio/PainelContas";
+import QuadroFoco from "@/components/laboratorio/QuadroFoco";
 import { ResultadoTreino, SecaoTreinar, useTreino } from "@/components/laboratorio/Treinar";
 import { LabContexto } from "@/components/laboratorio/contexto";
 import { Aqua } from "@/components/mascote";
@@ -110,6 +111,8 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
   const [editando, setEditando] = useState<string | null>(null);
   const [execucao, setExecucao] = useState<Execucao | null>(null);
   const [automatico, setAutomatico] = useState(false);
+  // Modo Foco (ADR-0026): a conta da vez num quadro por cima do canvas
+  const [foco, setFoco] = useState(false);
   const [chegou, setChegou] = useState<number | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const [salvamento, setSalvamento] = useState<Salvamento>(projeto ? "salvo" : "nao-salvo");
@@ -277,6 +280,8 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
     }),
     [entrada, exemplos, rotulos, volta, treino, vista, ativa, chegou, informarLinha, posicaoDoPeso],
   );
+
+  const fecharFoco = useCallback(() => setFoco(false), []);
 
   const rodarAgora = () => {
     treino.reiniciar();
@@ -455,12 +460,19 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
             atual={atual}
             erros={ativa?.erros ?? []}
             automatico={automatico}
+            foco={foco}
+            setFoco={setFoco}
             irPara={irPara}
             setAutomatico={setAutomatico}
             textoResposta={textoResposta}
             soTreinar={treino.fase !== "pronto"}
             treinar={<SecaoTreinar treino={treino} exemplos={exemplos} rodarAgora={rodarAgora} />}
           />
+
+          {/* cobre a paleta e o canvas; o painel com Anterior / Próximo continua à vista */}
+          {foco && rodada && treino.fase === "pronto" && (
+            <QuadroFoco rodada={rodada} volta={voltaPassos} atual={atual} textoResposta={textoResposta} onFechar={fecharFoco} />
+          )}
         </div>
       </div>
     </LabContexto.Provider>
