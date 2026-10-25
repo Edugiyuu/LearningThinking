@@ -18,18 +18,24 @@ import {
 import "@xyflow/react/dist/style.css";
 import "@/components/laboratorio/laboratorio.css";
 
+import BackwardNode from "@/components/laboratorio/BackwardNode";
 import CamadaNode from "@/components/laboratorio/CamadaNode";
 import EntradaNode from "@/components/laboratorio/EntradaNode";
 import NeuronioNode from "@/components/laboratorio/NeuronioNode";
 import SaidaNode from "@/components/laboratorio/SaidaNode";
 import PesoEdge from "@/components/laboratorio/PesoEdge";
 import PainelContas from "@/components/laboratorio/PainelContas";
+import QuadroFoco from "@/components/laboratorio/QuadroFoco";
+import { ResultadoTreino, SecaoTreinar, useTreino } from "@/components/laboratorio/Treinar";
 import { LabContexto } from "@/components/laboratorio/contexto";
 import { Aqua } from "@/components/mascote";
 import { lerMontagem, salvarMontagem, type Projeto } from "@/lib/projetos";
+import { EXEMPLOS_PRONTOS, corParaEntradas, lerRede, type Exemplo } from "@/lib/treino";
+import { vistaDaVolta, voltarCulpa, type PassoVolta } from "@/lib/backward";
 import {
   camadaNoPonto,
   continuarIds,
+  criarBackward,
   criarCamada,
   criarEntrada,
   criarNeuronio,
@@ -55,11 +61,12 @@ import {
   type Segmento,
 } from "@/lib/rede";
 
-const nodeTypes = { camada: CamadaNode, neuronio: NeuronioNode, saida: SaidaNode, entrada: EntradaNode };
+const nodeTypes = { camada: CamadaNode, neuronio: NeuronioNode, saida: SaidaNode, entrada: EntradaNode, backward: BackwardNode };
 const edgeTypes = { peso: PesoEdge };
 const TIPO_ARRASTE = "application/x-bloco";
 const INTERVALO_AUTOMATICO = 2300; // ms entre um passo e outro no modo automático (a bolinha leva 2 s)
 const ESPERA_SALVAR = 400; // ms sem mexer antes de salvar
+const ROTULOS_PADRAO = { rotulo0: "0", cor0: "#378ADD", rotulo1: "1", cor1: "#E8853A" };
 
 /** A montagem salva do projeto ou, se não houver, a que o aluno escolheu em Novo projeto. */
 function montagemDoProjeto(projeto: Projeto | null): Montagem {
@@ -71,8 +78,28 @@ function montagemDoProjeto(projeto: Projeto | null): Montagem {
   return projeto?.inicio === "vazio" ? montagemVazia() : montagemBasica();
 }
 
-/** A rodada (ou os erros) vale só para a montagem em que o aluno clicou em Rodar. */
-type Execucao = { estrutura: string; rodada: Rodada | null; erros: Erro[]; atual: number };
+/**
+ * A rodada (ou os erros) vale só para a montagem em que o aluno clicou em Rodar.
+ * Com o Backward pass, a volta vem depois da ida (ADR-0025); com Salvar, os pesos entram no fim.
+ */
+type Execucao = {
+  estrutura: string;
+  rodada: Rodada | null;
+  erros: Erro[];
+  atual: number;
+  volta: PassoVolta[] | null;
+  modo: "mostrar" | "salvar";
+  salvou: boolean;
+};
+
+/** Só o que muda as contas (não a posição nem a seleção); mexer nisso cancela a rodada. */
+function estruturaDe(nodes: NoDaRede[], fios: Fio[], pesos: Pesos) {
+  return JSON.stringify({
+    n: nodes.map((n) => [n.id, n.type, n.parentId, n.type === "saida" || n.type === "backward" ? null : n.data]),
+    f: fios.map((f) => [f.source, f.target]),
+    pesos,
+  });
+}
 type Salvamento = "salvo" | "salvando" | "nao-salvo";
 
 function Laboratorio({ projeto }: { projeto: Projeto | null }) {
@@ -80,13 +107,15 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
   const [nodes, setNodes] = useState<NoDaRede[]>(inicial.nodes);
   const [fiosBrutos, setFios] = useState<Fio[]>(inicial.fios);
   const [pesos, setPesos] = useState<Pesos>(inicial.pesos);
+  const [exemplos, setExemplos] = useState<Exemplo[]>(inicial.exemplos ?? EXEMPLOS_PRONTOS);
   const [editando, setEditando] = useState<string | null>(null);
   const [execucao, setExecucao] = useState<Execucao | null>(null);
   const [automatico, setAutomatico] = useState(false);
+  // Modo Foco (ADR-0026): a conta da vez num quadro por cima do canvas
+  const [foco, setFoco] = useState(false);
   const [chegou, setChegou] = useState<number | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const [salvamento, setSalvamento] = useState<Salvamento>(projeto ? "salvo" : "nao-salvo");
-  const treinarRef = useRef<HTMLElement>(null);
   const { screenToFlowPosition, zoomIn, zoomOut } = useReactFlow<NoDaRede>();
 
   // fios de blocos apagados somem sozinhos
@@ -102,51 +131,105 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
     }
     setSalvamento("salvando");
     const t = setTimeout(() => {
-      setSalvamento(salvarMontagem(projeto.id, { nodes, fios, pesos }) ? "salvo" : "nao-salvo");
+      setSalvamento(salvarMontagem(projeto.id, { nodes, fios, pesos, exemplos }) ? "salvo" : "nao-salvo");
     }, ESPERA_SALVAR);
     return () => clearTimeout(t);
-  }, [projeto, nodes, fios, pesos]);
+  }, [projeto, nodes, fios, pesos, exemplos]);
 
-  // só o que muda as contas (não a posição nem a seleção); mexer nisso cancela a rodada
-  const estrutura = useMemo(
-    () =>
-      JSON.stringify({
-        n: nodes.map((n) => [n.id, n.type, n.parentId, n.type === "saida" ? null : n.data]),
-        f: fios.map((f) => [f.source, f.target]),
-        pesos,
-      }),
-    [nodes, fios, pesos],
-  );
+  // Treinar (ADR-0024): a rede aprende com os exemplos; no fim, os pesos novos entram no projeto
+  const aplicarPesos = useCallback((novos: Pesos) => setPesos((atuais) => ({ ...atuais, ...novos })), []);
+  const treino = useTreino({
+    exemplos,
+    aplicar: aplicarPesos,
+    ler: () => {
+      // treinar é o backward repetido sobre os Dados: sem o bloco ligado na Saída, não há treino (ADR-0025)
+      const bloco = nodes.find((n) => n.type === "backward");
+      if (!bloco || !fios.some((f) => f.target === bloco.id)) return "Para treinar, ligue o Backward pass na Saída.";
+      const entrada = nodes.find((n) => n.type === "entrada");
+      if (entrada?.type === "entrada" && entrada.data.tipo !== "cor") return "Por enquanto o treino usa a Entrada de cor. Troque a Entrada para Cor.";
+      return lerRede(nodes, fios, pesos) ?? "A montagem tem um problema. Clique em Rodar para ver o que falta.";
+    },
+  });
+
+  const estrutura = useMemo(() => estruturaDe(nodes, fios, pesos), [nodes, fios, pesos]);
   const ativa = execucao?.estrutura === estrutura ? execucao : null;
   const rodada = ativa?.rodada ?? null;
   const atual = ativa?.atual ?? 0;
-  const vista = useMemo(() => (rodada ? vistaDaRodada(rodada, atual) : null), [rodada, atual]);
-
-  // as linhas não são guardadas: são recalculadas a partir dos blocos, fios e da rodada
-  const edges = useMemo<Edge[]>(
-    () => [...fios, ...linhas(nodes, fios, pesos, editando, vista)],
-    [nodes, fios, pesos, editando, vista],
+  // a volta vem depois de todos os passos da ida: na volta, a ida fica parada no último passo
+  const passosDaIda = rodada?.passos.length ?? 0;
+  const voltaPassos = ativa?.volta ?? null;
+  const vista = useMemo(() => (rodada ? vistaDaRodada(rodada, Math.min(atual, passosDaIda - 1)) : null), [rodada, atual, passosDaIda]);
+  const volta = useMemo(
+    () => (voltaPassos && atual >= passosDaIda ? vistaDaVolta(voltaPassos, atual - passosDaIda) : null),
+    [voltaPassos, atual, passosDaIda],
   );
 
-  // modo automático: avança sozinho até o último passo
-  const total = rodada?.passos.length ?? 0;
+  // as linhas não são guardadas: são recalculadas a partir dos blocos, fios e da rodada.
+  // Durante o treino, elas mostram os pesos da repetição que está passando.
+  const pesosNaTela = useMemo(() => (treino.pesosAoVivo ? { ...pesos, ...treino.pesosAoVivo } : pesos), [pesos, treino.pesosAoVivo]);
+  const edges = useMemo<Edge[]>(
+    () => [...fios, ...linhas(nodes, fios, pesosNaTela, editando, vista)],
+    [nodes, fios, pesosNaTela, editando, vista],
+  );
+
+  // mexer em blocos ou fios no meio do treino cancela o treino
+  const formato = useMemo(() => JSON.stringify([nodes.map((n) => [n.id, n.parentId]), fios.map((f) => [f.source, f.target])]), [nodes, fios]);
+  const formatoDoTreino = useRef(formato);
+  const { emAndamento, parar } = treino;
   useEffect(() => {
-    if (!automatico || !rodada || atual >= total - 1) return;
-    const t = setTimeout(() => setExecucao((e) => (e ? { ...e, atual: e.atual + 1 } : e)), INTERVALO_AUTOMATICO);
-    return () => clearTimeout(t);
-  }, [automatico, rodada, atual, total]);
+    if (!emAndamento) formatoDoTreino.current = formato;
+    else if (formato !== formatoDoTreino.current) parar();
+  }, [formato, emAndamento, parar]);
+
+  const total = passosDaIda + (voltaPassos?.length ?? 0);
 
   const rodar = () => {
     const { rodada, erros } = prepararRodada(nodes, fios, pesos);
     setChegou(null);
-    setExecucao({ estrutura, rodada, erros, atual: 0 });
+    setExecucao({ estrutura, rodada, erros, atual: 0, ...(rodada ? prepararVolta() : { volta: null, modo: "mostrar" }), salvou: false });
   };
 
-  // voltar um passo não repete a viagem: a parcela daquele passo já aparece dentro do neurônio
+  /**
+   * Backward pass (ADR-0025): a volta só acontece com o bloco ligado na Saída, a Entrada de cor
+   * e a resposta certa da cor nos Dados. Sem isso, o Rodar faz só a ida.
+   */
+  const prepararVolta = (): Pick<Execucao, "volta" | "modo"> => {
+    const bloco = nodes.find((n) => n.type === "backward");
+    const ligado = bloco && fios.some((f) => f.target === bloco.id && nodes.find((n) => n.id === f.source)?.type === "saida");
+    const cor = entrada?.tipo === "cor" ? entrada.cor.toUpperCase() : null;
+    const certa = cor ? exemplos.find((d) => d.cor.toUpperCase() === cor) : undefined;
+    const lida = lerRede(nodes, fios, pesos);
+    if (!bloco || bloco.type !== "backward" || !ligado || !cor || !certa || !lida) return { volta: null, modo: "mostrar" };
+    return {
+      volta: voltarCulpa({ rede: lida.rede, pesos: lida.pesos, entradas: corParaEntradas(cor), objetivo: certa.objetivo }),
+      modo: bloco.data.modo,
+    };
+  };
+
+  // voltar um passo não repete a viagem: a parcela daquele passo já aparece dentro do neurônio.
+  // Com Salvar, chegar no fim da volta grava os pesos novos (uma vez só) e a rodada continua aberta.
   const irPara = (p: number) => {
     if (p < atual) setChegou(p);
+    const fim = voltaPassos?.at(-1);
+    if (ativa && fim?.tipo === "fim" && ativa.modo === "salvar" && !ativa.salvou && p === total - 1) {
+      const novos = { ...pesos, ...fim.pesos };
+      setPesos(novos);
+      setExecucao({ ...ativa, atual: p, salvou: true, estrutura: estruturaDe(nodes, fios, novos) });
+      return;
+    }
     setExecucao((e) => (e ? { ...e, atual: p } : e));
   };
+
+  // modo automático: avança sozinho até o último passo
+  const irParaRef = useRef(irPara);
+  useEffect(() => {
+    irParaRef.current = irPara;
+  });
+  useEffect(() => {
+    if (!automatico || !rodada || atual >= total - 1) return;
+    const t = setTimeout(() => irParaRef.current(atual + 1), INTERVALO_AUTOMATICO);
+    return () => clearTimeout(t);
+  }, [automatico, rodada, atual, total]);
 
   // onde fica o número de cada peso: as linhas contam as pontas, e o laboratório
   // escolhe um ponto de cada uma sem encostar em outro número nem ficar embaixo de um bloco
@@ -168,8 +251,20 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
     return posicionarPesos(segmentos, caixas, vista?.linhaAgora ?? null);
   }, [pontas, edges, nodes, vista?.linhaAgora]);
 
+  const saidaDaMontagem = nodes.find((n) => n.type === "saida");
+  const rotulos = saidaDaMontagem?.type === "saida" ? saidaDaMontagem.data : ROTULOS_PADRAO;
+  const entradaDaMontagem = nodes.find((n) => n.type === "entrada");
+  const entrada = entradaDaMontagem?.type === "entrada" ? entradaDaMontagem.data : null;
+
   const lab = useMemo(
     () => ({
+      entrada,
+      dados: exemplos,
+      setDados: setExemplos,
+      rotulos,
+      volta,
+      modoVolta: ativa?.modo ?? "mostrar",
+      treino,
       vista,
       erros: new Set((ativa?.erros ?? []).flatMap((e) => (e.no && e.tipo !== "aviso" ? [e.no] : []))),
       avisos: new Set((ativa?.erros ?? []).flatMap((e) => (e.no && e.tipo === "aviso" ? [e.no] : []))),
@@ -183,13 +278,27 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
       informarLinha,
       posicaoDoPeso,
     }),
-    [vista, ativa, chegou, informarLinha, posicaoDoPeso],
+    [entrada, exemplos, rotulos, volta, treino, vista, ativa, chegou, informarLinha, posicaoDoPeso],
   );
+
+  const fecharFoco = useCallback(() => setFoco(false), []);
+
+  const rodarAgora = () => {
+    treino.reiniciar();
+    rodar();
+  };
 
   const textoResposta = (saidaId: string, valor: number, resposta: 0 | 1) => {
     const saida = nodes.find((n) => n.id === saidaId);
     const rotulo = saida?.type === "saida" ? (resposta === 1 ? saida.data.rotulo1 : saida.data.rotulo0) : "";
     return `${formatar(valor)} → ${rotulo} (${resposta})`;
+  };
+
+  // o fim da ida no Modo Foco pinta a Saída com a cor da resposta (ADR-0026, item 9)
+  const rotuloDaResposta = (saidaId: string, resposta: 0 | 1) => {
+    const saida = nodes.find((n) => n.id === saidaId);
+    if (saida?.type !== "saida") return { rotulo: String(resposta), cor: null };
+    return resposta === 1 ? { rotulo: saida.data.rotulo1, cor: saida.data.cor1 } : { rotulo: saida.data.rotulo0, cor: saida.data.cor0 };
   };
 
   const onNodesChange = useCallback((changes: NodeChange<NoDaRede>[]) => {
@@ -229,6 +338,13 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
       }
       if (tipo === "entrada") setNodes((ns) => [...ns, criarEntrada(ponto.x, ponto.y)]);
       if (tipo === "saida") setNodes((ns) => [...ns, criarSaida(ponto.x, ponto.y)]);
+      if (tipo === "backward") {
+        if (nodes.some((n) => n.type === "backward")) {
+          setAviso("Use só um bloco Backward pass por montagem.");
+          return;
+        }
+        setNodes((ns) => [...ns, criarBackward(ponto.x, ponto.y)]);
+      }
 
       if (tipo === "neuronio") {
         const alvo = camadaNoPonto(nodes, ponto.x, ponto.y);
@@ -278,10 +394,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
           </div>
 
           <div className="lab-topo-direita">
-            <button className="botao lab-botao" onClick={() => treinarRef.current?.scrollIntoView({ behavior: "smooth" })}>
-              Treinar
-            </button>
-            <button className="botao principal lab-botao" onClick={rodar}>
+            <button className="botao principal lab-botao" onClick={rodar} disabled={treino.emAndamento}>
               <span aria-hidden>▶</span> {rodada ? "Rodar de novo" : "Rodar"}
             </button>
           </div>
@@ -294,6 +407,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
             {bloco("camada", "Camada", "Agrupa neurônios")}
             {bloco("neuronio", "Neurônio", "Solte numa camada")}
             {bloco("saida", "Saída", "A resposta da rede")}
+            {bloco("backward", "Backward pass", "Liga na Saída · a culpa volta")}
             {aviso && <p className="aviso">{aviso}</p>}
           </aside>
 
@@ -330,20 +444,49 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
               <span>
                 <i className="legenda-negativo" /> peso negativo
               </span>
-              <span className="legenda-dica">Duplo clique no número muda o peso</span>
+              {volta ? (
+                <>
+                  <span>
+                    <i className="legenda-culpa" /> culpa voltando
+                  </span>
+                  <span className="legenda-sinais">
+                    <b className="sinal mais">+</b> mais forte <b className="sinal menos">−</b> mais fraca <b className="sinal igual">=</b> igual
+                  </span>
+                </>
+              ) : (
+                <span className="legenda-dica">Duplo clique no número muda o peso</span>
+              )}
             </div>
+            <ResultadoTreino treino={treino} rotulos={rotulos} rodarAgora={rodarAgora} />
           </div>
 
           <PainelContas
             rodada={rodada}
+            volta={voltaPassos}
+            modoVolta={ativa?.modo ?? "mostrar"}
             atual={atual}
             erros={ativa?.erros ?? []}
             automatico={automatico}
+            foco={foco}
+            setFoco={setFoco}
             irPara={irPara}
             setAutomatico={setAutomatico}
             textoResposta={textoResposta}
-            treinarRef={treinarRef}
+            soTreinar={treino.fase !== "pronto"}
+            treinar={<SecaoTreinar treino={treino} exemplos={exemplos} rodarAgora={rodarAgora} />}
           />
+
+          {/* cobre a paleta e o canvas; o painel com Anterior / Próximo continua à vista */}
+          {foco && rodada && treino.fase === "pronto" && (
+            <QuadroFoco
+              rodada={rodada}
+              volta={voltaPassos}
+              atual={atual}
+              corDaEntrada={entrada?.tipo === "cor" ? entrada.cor : null}
+              rotuloDaResposta={rotuloDaResposta}
+              onFechar={fecharFoco}
+            />
+          )}
         </div>
       </div>
     </LabContexto.Provider>
@@ -371,6 +514,12 @@ function IconeBloco({ tipo }: { tipo: string }) {
         <>
           <circle cx="12" cy="12" r="9" fill="#fff" stroke="#0E7C86" strokeWidth="1.5" />
           <circle cx="12" cy="12" r="4" fill="#0E7C86" />
+        </>
+      )}
+      {tipo === "backward" && (
+        <>
+          <circle cx="12" cy="12" r="10" fill="#0E7C86" />
+          <path d="M15 7.5 L8.5 12 L15 16.5 Z" fill="#fff" />
         </>
       )}
     </svg>

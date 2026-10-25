@@ -35,3 +35,7 @@ Registro das decisões de arquitetura do projeto. Formato baseado em [MADR](http
 | [0020](0020-laboratorio-em-codigo.md) | Laboratório em código a partir do teste técnico, salvando no navegador | **Aceita** (autor), detalhes propostos pela IA |
 | [0021](0021-bolinhas-cores-e-espremer.md) | Bolinhas nas linhas (GSAP), verde/vermelho para o sinal, passo do espremer explicado | **Aceita** (autor), detalhes propostos pela IA |
 | [0022](0022-tutoriais-com-a-aqua.md) | Tutoriais: trilha com a Aqua e aulas passo a passo com teste rápido | **Aceita** (autor) a aba; formato proposto pela IA, em revisão |
+| [0023](0023-sigmoide-em-passos-e-tutorial-01-com-o-lab.md) | Sigmoide em passos (lab e tutorial 03) e tutorial 01 com o exemplo do laboratório | **Aceita** (autor) |
+| [0024](0024-treinar-com-backpropagation.md) | Treinar: backpropagation no laboratório (exemplos editáveis, erro ao vivo, gráfico + tabela, passinho em 3 opções) | **Aceita** (autor), detalhes técnicos propostos pela IA |
+| [0025](0025-bloco-backward-pass.md) | Bloco Backward pass: a culpa voltando passo a passo (Mostrar/Salvar, termômetro, bolinha de culpa, sinais + − =, lupa) | **Aceita** (autor) |
+| [0026](0026-modo-foco.md) | Modo Foco no Rodar: zoom no passo da vez, culpa com sinal e de onde ela vem | **Aceita** (autor), falta Figma |

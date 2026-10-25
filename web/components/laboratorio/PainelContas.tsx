@@ -1,27 +1,42 @@
 "use client";
 
-import { useState, type RefObject } from "react";
+import Link from "next/link";
+import type { ReactNode } from "react";
 import { formatar, type Erro, type Passo, type Rodada } from "@/lib/rede";
+import type { PassoVolta } from "@/lib/backward";
+import ContasDaVolta from "@/components/laboratorio/ContasDaVolta";
 
 type Props = {
   rodada: Rodada | null;
+  /** Os passos da volta (Backward pass, ADR-0025), que vêm depois dos da ida. */
+  volta: PassoVolta[] | null;
+  modoVolta: "mostrar" | "salvar";
   atual: number;
   erros: Erro[];
   automatico: boolean;
+  /** Modo Foco (ADR-0026): a conta da vez aparece num quadro por cima do canvas. */
+  foco: boolean;
+  setFoco: (ligado: boolean) => void;
   irPara: (passo: number) => void;
   setAutomatico: (ligado: boolean) => void;
   /** "0,71 → laranja (1)", com o objetivo que o aluno deu à Saída. */
   textoResposta: (saidaId: string, valor: number, resposta: 0 | 1) => string;
-  /** Para o botão Treinar da barra de cima rolar até aqui. */
-  treinarRef: RefObject<HTMLElement | null>;
+  /** A seção Treinar (components/laboratorio/Treinar.tsx). */
+  treinar: ReactNode;
+  /** Enquanto o treino passa ou depois dele, o painel mostra só o Treinar. */
+  soTreinar: boolean;
 };
 
 /** Painel da direita: as contas, uma multiplicação de cada vez, e o Treinar. */
-export default function PainelContas({ rodada, atual, erros, automatico, irPara, setAutomatico, textoResposta, treinarRef }: Props) {
-  const total = rodada?.passos.length ?? 0;
-  const passo = rodada?.passos[atual];
+export default function PainelContas({ rodada, volta, modoVolta, atual, erros, automatico, foco, setFoco, irPara, setAutomatico, textoResposta, treinar, soTreinar }: Props) {
+  const daIda = rodada?.passos.length ?? 0;
+  const total = daIda + (volta?.length ?? 0);
+  const naVolta = !!volta && atual >= daIda;
+  const passo = naVolta ? undefined : rodada?.passos[atual];
   const graves = erros.filter((e) => e.tipo !== "aviso");
   const avisos = erros.filter((e) => e.tipo === "aviso");
+
+  if (soTreinar) return <aside className="painel">{treinar}</aside>;
 
   return (
     <aside className="painel">
@@ -33,6 +48,40 @@ export default function PainelContas({ rodada, atual, erros, automatico, irPara,
           </span>
         )}
       </div>
+
+      {/* Fixos no topo: a conta abaixo muda de altura a cada passo, e os botões não podem pular (ADR-0025). */}
+      {rodada && volta && (
+        <div className="direcao" aria-label="Direção das contas">
+          <span className={naVolta ? "feita" : "agora"}>Forward {naVolta ? "✓" : `· ${atual + 1} de ${daIda}`}</span>
+          <span className={naVolta ? "agora" : ""}>◀ Backward {naVolta ? `· ${atual - daIda + 1} de ${volta.length}` : ""}</span>
+        </div>
+      )}
+
+      {rodada && (
+        <>
+          <div className="navegar">
+            <button className="botao" disabled={atual === 0} onClick={() => irPara(atual - 1)}>
+              ← Anterior
+            </button>
+            <button className="botao escuro" disabled={atual === total - 1} onClick={() => irPara(atual + 1)}>
+              Próximo →
+            </button>
+          </div>
+          <button className={`modo-foco ${foco ? "ligado" : ""}`} aria-pressed={foco} onClick={() => setFoco(!foco)}>
+            <i aria-hidden />
+            Modo Foco
+            <span>{foco ? "ligado" : "desligado"}</span>
+          </button>
+          <div className="alternar">
+            <button className={!automatico ? "ativo" : ""} onClick={() => setAutomatico(false)}>
+              Passo a passo
+            </button>
+            <button className={automatico ? "ativo" : ""} onClick={() => setAutomatico(true)}>
+              Automático
+            </button>
+          </div>
+        </>
+      )}
 
       {graves.length > 0 && (
         <div className="erros">
@@ -56,99 +105,76 @@ export default function PainelContas({ rodada, atual, erros, automatico, irPara,
       )}
 
       {rodada && passo && <ContasDoPasso rodada={rodada} atual={atual} passo={passo} textoResposta={textoResposta} />}
+      {rodada && volta && naVolta && <ContasDaVolta rodada={rodada} passos={volta} atual={atual - daIda} modo={modoVolta} />}
 
-      {rodada && (
-        <>
-          <div className="navegar">
-            <button className="botao" disabled={atual === 0} onClick={() => irPara(atual - 1)}>
-              ← Anterior
-            </button>
-            <button className="botao escuro" disabled={atual === total - 1} onClick={() => irPara(atual + 1)}>
-              Próximo →
-            </button>
-          </div>
-          <div className="alternar">
-            <button className={!automatico ? "ativo" : ""} onClick={() => setAutomatico(false)}>
-              Passo a passo
-            </button>
-            <button className={automatico ? "ativo" : ""} onClick={() => setAutomatico(true)}>
-              Automático
-            </button>
-          </div>
-        </>
-      )}
-
-      <Treinar secaoRef={treinarRef} />
+      {treinar}
     </aside>
   );
 }
 
 /**
- * Seção Treinar, como no Figma. O treino ainda não foi feito em código:
- * os campos já funcionam, mas o botão fica desligado (ADR-0020).
- */
-function Treinar({ secaoRef }: { secaoRef: RefObject<HTMLElement | null> }) {
-  const [repeticoes, setRepeticoes] = useState(1000);
-  const [velocidade, setVelocidade] = useState("x100");
-  const [doZero, setDoZero] = useState(true);
-
-  return (
-    <section ref={secaoRef} className="treinar" aria-labelledby="treinar-titulo">
-      <h2 id="treinar-titulo">Treinar</h2>
-      <div className="treinar-campos">
-        <label>
-          <span>Repetições</span>
-          <input
-            type="number"
-            min={1}
-            max={100000}
-            value={repeticoes}
-            onChange={(e) => setRepeticoes(Math.max(1, Number(e.target.value) || 1))}
-          />
-        </label>
-        <label>
-          <span>Velocidade</span>
-          <select value={velocidade} onChange={(e) => setVelocidade(e.target.value)}>
-            <option>x1</option>
-            <option>x10</option>
-            <option>x100</option>
-          </select>
-        </label>
-      </div>
-      <div className="treinar-rotulo">Começar de</div>
-      <div className="alternar">
-        <button className={doZero ? "ativo" : ""} onClick={() => setDoZero(true)}>
-          Do zero
-        </button>
-        <button className={!doZero ? "ativo" : ""} onClick={() => setDoZero(false)}>
-          Já treinada
-        </button>
-      </div>
-      <button className="botao principal treinar-botao" disabled aria-describedby="treinar-nota">
-        Treinar {repeticoes.toLocaleString("pt-BR")} vezes
-      </button>
-      <p id="treinar-nota" className="treinar-nota">O treino chega na próxima etapa. No fim, você verá as saídas de cada repetição.</p>
-    </section>
-  );
-}
-
-/**
- * O último neurônio passa a soma pela sigmoide, que a deixa entre 0 e 1. A conta aparece
- * simplificada; de onde sai o e^(−soma) fica no tutorial 03 · A sigmoide.
+ * O último neurônio passa a soma pela sigmoide, que a deixa entre 0 e 1 (frame "Laboratório ·
+ * Desktop · v2 (sigmoide)"). Uma curva em S pequena mostra onde a soma caiu, e a conta vem em
+ * três passos com os números da rodada. A fórmula geral fica só no tutorial 03 · A sigmoide.
  */
 function Sigmoide({ soma, valor }: { soma: number; valor: number }) {
   const e = Math.exp(-soma);
   return (
     <div className="sigmoide">
-      <div className="sigmoide-titulo">Sigmoide (deixa entre 0 e 1) · soma {formatar(soma)}</div>
-      <div className="sigmoide-conta">
-        1 ÷ (1 + {formatar(e)}) = {formatar(valor)}
+      <div className="sigmoide-titulo">
+        <b>Sigmoide</b> deixa a soma entre 0 e 1 · soma {formatar(soma)}
       </div>
-      <p className="sigmoide-nota">
-        Fórmula completa: 1 ÷ (1 + e<sup>{formatar(-soma)}</sup>). O {formatar(e)} é o e<sup>{formatar(-soma)}</sup>. Soma alta chega
-        perto de 1; soma baixa, perto de 0. Detalhes no tutorial A sigmoide.
-      </p>
+      <CurvaS soma={soma} valor={valor} />
+      <div className="sigmoide-rotulo">A conta</div>
+      <ol className="sigmoide-passos">
+        <li>
+          <span className="sigmoide-num">1</span>Troca o sinal da soma: {formatar(-soma)}
+        </li>
+        <li>
+          <span className="sigmoide-num">2</span>
+          <span>
+            e<sup>{formatar(-soma)}</sup> ≈ {formatar(e)}
+          </span>
+        </li>
+        <li className="sigmoide-final">
+          <span className="sigmoide-num">3</span>1 ÷ (1 + {formatar(e)}) = {formatar(valor)}
+        </li>
+      </ol>
+      <Link href="/tutoriais/sigmoide" className="sigmoide-link">
+        Por que essa conta? Tutorial A sigmoide →
+      </Link>
     </div>
+  );
+}
+
+/** Curva em S de −6 a 6 com o ponto da soma da rodada (somas fora disso ficam na ponta). */
+function CurvaS({ soma, valor }: { soma: number; valor: number }) {
+  const px = (s: number) => 22 + ((s + 6) / 12) * 210;
+  const py = (v: number) => 74 - v * 62;
+  const caminho = Array.from({ length: 49 }, (_, i) => -6 + i * 0.25)
+    .map((s, i) => `${i ? "L" : "M"}${px(s).toFixed(1)} ${py(1 / (1 + Math.exp(-s))).toFixed(1)}`)
+    .join(" ");
+  const sx = px(Math.max(-6, Math.min(6, soma)));
+  const sy = py(valor);
+  const direita = sx > 150;
+  return (
+    <svg className="sigmoide-curva" viewBox="0 0 244 96" role="img" aria-label={`Curva em S: a soma ${formatar(soma)} vira ${formatar(valor)}.`}>
+      <line x1={22} y1={py(1)} x2={232} y2={py(1)} className="sigmoide-guia" strokeDasharray="3 3" />
+      <line x1={22} y1={py(0)} x2={232} y2={py(0)} className="sigmoide-guia" />
+      <line x1={px(0)} y1={8} x2={px(0)} y2={78} className="sigmoide-guia" strokeDasharray="3 3" />
+      <text x={14} y={py(1) + 3} textAnchor="end">1</text>
+      <text x={14} y={py(0) + 3} textAnchor="end">0</text>
+      <text x={px(0)} y={90} textAnchor="middle">soma 0</text>
+      <path d={caminho} className="sigmoide-linha" />
+      <line x1={sx} y1={sy} x2={sx} y2={py(0)} className="sigmoide-marca" strokeDasharray="2 2" />
+      <circle cx={sx} cy={sy} r={4.5} className="sigmoide-ponto" />
+      <text x={sx} y={90} textAnchor="middle" className="sigmoide-valor">
+        {Math.abs(sx - px(0)) > 26 ? formatar(soma) : ""}
+      </text>
+      <text x={direita ? sx - 8 : sx + 8} y={sy < 40 ? sy + 16 : sy - 8} textAnchor={direita ? "end" : "start"} className="sigmoide-valor">
+        {formatar(valor)}
+      </text>
+    </svg>
   );
 }
 

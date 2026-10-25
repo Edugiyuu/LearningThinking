@@ -113,6 +113,7 @@
 }
 
 .lab {
+  position: relative;
   display: flex;
   flex: 1;
   min-height: 0;
@@ -677,6 +678,125 @@
   font-size: 11px;
 }
 
+/* ---------- Bloco Backward pass (ADR-0025) ---------- */
+.backward {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 220px;
+  padding: 10px;
+  border: 1.5px solid var(--destaque);
+  border-radius: 14px;
+  background: var(--bg);
+}
+
+.backward.selecionada {
+  box-shadow: 0 0 0 2px rgba(94, 211, 219, 0.35);
+}
+
+.backward > .nodrag {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.backward-titulo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--destaque-texto);
+}
+
+.backward-icone {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--destaque-texto);
+  font-size: 8px;
+  color: #ffffff;
+}
+
+.backward-rotulo {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.backward-opcoes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.backward-opcoes button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: var(--bg-subtle);
+  font-size: 11px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.backward-opcoes button.ativa {
+  border-color: var(--text);
+  background: var(--bg);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.backward-opcoes i,
+.backward-nova i {
+  display: inline-block;
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.backward-origem {
+  font-size: 11px;
+  color: var(--destaque-texto);
+}
+
+.backward-nova {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px;
+  border-radius: 8px;
+  background: rgba(245, 165, 36, 0.12);
+  font-size: 11px;
+  color: #8a5a00;
+}
+
+.backward-nova b {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.backward-adicionar {
+  padding: 6px 10px;
+  font-size: 11px;
+}
+
+.backward-nota {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.backward-modo.apagado {
+  opacity: 0.4;
+}
+
 /* ---------- Painel de contas (direita) ---------- */
 .painel {
   display: flex;
@@ -859,7 +979,7 @@
   color: var(--destaque-texto);
 }
 
-/* o passo do último neurônio: a soma espremida entre 0 e 1 */
+/* o passo do último neurônio: a soma passa pela sigmoide (curva em S e a conta em 3 passos) */
 .sigmoide {
   padding: 12px 14px;
   border: 1px solid var(--destaque);
@@ -869,21 +989,105 @@
 }
 
 .sigmoide-titulo {
-  font-size: 11px;
+  font-size: 12px;
 }
 
-.sigmoide-conta {
-  margin-top: 4px;
-  font-size: 18px;
-  font-weight: 700;
+.sigmoide-curva {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 8px;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.sigmoide-curva text {
+  font-size: 9px;
+  fill: var(--text-subtle);
   font-variant-numeric: tabular-nums;
 }
 
-.sigmoide-nota {
-  margin-top: 8px;
+.sigmoide-guia {
+  stroke: #e5e5ea;
+}
+
+.sigmoide-linha {
+  fill: none;
+  stroke: var(--destaque-texto);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+
+.sigmoide-marca {
+  stroke: var(--peso-positivo);
+}
+
+.sigmoide-ponto {
+  fill: var(--peso-positivo);
+  stroke: #ffffff;
+  stroke-width: 2;
+}
+
+.sigmoide-curva .sigmoide-valor {
+  font-size: 10px;
+  font-weight: 700;
+  fill: var(--positivo);
+}
+
+.sigmoide-rotulo {
+  margin-top: 12px;
   font-size: 11px;
-  line-height: 1.45;
-  color: var(--text-muted);
+  opacity: 0.8;
+}
+
+.sigmoide-passos {
+  display: grid;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.sigmoide-passos li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sigmoide-num {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--destaque);
+  border-radius: 999px;
+  background: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--destaque-texto);
+}
+
+.sigmoide-final {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.sigmoide-final .sigmoide-num {
+  background: var(--destaque);
+  color: var(--sobre-destaque);
+}
+
+.sigmoide-link {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--destaque-texto);
+}
+
+.sigmoide-link:hover {
+  text-decoration: underline;
 }
 
 .navegar {
@@ -985,4 +1189,1846 @@
   font-size: 11px;
   text-align: center;
   color: var(--text-subtle);
+}
+
+/* ---------- Treinar: antes, durante e fim (ADR-0024) ---------- */
+.treinar-sozinho {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.treinar-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.treinar-selo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--destaque-fundo);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--destaque-texto);
+}
+
+.treinar-selo i {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--destaque-texto);
+}
+
+.treinar-selo.concluido {
+  background: #eefbf2;
+  color: var(--positivo);
+}
+
+.treinar-rotulo.forte {
+  margin-top: 4px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.treinar-nota.esquerda {
+  text-align: left;
+}
+
+.alternar.tres {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.exemplos {
+  padding: 10px 14px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+}
+
+.exemplos-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+.exemplos-topo b {
+  color: var(--text);
+}
+
+.exemplos-editar {
+  border: none;
+  background: none;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--destaque-texto);
+}
+
+.exemplos-amostras {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.exemplos-amostras span {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+}
+
+.exemplos-lista {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.exemplos-lista li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.exemplos-lista input[type="color"] {
+  width: 26px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: none;
+}
+
+.exemplos-marca {
+  flex: 1;
+  padding: 3px 10px;
+  border: none;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: left;
+}
+
+.marca-1 {
+  background: #fff1e0;
+  color: #b45309;
+}
+
+.marca-0 {
+  background: #e8f1fc;
+  color: #1d4ed8;
+}
+
+.exemplos-tirar {
+  border: none;
+  background: none;
+  font-size: 15px;
+  color: var(--text-subtle);
+}
+
+.exemplos-mais {
+  padding: 3px 12px;
+  border: 1px solid var(--destaque);
+  border-radius: 999px;
+  background: var(--bg);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--destaque-texto);
+}
+
+.treinar-contador {
+  margin: -6px 0 0;
+  font-size: 24px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.treinar-contador span {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-subtle);
+}
+
+.treinar-progresso {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e5e5ea;
+}
+
+.treinar-progresso i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--destaque);
+}
+
+.treinar-grafico {
+  padding: 12px 14px 8px;
+  border-radius: 12px;
+  background: var(--bg-subtle);
+}
+
+.treinar-grafico-topo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--negativo);
+}
+
+.treinar-grafico-topo b {
+  font-size: 20px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.grafico-erro {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 6px;
+}
+
+.grafico-erro text {
+  font-size: 9px;
+  fill: var(--text-subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+.grafico-eixo {
+  stroke: #c7c7cc;
+}
+
+.grafico-linha {
+  fill: none;
+  stroke: var(--negativo);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+
+.grafico-ponto {
+  fill: var(--negativo);
+}
+
+.treinar-parar {
+  color: var(--negativo);
+}
+
+.treinar-explica {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fff7e0;
+  font-size: 12px;
+  color: #5c4a1a;
+}
+
+.treinar-explica b {
+  color: #7a5a00;
+}
+
+.treinar-explica p {
+  margin: 6px 0 0;
+  line-height: 1.5;
+}
+
+.treinar-resumo {
+  display: grid;
+  gap: 2px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--bg-subtle);
+}
+
+.treinar-erros {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.treinar-erros span {
+  font-weight: 400;
+  color: var(--text-subtle);
+}
+
+.treinar-erros b {
+  color: var(--positivo);
+}
+
+.treinar-ver {
+  border-color: var(--destaque);
+  font-weight: 700;
+  color: var(--destaque-texto);
+}
+
+.treinar-de-novo {
+  border: none;
+  background: none;
+  font-size: 12px;
+  color: var(--destaque-texto);
+}
+
+/* a janela flutuante do resultado: no pé do canvas, sem escurecer, para ver a rede junto */
+.resultado {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  left: 16px;
+  z-index: 10;
+  max-height: 60%;
+  overflow: auto;
+  border: 1px solid #d2d2d7;
+  border-radius: 18px;
+  background: var(--bg);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+.resultado.minimizada {
+  right: auto;
+  max-width: 520px;
+}
+
+.resultado-topo {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 14px 20px 10px;
+  background: var(--bg);
+}
+
+.resultado-topo h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.resultado-topo span {
+  flex: 1;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.resultado-topo button {
+  border: none;
+  background: none;
+  font-size: 16px;
+  color: var(--text-subtle);
+}
+
+.resultado-corpo {
+  display: grid;
+  grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+  gap: 20px;
+  padding: 0 20px 18px;
+}
+
+.resultado-grafico {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--bg-subtle);
+}
+
+.resultado-grafico .treinar-grafico-topo span + span {
+  color: var(--text);
+  font-weight: 400;
+}
+
+.resultado-grafico .treinar-grafico-topo b {
+  font-size: 12px;
+  color: var(--positivo);
+}
+
+.resultado-tabela table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.resultado-tabela th {
+  padding: 0 6px 6px;
+  border-bottom: 1px solid #e5e5ea;
+  font-size: 11px;
+  text-align: left;
+  color: var(--text-subtle);
+}
+
+.resultado-tabela td {
+  padding: 4px 6px;
+}
+
+.resultado-tabela td i {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 6px;
+  border-radius: 3px;
+  vertical-align: -2px;
+}
+
+.resultado-tabela td.marca-0,
+.resultado-tabela td.marca-1 {
+  background: none;
+}
+
+.resultado-tabela .certo {
+  color: var(--positivo);
+}
+
+.resultado-tabela .errado {
+  color: var(--negativo);
+}
+
+.resultado-tabela .forte {
+  font-weight: 700;
+}
+
+.resultado-rodape {
+  display: flex;
+  gap: 4px;
+  margin: 10px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid #e5e5ea;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.resultado-rodape span {
+  margin-left: auto;
+  color: var(--destaque-texto);
+}
+
+.resultado-rodar {
+  margin-top: 10px;
+}
+
+/* ---------- Backward pass: a culpa voltando (ADR-0025) ---------- */
+
+/* + mais forte (preto), − mais fraca (branco), = igual (cinza): sem verde e vermelho, que são o sinal do peso */
+.sinal {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin-right: 4px;
+  border: 1px solid var(--text);
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  vertical-align: -2px;
+}
+
+.sinal.mais {
+  background: var(--text);
+  color: #ffffff;
+}
+
+.sinal.menos {
+  background: #ffffff;
+  color: var(--text);
+}
+
+.sinal.igual {
+  border-color: var(--text-subtle);
+  background: #ffffff;
+  color: var(--text-subtle);
+}
+
+.bolinha-culpa {
+  fill: var(--destaque);
+  stroke: #ffffff;
+  stroke-width: 1.5;
+  pointer-events: none;
+}
+
+.lupa {
+  position: absolute;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 10px;
+  border: 1.5px solid var(--text);
+  border-radius: 14px;
+  background: #ffffff;
+  pointer-events: none;
+}
+
+.lupa-pesos {
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.lupa-sinal {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.lupa-sinal.mais {
+  background: var(--text);
+  color: #ffffff;
+}
+
+.lupa-sinal.menos {
+  border: 1px solid var(--text);
+  color: var(--text);
+}
+
+.lupa-sinal.igual {
+  border: 1px solid var(--text-subtle);
+  color: var(--text-subtle);
+}
+
+.lupa-nota {
+  font-size: 9px;
+  color: var(--text-subtle);
+}
+
+/* a culpa parou aqui: o neurônio passou 0 */
+.neuronio.parado {
+  outline: 1.5px dashed var(--text-subtle);
+  outline-offset: 4px;
+}
+
+.termometro {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.termometro-barra {
+  position: relative;
+  height: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 5px;
+  background: var(--bg-subtle);
+}
+
+.termometro-erro {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 4px;
+  background: rgba(229, 72, 77, 0.35);
+}
+
+.termometro-certo {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 3px;
+  margin-left: -1.5px;
+  background: var(--positivo);
+}
+
+/* o ponteiro é um triângulo em cima da barra */
+.termometro-ponteiro {
+  position: absolute;
+  top: -8px;
+  width: 0;
+  height: 0;
+  margin-left: -4px;
+  border-top: 7px solid var(--text);
+  border-right: 4px solid transparent;
+  border-left: 4px solid transparent;
+}
+
+.termometro-ponteiro.antes {
+  border-top-color: var(--text-subtle);
+  opacity: 0.6;
+}
+
+.termometro-escala {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: var(--text-subtle);
+}
+
+.termometro-texto {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.termometro-texto .negativo,
+.volta-cadeia .negativo {
+  color: var(--negativo);
+}
+
+.termometro-texto .positivo,
+.volta-resultado .positivo {
+  color: var(--positivo);
+}
+
+.legenda-culpa {
+  width: 10px !important;
+  height: 10px !important;
+  border-radius: 50%;
+  background: var(--destaque);
+}
+
+.legenda-sinais {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.legenda-sinais .sinal {
+  margin-left: 6px;
+}
+
+/* painel: Forward ✓ · ◀ Backward n de N */
+.direcao {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 14px;
+  background: var(--bg-subtle);
+  font-size: 11px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.direcao span {
+  padding: 3px 6px;
+  border-radius: 11px;
+}
+
+.direcao .agora {
+  background: var(--destaque-texto);
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.volta-icone {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.volta-icone.erro {
+  border-radius: 3px;
+  background: rgba(229, 72, 77, 0.35);
+}
+
+.volta-icone.culpa {
+  background: var(--destaque);
+}
+
+.volta-fim {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.volta-tabela {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+}
+
+.volta-tabela li {
+  display: flex;
+  align-items: center;
+}
+
+.volta-tabela li.igual {
+  color: var(--text-subtle);
+}
+
+.volta-pesos {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.volta-resultado {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--bg-subtle);
+  font-size: 12px;
+}
+
+/* ---------- O bloco como lugar do aprendizado: Dados e Treinar (ADR-0025) ---------- */
+.backward-secao,
+.treino-bloco-titulo {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.backward-divisor {
+  width: 100%;
+  margin: 2px 0;
+  border: none;
+  border-top: 1px solid var(--border);
+}
+
+.dados,
+.treino-bloco {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dados-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.dados-topo b {
+  color: var(--text);
+}
+
+.dados .exemplos-lista {
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.dados-mais {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  font-size: 11px;
+}
+
+.dados-mais > span {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-muted);
+}
+
+.dados-mais i {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.dados-mais .botao {
+  padding: 4px 6px;
+  font-size: 11px;
+}
+
+.treino-bloco-rotulo {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.treino-bloco .alternar button {
+  font-size: 11px;
+}
+
+.treino-bloco .treinar-campos {
+  gap: 6px;
+}
+
+.treino-bloco .botao.principal {
+  padding: 7px 10px;
+  font-size: 12px;
+}
+
+/* painel da volta: trilha de símbolos + cartão curto */
+.volta-trilha-rotulo {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.volta-trilha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.volta-trilha span {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  cursor: default;
+}
+
+.volta-trilha .sinal {
+  margin: 0;
+}
+
+.volta-trilha span.agora {
+  box-shadow: 0 0 0 2px var(--destaque);
+}
+
+.volta-cartao {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--destaque);
+  border-radius: 12px;
+  background: var(--destaque-fundo);
+}
+
+.volta-cartao-topo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.volta-cartao-topo .sinal {
+  margin: 0;
+}
+
+.volta-cartao-topo > span {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.volta-cadeia {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px;
+  margin: 0;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.volta-cadeia i {
+  margin-right: 4px;
+  font-style: normal;
+  color: var(--destaque);
+}
+
+.volta-cadeia span {
+  color: var(--text-muted);
+}
+
+.volta-cadeia b {
+  color: var(--text);
+}
+
+.volta-pe {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-subtle);
+}
+
+.volta-contagem {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.volta-contagem .sinal {
+  margin: 0;
+}
+
+.volta-resultado {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.volta-resultado > span:first-child {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.volta-todos summary {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--destaque-texto);
+  cursor: pointer;
+}
+
+.volta-todos .volta-tabela {
+  margin-top: 8px;
+}
+
+/* ---------- Modo Foco (ADR-0026): o quadro por cima do canvas ---------- */
+.modo-foco {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.modo-foco i {
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px var(--bg), inset 0 0 0 5px currentColor;
+}
+
+.modo-foco span {
+  margin-left: auto;
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.modo-foco.ligado {
+  border-color: var(--destaque-texto);
+  background: var(--destaque-fundo);
+  color: var(--destaque-texto);
+}
+
+.modo-foco.ligado i {
+  box-shadow: inset 0 0 0 2px var(--destaque-fundo), inset 0 0 0 5px currentColor;
+}
+
+.modo-foco.ligado span {
+  color: var(--destaque-texto);
+}
+
+.foco {
+  position: absolute;
+  inset: 0 320px 0 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 24px;
+  /* o zoom da lousa passa por fora durante a animação: sem barra de rolagem */
+  overflow: hidden;
+  background: rgba(29, 29, 31, 0.45);
+}
+
+.foco-quadro {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+  overflow: hidden;
+  padding: 28px 36px 32px;
+  border: 10px solid #c7c7cc;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+}
+
+.foco-fechar {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background: #f2f2f7;
+  font-size: 16px;
+  color: var(--text-muted);
+}
+
+.foco-etapa {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--destaque-texto);
+}
+
+.foco-titulo {
+  margin: 6px 0 12px;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.foco-corpo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 24px;
+  align-items: start;
+}
+
+.foco-diagrama {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+}
+
+/*
+ * O quadro vai até a lousa de baixo e o conteúdo fica no meio da altura. A letra tem um tamanho
+ * só para todos os passos: muda com a altura da tela (as media queries no fim), nunca por passo.
+ */
+.foco-caixa {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* título em cima, o desenho cresce no meio, a conta e o e se? embaixo (o espaço vai para o desenho) */
+.foco-conteudo {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+}
+
+.foco-conteudo > .foco-diagrama,
+.foco-conteudo > .foco-rede,
+.foco-corpo .foco-diagrama {
+  flex: 1 1 0;
+  width: 100%;
+  max-width: none;
+  min-height: 120px;
+  max-height: none;
+  margin: 0 auto;
+}
+
+.foco-corpo {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.foco-corpo > div:first-child {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.foco-centro {
+  flex: 1;
+  justify-content: center;
+}
+
+/* passos com pouca coisa (erro, culpa chegando, fim): no centro, sem sobrar espaço de um lado só */
+.foco-centro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.foco-diagrama.volta {
+  max-width: 760px;
+  margin: 0 auto 8px;
+}
+
+.foco-diagrama .apagada {
+  opacity: 0.3;
+}
+
+.foco-no {
+  fill: #fff;
+  stroke: var(--text);
+  stroke-width: 2.5;
+}
+
+.foco-no-valor {
+  font-size: 17px;
+  font-weight: 700;
+  fill: var(--text);
+}
+
+.foco-no-nome {
+  font-size: 12px;
+  fill: var(--text-muted);
+}
+
+.foco-no-nome.destino {
+  font-weight: 600;
+  fill: var(--text);
+}
+
+/* a bolinha andando no Modo Foco: o número maior que no canvas */
+.foco-viajante text {
+  font-size: 14px;
+  stroke: #fff;
+}
+
+.foco-culpa {
+  fill: var(--destaque);
+  stroke: var(--destaque-texto);
+  stroke-width: 1.5;
+}
+
+.foco-culpa-nome {
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--destaque-texto);
+}
+
+.foco-certo {
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--destaque-texto);
+}
+
+.foco-seta {
+  fill: var(--text);
+}
+
+.foco-pilula {
+  fill: #eaf7ef;
+  stroke: var(--positivo);
+}
+
+.foco-pilula.negativo {
+  fill: #fff1f1;
+  stroke: var(--erro);
+}
+
+.foco-pilula + text {
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--positivo);
+}
+
+.foco-pilula.negativo + text {
+  fill: var(--erro);
+}
+
+/* a cadeia: cada número com o nome embaixo */
+.foco-cadeia {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px 14px;
+  margin: 8px 0 4px;
+}
+
+.foco-elo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 64px;
+  text-align: center;
+}
+
+.foco-elo b {
+  font-size: 30px;
+  font-variant-numeric: tabular-nums;
+}
+
+.foco-elo small {
+  max-width: 130px;
+  font-size: 15px;
+  line-height: 1.25;
+  color: var(--text-muted);
+}
+
+.foco-elo.destaque b {
+  font-size: 36px;
+  color: var(--destaque-texto);
+}
+
+.foco-elo.negativo b {
+  color: var(--erro);
+}
+
+.foco-op {
+  padding-top: 4px;
+  font-size: 26px;
+  color: #aeaeb2;
+}
+
+.foco-ver-conta,
+.foco-link {
+  margin-top: 2px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--destaque-texto);
+}
+
+.foco-ver-conta:hover,
+.foco-link:hover {
+  text-decoration: underline;
+}
+
+.foco-nota {
+  margin: 12px 0 0;
+  text-align: center;
+  font-size: 17px;
+  color: var(--text-muted);
+}
+
+.foco-grande {
+  margin: 16px 0 0;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+/* a soma do neurônio, com a linha da vez acesa */
+.foco-soma {
+  padding: 14px 16px;
+  border: 1px solid #e5e5ea;
+  border-radius: 10px;
+  background: #fafafa;
+}
+
+.foco-rotulo {
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.foco-soma ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.foco-soma li,
+.foco-soma-fim {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 8px;
+  border: 1.5px solid transparent;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #aeaeb2;
+}
+
+.foco-soma li.agora {
+  border-color: var(--destaque-texto);
+  background: var(--destaque-fundo);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.foco-soma li.agora b.negativo {
+  color: var(--erro);
+}
+
+.foco-soma-fim {
+  margin-top: 6px;
+  border-top: 1.5px solid #e5e5ea;
+  border-radius: 0;
+}
+
+.foco-soma-fim.agora {
+  border: 1.5px solid var(--destaque-texto);
+  border-radius: 6px;
+  background: var(--destaque-fundo);
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* o teste "e se?" */
+.foco-ese {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e5ea;
+}
+
+.foco-ese-topo {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.foco-ese-topo b {
+  text-transform: none;
+  color: var(--destaque-texto);
+}
+
+.foco-ese-linha {
+  font-size: 17px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin-top: 6px;
+  padding: 8px 14px;
+  border: 1px solid #e5e5ea;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.foco-ese-linha i {
+  font-style: normal;
+  color: #aeaeb2;
+}
+
+.foco-ese-linha.melhora {
+  border: 1.5px solid #1e9e5a;
+  background: #eaf7ef;
+  color: var(--text);
+}
+
+.foco-ese-marca {
+  margin-left: auto;
+  color: var(--erro);
+}
+
+.foco-ese-linha.melhora .foco-ese-marca {
+  color: #1e9e5a;
+}
+
+/* a lousa Onde estamos, embaixo do quadro (ADR-0026, item 11) */
+.foco-onde {
+  flex-shrink: 0;
+  width: min(560px, 100%);
+  padding: 10px 18px 8px;
+  border: 6px solid #c7c7cc;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.foco-onde-topo {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.foco-onde-topo span {
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.foco-onde-topo b {
+  font-weight: 600;
+  text-align: right;
+  color: var(--destaque-texto);
+}
+
+.foco-onde-mapa {
+  /* distância entre o centro da coluna e o começo da linha */
+  --folga: 16px;
+  position: relative;
+  height: 84px;
+}
+
+.foco-onde-coluna {
+  position: absolute;
+  top: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transform: translateX(-50%);
+  font-size: 11px;
+  color: #aeaeb2;
+}
+
+.foco-onde-nos {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 4px;
+  border: 1.5px dashed transparent;
+  border-radius: 8px;
+  align-items: center;
+}
+
+.foco-onde-nos i {
+  width: 11px;
+  height: 11px;
+  border: 1.5px solid #c7c7cc;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.foco-onde-coluna.agora {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.foco-onde-coluna.agora .foco-onde-nos {
+  border-color: var(--destaque);
+}
+
+.foco-onde-coluna.agora .foco-onde-nos i {
+  border-color: var(--text);
+}
+
+.foco-onde-nos i.aceso {
+  border-color: var(--text);
+  background: var(--destaque);
+}
+
+.foco-onde-seta {
+  position: absolute;
+  top: 41px;
+  height: 2.5px;
+  background: var(--destaque);
+}
+
+/* a linha fina que liga as colunas, embaixo da seta */
+.foco-onde-trilho {
+  position: absolute;
+  top: 41.5px;
+  height: 1.5px;
+  background: #e5e5ea;
+}
+
+.foco-onde-seta::after {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: calc(50% - 6px);
+  border: 6px solid transparent;
+  border-top-width: 6px;
+  border-bottom-width: 6px;
+}
+
+.foco-onde-seta.ida::after {
+  border-left: 10px solid var(--destaque);
+  border-right: 0;
+}
+
+.foco-onde-seta.volta::after {
+  border-right: 10px solid var(--destaque);
+  border-left: 0;
+}
+
+.foco-onde-aqua {
+  position: absolute;
+  top: 0;
+  margin-left: 26px;
+  line-height: 0;
+}
+
+/* o zoom da lousa (ADR-0026, item 13): sobe para o meio, a Aqua anda, depois desce */
+/* o véu do zoom: escurece o quadro atrás da lousa grande */
+.foco-veu {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: rgba(29, 29, 31, 0.4);
+  pointer-events: none;
+}
+
+/* no meio da tela; o GSAP leva ela de onde a lousa pequena está e traz de volta */
+.foco-onde.grande {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: min(700px, calc(100% - 48px));
+  height: fit-content;
+  margin: auto;
+  padding: 26px 32px 22px;
+  border-width: 10px;
+  border-radius: 14px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  will-change: transform, opacity;
+}
+
+.foco-onde.grande .foco-onde-topo {
+  display: block;
+}
+
+.foco-onde.grande .foco-onde-topo span {
+  font-size: 14px;
+}
+
+.foco-onde.grande .foco-onde-topo b {
+  display: block;
+  margin-top: 10px;
+  font-size: 26px;
+  font-weight: 700;
+  text-align: left;
+}
+
+.foco-onde.grande .foco-onde-topo p {
+  margin: 6px 0 0;
+  font-size: 17px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.foco-onde.grande .foco-onde-mapa {
+  --folga: 40px;
+  height: 250px;
+}
+
+.foco-onde.grande .foco-onde-coluna {
+  top: 80px;
+  gap: 14px;
+  font-size: 18px;
+}
+
+.foco-onde.grande .foco-onde-nos {
+  gap: 10px;
+  min-width: 92px;
+  min-height: 128px;
+  border-width: 2px;
+  border-radius: 14px;
+}
+
+.foco-onde.grande .foco-onde-nos i {
+  width: 28px;
+  height: 28px;
+  border-width: 2.5px;
+}
+
+.foco-onde.grande .foco-onde-seta {
+  top: 142px;
+  height: 5px;
+}
+
+.foco-onde.grande .foco-onde-seta::after {
+  top: -9px;
+  left: calc(50% - 10px);
+  border-width: 11px;
+}
+
+.foco-onde.grande .foco-onde-seta.ida::after {
+  border-left-width: 20px;
+  border-right: 0;
+}
+
+.foco-onde.grande .foco-onde-seta.volta::after {
+  border-right-width: 20px;
+  border-left: 0;
+}
+
+.foco-onde.grande .foco-onde-trilho {
+  top: 143.5px;
+  height: 2px;
+}
+
+/* na lousa grande a Aqua fica em cima da coluna */
+.foco-onde.grande .foco-onde-aqua {
+  top: 22px;
+  margin-left: -40px;
+}
+
+/* fim da ida: a rede toda */
+.foco-rede {
+  display: block;
+  width: 100%;
+  max-height: 300px;
+  margin: 8px 0;
+}
+
+.foco-no-nome.pequeno {
+  font-size: 11px;
+}
+
+.foco-pilula-resposta {
+  font-size: 13px;
+  font-weight: 700;
+  fill: #fff;
+}
+
+.foco-nota.esquerda {
+  text-align: left;
+}
+
+/* ---------- Ver conta: a conta armada por cima do quadro ---------- */
+.ver-conta {
+  position: absolute;
+  z-index: 2;
+  width: min(460px, calc(100% - 32px));
+  padding: 18px 20px 16px;
+  border: 1px solid #d2d2d7;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+}
+
+.ver-conta-topo {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.ver-conta h3 {
+  margin: 10px 0 2px;
+  font-size: 18px;
+}
+
+.ver-conta-legenda {
+  margin: 0 0 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--destaque-texto);
+}
+
+.ver-conta-corpo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 170px;
+}
+
+.ver-conta-par {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.ver-conta-numero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.ver-conta-numero b,
+.ver-conta-tirar span,
+.ver-conta-tirar b {
+  font-size: 28px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.ver-conta-numero em {
+  font-style: normal;
+  color: var(--erro);
+}
+
+.ver-conta small {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.ver-conta-tirar div {
+  display: grid;
+  grid-template-columns: auto 24px auto auto;
+  align-items: baseline;
+  gap: 10px;
+  margin: 6px 0;
+}
+
+.ver-conta-tirar span {
+  color: var(--text-muted);
+}
+
+.ver-conta-tirar i {
+  font-style: normal;
+  color: #aeaeb2;
+}
+
+.ver-conta-tirar b {
+  color: var(--destaque-texto);
+}
+
+.ver-conta-resultado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.ver-conta-resultado b {
+  font-size: 34px;
+  color: var(--destaque-texto);
+}
+
+.ver-conta-resultado b.negativo {
+  color: var(--erro);
+}
+
+.ver-conta-regra {
+  font-size: 22px;
+}
+
+.armada {
+  display: grid;
+  row-gap: 4px;
+  font-size: 28px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.armada-op {
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.armada-op.barra,
+.armada-digito.barra {
+  padding-bottom: 4px;
+  border-bottom: 2.5px solid var(--text);
+}
+
+.armada-digito.destaque {
+  color: var(--destaque-texto);
+}
+
+.armada-digito.apagado {
+  color: #c7c7cc;
+}
+
+.ver-conta-fala {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.ver-conta-fala p {
+  flex: 1;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--destaque-fundo);
+  font-size: 13px;
+}
+
+.ver-conta-navegar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.ver-conta-bolinhas {
+  display: flex;
+  gap: 6px;
+}
+
+.ver-conta-bolinhas i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d2d2d7;
+}
+
+.ver-conta-bolinhas i.agora {
+  background: var(--destaque-texto);
+}
+
+@media (max-width: 900px) {
+  .foco-corpo {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* tela de PC mais baixa (ex.: 1280 × 720): o mesmo layout, mais compacto, sem rolar */
+@media (max-height: 820px) {
+  .foco {
+    gap: 12px;
+    padding: 16px 24px;
+  }
+
+  .foco-quadro {
+    padding: 18px 28px 20px;
+  }
+
+  .foco-titulo {
+    margin: 2px 0 6px;
+    font-size: 24px;
+  }
+
+  .foco-diagrama.volta {
+    max-width: 560px;
+  }
+
+  .foco-cadeia {
+    margin: 2px 0;
+  }
+
+  .foco-elo b {
+    font-size: 26px;
+  }
+
+  .foco-elo.destaque b {
+    font-size: 30px;
+  }
+
+  .foco-ese {
+    margin-top: 8px;
+    padding-top: 8px;
+  }
+
+  .foco-ese-linha {
+    margin-top: 4px;
+    padding: 6px 12px;
+  }
+
+  .foco-onde {
+    padding: 6px 16px 4px;
+  }
+
+  .foco-onde-mapa {
+    height: 74px;
+  }
+}
+
+/* tela de PC mais alta: tudo um pouco maior, igual em todos os passos */
+@media (min-height: 860px) {
+  .foco-titulo {
+    font-size: 32px;
+  }
+
+  .foco-elo b {
+    font-size: 34px;
+  }
+
+  .foco-elo.destaque b {
+    font-size: 42px;
+  }
+
+  .foco-elo small,
+  .foco-nota {
+    font-size: 17px;
+  }
 }

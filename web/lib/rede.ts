@@ -17,9 +17,12 @@ export type CamadaNode = Node<CamadaData, "camada">;
 export type NeuronioNode = Node<Record<string, never>, "neuronio">;
 export type SaidaNode = Node<SaidaData, "saida">;
 export type EntradaNode = Node<EntradaData, "entrada">;
-export type NoDaRede = CamadaNode | NeuronioNode | SaidaNode | EntradaNode;
+/** Backward pass (ADR-0025): Mostrar só vê a culpa; Salvar aplica os pesos no fim. */
+export type BackwardData = { modo: "mostrar" | "salvar" };
+export type BackwardNode = Node<BackwardData, "backward">;
+export type NoDaRede = CamadaNode | NeuronioNode | SaidaNode | EntradaNode | BackwardNode;
 
-/** Fio que o aluno liga: entrada → camada, camada → camada, ou camada → saída. */
+/** Fio que o aluno liga: entrada → camada, camada → camada, camada → saída, ou saída → backward pass. */
 export type Fio = Edge;
 /** Pesos que o aluno mudou à mão, pelo id da linha. */
 export type Pesos = Record<string, number>;
@@ -83,6 +86,10 @@ export function criarEntrada(x: number, y: number): EntradaNode {
   };
 }
 
+export function criarBackward(x: number, y: number): BackwardNode {
+  return { id: novoId("backward"), type: "backward", position: { x, y }, data: { modo: "mostrar" } };
+}
+
 export function criarFio(source: string, target: string): Fio {
   return {
     id: `fio:${source}->${target}`,
@@ -97,7 +104,8 @@ export function criarFio(source: string, target: string): Fio {
 
 /* ---------- Montagens prontas ---------- */
 
-export type Montagem = { nodes: NoDaRede[]; fios: Fio[]; pesos: Pesos };
+/** A montagem salva no projeto. Os exemplos do Treinar (ADR-0024) vêm junto; sem eles, a lista pronta. */
+export type Montagem = { nodes: NoDaRede[]; fios: Fio[]; pesos: Pesos; exemplos?: { cor: string; objetivo: 0 | 1 }[] };
 
 /**
  * Básico pronto: a cor entra, a Camada 1 tem um detector de laranja e um de azul,
@@ -157,7 +165,7 @@ export function valoresDaEntrada(d: EntradaData): { nome: string; valor: number 
 export function reorganizar(nodes: NoDaRede[]): NoDaRede[] {
   // só percorre camadas: neurônios cuja camada foi apagada somem junto
   const camadas = nodes.filter((n): n is CamadaNode => n.type === "camada");
-  const resultado: NoDaRede[] = nodes.filter((n) => n.type === "saida" || n.type === "entrada");
+  const resultado: NoDaRede[] = nodes.filter((n) => n.type === "saida" || n.type === "entrada" || n.type === "backward");
 
   for (const camada of camadas) {
     const filhos = neuroniosDe(nodes, camada.id);
@@ -209,11 +217,15 @@ export function fiosValidos(nodes: NoDaRede[], fios: Fio[]): Fio[] {
   return fios.filter((f) => ids.has(f.source) && ids.has(f.target));
 }
 
-/** Um fio sai da Entrada ou de uma camada e chega numa camada ou na Saída, sem voltar para trás. */
+/**
+ * Um fio sai da Entrada ou de uma camada e chega numa camada ou na Saída, sem voltar para trás.
+ * O Backward pass só recebe um fio, e só da Saída (é de lá que a culpa começa a voltar).
+ */
 export function fioPermitido(nodes: NoDaRede[], fios: Fio[], c: Connection | Edge): boolean {
   const origem = nodes.find((n) => n.id === c.source);
   const destino = nodes.find((n) => n.id === c.target);
   if (!origem || !destino || c.source === c.target) return false;
+  if (origem.type === "saida" || destino.type === "backward") return origem.type === "saida" && destino.type === "backward";
   if (origem.type !== "camada" && origem.type !== "entrada") return false;
   if (destino.type !== "camada" && destino.type !== "saida") return false;
   if (origem.type === "entrada" && destino.type === "saida") return false;

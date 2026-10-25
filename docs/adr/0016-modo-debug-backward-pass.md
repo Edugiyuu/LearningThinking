@@ -4,6 +4,7 @@
 - **Data:** 2026-10-19
 - **Decisores:** autor do projeto
 - **Relacionado:** [ADR-0015](0015-aba-redes-neurais-montagem.md)
+- **Atualização (2026-10-22):** o "em aberto" foi decidido na [ADR-0025](0025-bloco-backward-pass.md), com o bloco Backward pass ligado na Saída.
 
 ## Contexto
 

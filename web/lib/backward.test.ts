@@ -1,0 +1,135 @@
+// Testes do backward pass passo a passo (ADR-0025). Rodar com: npm test
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { formatarCulpa, pesoSalvo, sinalDaMudanca, vistaDaVolta, voltarCulpa, type PassoVolta } from "./backward";
+import { criarBackward, fioPermitido, montagemBasica } from "./rede";
+import { EXEMPLOS_PRONTOS, corParaEntradas, lerRede, retropropagar, sortearPesos } from "./treino";
+
+const basica = () => {
+  const m = montagemBasica();
+  const lida = lerRede(m.nodes, m.fios, m.pesos);
+  assert.ok(lida);
+  return lida;
+};
+
+type Linha = Extract<PassoVolta, { tipo: "culpa-linha" }>;
+const linhas = (passos: PassoVolta[]) => passos.filter((p): p is Linha => p.tipo === "culpa-linha");
+
+test("a culpa de cada linha é a mesma do Treinar (retropropagar)", () => {
+  const { rede, pesos: basicos } = basica();
+  for (const [semente, ex] of EXEMPLOS_PRONTOS.entries()) {
+    // a montagem básica e uma rede sorteada (onde a última camada não é zero)
+    const sorteados = Object.fromEntries(Object.entries(sortearPesos(rede, EXEMPLOS_PRONTOS, semente)).map(([k, w]) => [k, w || 0.7]));
+    for (const pesos of [basicos, sorteados]) {
+      const x = corParaEntradas(ex.cor);
+      const { gradientes } = retropropagar(rede, pesos, x, ex.objetivo);
+      const passos = voltarCulpa({ rede, pesos, entradas: x, objetivo: ex.objetivo });
+      assert.equal(linhas(passos).length, Object.keys(pesos).length);
+      for (const l of linhas(passos)) assert.ok(Math.abs(l.culpa - (gradientes[l.linha] ?? 0)) < 1e-12, `${ex.cor} · ${l.linha}`);
+    }
+  }
+});
+
+test("o exemplo do azul dá o que está no Figma", () => {
+  const { rede, pesos } = basica();
+  const passos = voltarCulpa({ rede, pesos, entradas: corParaEntradas("#378ADD"), objetivo: 0 });
+  const erro = passos[0];
+  assert.equal(erro.tipo, "erro");
+  assert.equal(Math.round(erro.tipo === "erro" ? erro.erro * 100 : 0), 12);
+
+  // pela estrutura: o neurônio de cima, o de baixo e o último (os ids mudam a cada montagem)
+  const [cimaN, baixoN, finalN] = rede.neuronios;
+  const porLinha = Object.fromEntries(linhas(passos).map((l) => [l.linha, l]));
+  const linha = (de: string, para: string) => porLinha[`${de}->${para}`];
+  const cor = (c: number) => `${rede.entrada}#${c}`;
+  const baixoSaida = linha(baixoN.id, finalN.id);
+  assert.equal(baixoSaida.sinal, "+");
+  assert.equal(Math.round(baixoSaida.culpa * 1000), 16);
+  assert.equal(baixoSaida.salvo, -1.51);
+  assert.equal(linha(cor(0), baixoN.id).sinal, "-"); // R atrapalhou
+  assert.equal(linha(cor(1), baixoN.id).sinal, "+"); // G ajudou
+  assert.equal(linha(cor(2), baixoN.id).sinal, "+"); // B ajudou
+  assert.equal(linha(cor(2), baixoN.id).salvo, 1.51);
+  // o neurônio de cima passou 0: a culpa para nele, e ele e as linhas dele ficam iguais
+  assert.equal(linha(cimaN.id, finalN.id).sinal, "=");
+  for (const c of [0, 1, 2]) assert.equal(linha(cor(c), cimaN.id).sinal, "=");
+  const cima = passos.find((p) => p.tipo === "culpa-neuronio" && p.neuronio === cimaN.id);
+  assert.ok(cima?.tipo === "culpa-neuronio" && cima.apagado);
+
+  const fim = passos.at(-1);
+  assert.ok(fim?.tipo === "fim");
+  assert.ok(fim.erroDepois < fim.erroAntes);
+  assert.equal(Math.round(fim.erroDepois * 100), 11);
+});
+
+test("a volta anda da Saída para a Entrada", () => {
+  const { rede, pesos } = basica();
+  const passos = voltarCulpa({ rede, pesos, entradas: corParaEntradas("#FF8C00"), objetivo: 1 });
+  assert.equal(passos[0].tipo, "erro");
+  assert.equal(passos.at(-1)?.tipo, "fim");
+  const neuronios = passos.flatMap((p) => (p.tipo === "culpa-neuronio" ? [p.neuronio] : []));
+  const [cimaN, baixoN, finalN] = rede.neuronios;
+  assert.deepEqual(neuronios, [finalN.id, cimaN.id, baixoN.id]);
+  // cada linha vem logo depois do neurônio onde ela chega
+  let atual = "";
+  for (const p of passos) {
+    if (p.tipo === "culpa-neuronio") atual = p.neuronio;
+    if (p.tipo === "culpa-linha") assert.equal(p.neuronio, atual);
+  }
+});
+
+test("o sinal fala do tamanho do peso, não do sinal dele", () => {
+  assert.equal(sinalDaMudanca(-1.5, -1.51, 0.016), "+");
+  assert.equal(sinalDaMudanca(-1, -0.998, -0.004), "-");
+  assert.equal(sinalDaMudanca(0.5, 0.505, -0.01), "+");
+  assert.equal(sinalDaMudanca(2, 2, 0), "=");
+});
+
+test("com + ou −, o peso salvo anda pelo menos 0,01", () => {
+  assert.equal(pesoSalvo(0.5, 0.5048), 0.51); // G: 0,505 arredondaria para 0,50
+  assert.equal(pesoSalvo(-1, -0.998), -0.99); // R: −0,998 arredondaria para −1,00
+  assert.equal(pesoSalvo(-1.5, -1.508), -1.51); // já anda sozinho
+  assert.equal(pesoSalvo(2, 2), 2); // sem culpa, fica igual
+  assert.equal(pesoSalvo(5, 5.003), 5); // no limite, não passa de 5
+});
+
+test("o Backward pass só liga na Saída", () => {
+  const m = montagemBasica();
+  const b = criarBackward(1000, 40);
+  const nodes = [...m.nodes, b];
+  const saida = nodes.find((n) => n.type === "saida")!;
+  const camada = nodes.find((n) => n.type === "camada")!;
+  const entrada = nodes.find((n) => n.type === "entrada")!;
+  const liga = (source: string, target: string) => fioPermitido(nodes, m.fios, { source, target, sourceHandle: null, targetHandle: null });
+  assert.equal(liga(saida.id, b.id), true);
+  assert.equal(liga(camada.id, b.id), false);
+  assert.equal(liga(entrada.id, b.id), false);
+  assert.equal(liga(saida.id, camada.id), false);
+  assert.equal(liga(b.id, saida.id), false);
+});
+
+test("a vista da volta acompanha os passos", () => {
+  const { rede, pesos } = basica();
+  const passos = voltarCulpa({ rede, pesos, entradas: corParaEntradas("#378ADD"), objetivo: 0 });
+  const [cimaN, baixoN, finalN] = rede.neuronios;
+  const iLinha = passos.findIndex((p) => p.tipo === "culpa-linha" && p.linha === `${baixoN.id}->${finalN.id}`);
+  const v = vistaDaVolta(passos, iLinha);
+  assert.equal(v.linhaAgora?.linha, `${baixoN.id}->${finalN.id}`);
+  assert.equal(v.linhaAgora?.tamanho, 1); // é a linha com mais culpa
+  assert.equal(v.sinais.get(`${cimaN.id}->${finalN.id}`), "="); // a de cima já passou
+  assert.equal(v.neuronioAgora, finalN.id);
+  assert.ok(v.erro && !v.fim);
+  assert.equal(v.parados.size, 0); // a culpa ainda não chegou na Camada 1
+
+  const noFim = vistaDaVolta(passos, passos.length - 1);
+  assert.equal(noFim.linhaAgora, null);
+  assert.ok(noFim.parados.has(cimaN.id));
+  assert.equal(noFim.sinais.size, 8);
+  assert.equal(Math.round((noFim.fim?.erroDepois ?? 0) * 100), 11);
+  assert.equal(formatarCulpa(-0.0155), "0,016");
+});
+
+test("culpa pequena demais para 3 casas não vira 0,000", () => {
+  assert.equal(formatarCulpa(0.0003), "menos de 0,001");
+  assert.equal(formatarCulpa(0), "0,000");
+});

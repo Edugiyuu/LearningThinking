@@ -1,11 +1,13 @@
 "use client";
 
-import { Aqua, AquaCozinhando, AquaFantasia, AquaReacao, type FantasiaAqua, type ReacaoAqua } from "@/components/mascote";
+import { Aqua, AquaAcendendo, AquaFantasia, AquaSeparando, type FantasiaAqua } from "@/components/mascote";
+import Link from "next/link";
 import { formatar } from "@/lib/rede";
 
 // Palcos do tutorial 01 · O neurônio, iguais ao frame "Tutorial 01 · O neurônio · roteiro" no Figma.
-// Cada palco usa o mesmo tamanho do Figma (420 × 368) e é ampliado pelo SVG.
-// Os números são os da Aqua fazendo panqueca (docs/07-guia-de-conteudo.md).
+// Cada palco usa o mesmo tamanho (420 × 368) e é ampliado pelo SVG.
+// O exemplo é o mesmo do laboratório: o detector de laranja da montagem básica (lib/rede.ts),
+// com a cor laranja #FF8C00 entrando como R, G e B.
 
 const AQUA = "#5ED3DB";
 const AQUA_TEXTO = "#0E7C86";
@@ -14,70 +16,33 @@ const TEXTO = "#1D1D1F";
 const MUDO = "#6E6E73";
 const SUTIL = "#86868B";
 const BORDA = "#E5E5EA";
-const VERDE = "#30A46C";
-const VERDE_CLARO = "#7FCFA3";
-const VERMELHO = "#E5484D";
+const VERDE = "#16A34A";
+const VERDE_TEXTO = "#15803D";
+const VERDE_CLARO = "#4ADE80";
+const VERMELHO = "#DC2626";
+const VERMELHO_TEXTO = "#B91C1C";
+const LARANJA = "#FF8C00";
+const AZUL = "#378ADD";
+const ROXO = "#8000FF";
 const MONO = "var(--font-geist-mono), ui-monospace, monospace";
 
 const VIEWBOX = "0 0 420 368";
+const SUB = ["₁", "₂", "₃"];
 
-/** Panqueca da Aqua: entradas, pesos e o que sai de cada conta. */
-export const PANQUECA = {
-  entradas: [
-    { nome: "cor da massa", x: 0.9, w: 0.8, icone: "panqueca" },
-    { nome: "tempo no fogo", x: 0.6, w: 0.5, icone: "relogio" },
-    { nome: "música", x: 0.3, w: -0.1, icone: "musica" },
-  ],
-} as const;
-const Z = PANQUECA.entradas.reduce((s, e) => s + e.x * e.w, 0); // 0,99
-const sigmoide = (z: number) => 1 / (1 + Math.exp(-z));
+/** O detector de laranja: a cor laranja entrando como R, G e B, com os pesos da montagem básica. */
+export const DETECTOR = [
+  { nome: "vermelho", canal: "R", x: 1, w: 2, cor: "#EF4444" },
+  { nome: "verde", canal: "G", x: 0.55, w: 0.5, cor: "#22C55E" },
+  { nome: "azul", canal: "B", x: 0, w: -2, cor: "#3B82F6" },
+] as const;
+const Z = DETECTOR.reduce((s, e) => s + e.x * e.w, 0); // 2,28
+const Z_AZUL = 0.22 * 2 + 0.54 * 0.5 + 0.87 * -2; // −1,03: o azul #378ADD no mesmo detector
+
+/** O roxo do teste: (0,50; 0,00; 1,00) no mesmo detector. */
+const ROXO_X = [0.5, 0, 1];
+const Z_ROXO = ROXO_X.reduce((s, x, i) => s + x * DETECTOR[i].w, 0); // −1,00
 
 /* ---------------- Peças em comum ---------------- */
-
-function Pixel({ x, y, unidade, celulas }: { x: number; y: number; unidade: number; celulas: [number, number, number, number, string][] }) {
-  return (
-    <g transform={`translate(${x} ${y}) scale(${unidade})`} shapeRendering="crispEdges">
-      {celulas.map(([cx, cy, w, h, cor], i) => (
-        <rect key={i} x={cx} y={cy} width={w} height={h} fill={cor} />
-      ))}
-    </g>
-  );
-}
-
-const ICONES = {
-  panqueca: [
-    [1, 0, 5, 1, "#E9B44C"],
-    [0, 1, 7, 2, "#E9B44C"],
-    [1, 3, 5, 1, "#C98A2B"],
-    [2, 1, 1, 1, "#F6D58E"],
-  ],
-  relogio: [
-    [1, 2, 5, 3, "#FFFFFF"],
-    [2, 1, 3, 1, "#FFFFFF"],
-    [2, 5, 3, 1, "#FFFFFF"],
-    [2, 0, 3, 1, MUDO],
-    [1, 1, 1, 1, MUDO],
-    [5, 1, 1, 1, MUDO],
-    [0, 2, 1, 3, MUDO],
-    [6, 2, 1, 3, MUDO],
-    [1, 5, 1, 1, MUDO],
-    [5, 5, 1, 1, MUDO],
-    [2, 6, 3, 1, MUDO],
-    [3, 2, 1, 2, TEXTO],
-    [4, 3, 1, 1, TEXTO],
-  ],
-  musica: [
-    [3, 0, 1, 5, MUDO],
-    [4, 0, 2, 1, MUDO],
-    [5, 1, 1, 1, MUDO],
-    [1, 4, 2, 2, MUDO],
-    [0, 5, 1, 1, MUDO],
-  ],
-} satisfies Record<string, [number, number, number, number, string][]>;
-
-function Icone({ nome, x, y }: { nome: keyof typeof ICONES; x: number; y: number }) {
-  return <Pixel x={x} y={y} unidade={3} celulas={ICONES[nome]} />;
-}
 
 /** As peças de pixel art da Aqua dentro do SVG do palco. */
 function Em({ x, y, children }: { x: number; y: number; children: React.ReactNode }) {
@@ -108,50 +73,66 @@ function Pilula({ x, y, texto, cor, largura }: { x: number; y: number; texto: st
 }
 
 const corDoPeso = (w: number) => (w > 0 ? VERDE : VERMELHO);
+const textoDoPeso = (w: number) => (w > 0 ? VERDE_TEXTO : VERMELHO_TEXTO);
+const espessura = (w: number) => 2 + Math.abs(w) * 2;
 
-/* ---------------- Passo 2 · A Aqua aprendendo a cozinhar ---------------- */
-
-const LIGACOES = ["cor da massa", "tempo no fogo", "música tocando"];
+/* ---------------- Passo 2 · A Aqua aprendendo cores ---------------- */
 
 function Tentativa({ y, titulo, treinada }: { y: number; titulo: string; treinada: boolean }) {
-  const porta: [number, number] = [266, y + 62];
+  const no: [number, number] = [292, y + 76];
   return (
     <g>
-      <text x={12} y={y + 12} fontSize={12} fontWeight={700} fill={MUDO}>
+      <text x={12} y={y + 14} fontSize={12} fontWeight={700} fill={treinada ? VERDE_TEXTO : VERMELHO_TEXTO}>
         {titulo}
       </text>
-      {LIGACOES.map((nome, i) => {
-        const cy = y + 39 + i * 40;
-        const fraca = treinada && i === 2;
+      <rect x={12} y={y + 26} width={22} height={22} rx={5} fill={LARANJA} />
+      <text x={23} y={y + 60} textAnchor="middle" fontSize={9} fill={SUTIL}>
+        laranja
+      </text>
+      {DETECTOR.map((e, i) => {
+        const cy = y + 36 + i * 40;
+        const cor = !treinada ? "#B5B5BA" : i === 1 ? "#D2D2D7" : corDoPeso(e.w);
+        const largura = !treinada ? 2.5 : i === 1 ? 1 : 6;
         return (
-          <g key={nome}>
-            <line
-              data-traco
-              x1={124} y1={cy} x2={porta[0]} y2={porta[1]}
-              stroke={!treinada ? "#B5B5BA" : fraca ? "#D2D2D7" : VERDE}
-              strokeWidth={!treinada ? 2.5 : fraca ? 1 : 6}
-            />
-            <rect x={12} y={cy - 13} width={112} height={26} rx={13} fill="#FFFFFF" stroke={BORDA} />
-            <text x={68} y={cy + 4} textAnchor="middle" fontSize={11} fontWeight={700} fill={fraca ? SUTIL : TEXTO}>
-              {nome}
+          <g key={e.nome}>
+            <line data-traco x1={150} y1={cy} x2={no[0]} y2={no[1]} stroke={cor} strokeWidth={largura} strokeLinecap="round" />
+            <rect x={50} y={cy - 13} width={100} height={26} rx={13} fill="#FFFFFF" stroke={BORDA} />
+            <text x={100} y={cy + 4} textAnchor="middle" fontSize={11} fontWeight={700} fill={treinada && i === 1 ? SUTIL : TEXTO}>
+              {e.nome}
             </text>
           </g>
         );
       })}
-      <Em x={266} y={y + 34}>
-        <AquaCozinhando noPonto={treinada} rotulo={treinada ? "A Aqua confiante com a panqueca no ponto." : "A Aqua preocupada com a panqueca queimada."} />
-      </Em>
+      <circle cx={no[0]} cy={no[1]} r={16} fill={AQUA} />
+      <text x={no[0]} y={no[1] + 3.5} textAnchor="middle" fontSize={9} fontWeight={700} fill="#06363A">
+        Aqua
+      </text>
+      <text x={318} y={no[1] - 2} fontSize={12} fontWeight={700} fill={TEXTO}>
+        {treinada ? "“laranja!”" : "“azul?”"}
+      </text>
+      <text x={318} y={no[1] + 14} fontSize={11} fill={treinada ? VERDE_TEXTO : VERMELHO_TEXTO}>
+        {treinada ? "acertou" : "errou"}
+      </text>
     </g>
   );
 }
 
-export function Cozinha() {
+export function Cores() {
   return (
-    <svg viewBox={VIEWBOX} className="h-auto w-full" role="img" aria-label="Na primeira tentativa a Aqua presta atenção em tudo e a panqueca queima. Depois de treinar, as ligações que ajudam ficam fortes e a da música fica fraca.">
-      <Tentativa y={0} titulo="1ª tentativa: queimou" treinada={false} />
-      <line x1={12} y1={172} x2={408} y2={172} stroke={BORDA} />
-      <Tentativa y={176} titulo="depois de treinar: no ponto" treinada />
-      <text x={210} y={351} textAnchor="middle" fontSize={11.5} fontWeight={700} fill={AQUA_TEXTO}>
+    <svg
+      viewBox={VIEWBOX}
+      className="h-auto w-full"
+      role="img"
+      aria-label="Na primeira tentativa a Aqua dá a mesma atenção ao vermelho, ao verde e ao azul e erra. Depois de muitas cores, vermelho e azul ficam fortes, o verde fica fraco, e ela acerta."
+    >
+      <Tentativa y={0} titulo="1ª tentativa: errou" treinada={false} />
+      <line x1={12} y1={160} x2={408} y2={160} stroke={BORDA} />
+      <Tentativa y={164} titulo="depois de muitas cores: acertou" treinada />
+      <Em x={12} y={326}>
+        <AquaSeparando unidade={3} rotulo="A Aqua separando cartões laranja e azul em dois cestos" />
+      </Em>
+      <rect x={136} y={337} width={272} height={22} rx={11} fill={AQUA_FUNDO} />
+      <text x={272} y={351.5} textAnchor="middle" fontSize={10.5} fontWeight={700} fill={AQUA_TEXTO}>
         na IA, a força de cada ligação é o peso
       </text>
     </svg>
@@ -245,126 +226,139 @@ export function Ponte() {
     </svg>
   );
 }
-
 /* ---------------- Passos 5 e 6 · Entradas e pesos ---------------- */
 
-const LINHA_Y = [78, 148, 218];
-const PORTA_AQUA: [number, number] = [322, 148];
-
-export function Panqueca({ fase }: { fase: "entradas" | "pesos" }) {
-  const pesos = fase === "pesos";
+function Entradas() {
   return (
-    <svg
-      viewBox={VIEWBOX}
-      className="h-auto w-full"
-      role="img"
-      aria-label={pesos ? "Cada nota da Aqua é multiplicada pelo seu peso: 0,72, 0,30 e −0,03." : "A Aqua dá uma nota de 0 a 1 para a cor da massa, o tempo no fogo e a música."}
-    >
-      <text x={210} y={30} textAnchor="middle" fontSize={11} fontWeight={700} fill={MUDO}>
-        o que a Aqua olha antes de virar a panqueca
+    <svg viewBox={VIEWBOX} className="h-auto w-full" role="img" aria-label="O laranja #FF8C00 vira três números: vermelho 1,00, verde 0,55 e azul 0,00.">
+      <text x={210} y={22} textAnchor="middle" fontSize={11} fontWeight={700} fill={MUDO}>
+        a Aqua olha a cor e anota três números
       </text>
-      {PANQUECA.entradas.map((e, i) => {
-        const y = LINHA_Y[i];
+      <rect x={20} y={44} width={96} height={96} rx={14} fill={LARANJA} />
+      <text x={68} y={158} textAnchor="middle" fontSize={11} fontFamily={MONO} fill={MUDO}>
+        #FF8C00
+      </text>
+      {DETECTOR.map((e, i) => {
+        const y = 64 + i * 42;
         return (
           <g key={e.nome}>
-            <line
-              data-traco
-              x1={196} y1={y} x2={PORTA_AQUA[0]} y2={PORTA_AQUA[1]}
-              stroke={pesos ? corDoPeso(e.w) : "#C7C7CC"}
-              strokeWidth={pesos ? 1 + Math.abs(e.w) * 6 : 2}
-              strokeLinecap="round"
-              className="motion-safe:transition-[stroke,stroke-width] motion-safe:duration-500"
-            />
-            <Icone nome={e.icone} x={e.icone === "musica" ? 23 : 20} y={y - (e.icone === "panqueca" ? 7 : 10)} />
-            <text x={50} y={y} fontSize={11} fontWeight={700} fill={TEXTO}>
-              {e.nome}
+            <text x={140} y={y - 6} fontSize={12} fill={TEXTO}>
+              {e.nome} <tspan fill={SUTIL}>x{SUB[i]}</tspan>
             </text>
-            <text x={50} y={y + 13} fontSize={9} fill={SUTIL}>
-              x{["₁", "₂", "₃"][i]}
-            </text>
-            <circle cx={180} cy={y} r={16} fill="#FFFFFF" stroke="#D2D2D7" />
-            <text x={180} y={y + 3.5} textAnchor="middle" fontSize={10} fontWeight={700} fontFamily={MONO} fill={TEXTO}>
+            <rect x={140} y={y} width={190} height={10} rx={5} fill={BORDA} />
+            {e.x > 0 && <rect data-cresce x={140} y={y} width={190 * e.x} height={10} rx={5} fill={e.cor} />}
+            <text x={400} y={y + 10} textAnchor="end" fontSize={12} fontWeight={700} fontFamily={MONO} fill={TEXTO}>
               {formatar(e.x)}
             </text>
-            {pesos && <Pilula x={262} y={y + (PORTA_AQUA[1] - y) * 0.52 - 10} texto={`w${["₁", "₂", "₃"][i]} = ${formatar(e.w)}`} cor={corDoPeso(e.w)} largura={58} />}
           </g>
         );
       })}
-      <Em x={322} y={133}>
-        <Aqua unidade={6} rotulo="A Aqua, o neurônio" />
-      </Em>
-      {pesos ? (
-        <>
-          {PANQUECA.entradas.map((e, i) => (
-            <text key={e.nome} x={210} y={270 + i * 16} textAnchor="middle" fontSize={11} fontWeight={600} fontFamily={MONO} fill={e.w > 0 ? VERDE : VERMELHO}>
-              w{["₁", "₂", "₃"][i]}·x{["₁", "₂", "₃"][i]} = {formatar(e.w)} × {formatar(e.x)} = {formatar(e.w * e.x)}
-            </text>
-          ))}
-          <NoLab texto="no laboratório: o peso é o número na linha" largura={220} />
-        </>
-      ) : (
-        <>
-          <text x={210} y={290} textAnchor="middle" fontSize={16} fontWeight={700} fontFamily={MONO} fill={TEXTO}>
-            x = (0,90; 0,60; 0,30)
-          </text>
-          <text x={210} y={309} textAnchor="middle" fontSize={10} fill={MUDO}>
-            vetor de entrada: uma nota para cada coisa
-          </text>
-          <NoLab texto="exemplo no laboratório: R, G e B da cor do bloco Entrada" largura={300} />
-        </>
-      )}
+      <rect x={20} y={204} width={380} height={96} rx={12} fill="#FFFFFF" />
+      <text x={210} y={252} textAnchor="middle" fontSize={22} fontWeight={700} fontFamily={MONO} fill={TEXTO}>
+        x = (1,00; 0,55; 0,00)
+      </text>
+      <text x={210} y={278} textAnchor="middle" fontSize={11} fill={SUTIL}>
+        vetor de entrada: um número para cada parte da cor
+      </text>
+      <NoLab texto="no laboratório: o R, o G e o B do bloco Entrada" largura={280} />
     </svg>
   );
+}
+
+function Pesos() {
+  const no: [number, number] = [330, 120];
+  return (
+    <svg viewBox={VIEWBOX} className="h-auto w-full" role="img" aria-label="Cada parte da cor é multiplicada pelo seu peso: 1,00 × 2,00 = 2,00; 0,55 × 0,50 = 0,28; 0,00 × −2,00 = 0,00.">
+      <text x={210} y={22} textAnchor="middle" fontSize={11} fontWeight={700} fill={MUDO}>
+        quanto a Aqua confia em cada parte da cor
+      </text>
+      {DETECTOR.map((e, i) => {
+        const y = 60 + i * 60;
+        return (
+          <g key={e.nome}>
+            <line data-traco x1={92} y1={y} x2={no[0]} y2={no[1]} stroke={corDoPeso(e.w)} strokeWidth={espessura(e.w)} strokeLinecap="round" />
+            <text x={54} y={y + 4} textAnchor="end" fontSize={10} fill={SUTIL}>
+              {e.canal}
+            </text>
+            <circle cx={76} cy={y} r={16} fill="#FFFFFF" stroke={e.cor} strokeWidth={2} />
+            <text x={76} y={y + 3.5} textAnchor="middle" fontSize={10} fontWeight={700} fontFamily={MONO} fill={TEXTO}>
+              {formatar(e.x)}
+            </text>
+            <Pilula x={196} y={y + (no[1] - y) * 0.4} texto={`w${SUB[i]} = ${formatar(e.w)}`} cor={textoDoPeso(e.w)} largura={66} />
+          </g>
+        );
+      })}
+      <circle cx={no[0]} cy={no[1]} r={20} fill="#FFFFFF" stroke={AQUA} strokeWidth={3} />
+      <text x={no[0]} y={no[1] + 36} textAnchor="middle" fontSize={10} fill={AQUA_TEXTO}>
+        detector
+      </text>
+      <text x={no[0]} y={no[1] + 48} textAnchor="middle" fontSize={10} fill={AQUA_TEXTO}>
+        de laranja
+      </text>
+      <rect x={20} y={222} width={380} height={104} rx={12} fill="#FFFFFF" />
+      {DETECTOR.map((e, i) => (
+        <text key={e.nome} x={36} y={252 + i * 28} fontSize={13} fontFamily={MONO} fill={TEXTO}>
+          w{SUB[i]}·x{SUB[i]} = {formatar(e.x)} × {formatar(e.w)} ={" "}
+          <tspan fontWeight={700} fill={e.x * e.w === 0 ? SUTIL : textoDoPeso(e.w)}>
+            {formatar(e.x * e.w)}
+          </tspan>
+        </text>
+      ))}
+      <NoLab texto="no laboratório: o peso é o número na linha" largura={240} />
+    </svg>
+  );
+}
+
+export function Cor({ fase }: { fase: "entradas" | "pesos" }) {
+  return fase === "entradas" ? <Entradas /> : <Pesos />;
 }
 
 /* ---------------- Passo 7 · Soma ponderada ---------------- */
 
 export function Soma() {
-  const [massa, tempo, musica] = PANQUECA.entradas.map((e) => e.x * e.w);
-  const x0 = 50;
-  const porUnidade = 266; // 0,72 ocupa 191,5 px, como no Figma
-  const xTempo = x0 + massa * porUnidade;
-  const xAntes = xTempo + tempo * porUnidade; // 1,02: o que ajuda
-  const xZ = xAntes + musica * porUnidade; // 0,99: depois da música tirar
+  const [r, g] = DETECTOR.map((e) => e.x * e.w);
+  const x0 = 40;
+  const porUnidade = 300 / Z;
   return (
-    <svg viewBox={VIEWBOX} className="h-auto w-full" role="img" aria-label="Soma ponderada: 0,72 + 0,30 − 0,03 = 0,99.">
-      <text x={210} y={56} textAnchor="middle" fontSize={22} fontWeight={700} fontFamily={MONO} fill={TEXTO}>
-        z = Σ wᵢ·xᵢ
+    <svg viewBox={VIEWBOX} className="h-auto w-full" role="img" aria-label="Soma ponderada: 2,00 + 0,28 + 0,00 = 2,28.">
+      <text x={210} y={22} textAnchor="middle" fontSize={11} fontWeight={700} fill={MUDO}>
+        a Aqua junta as três partes
       </text>
-      <text x={210} y={76} textAnchor="middle" fontSize={11} fill={MUDO}>
-        Σ (sigma) = “some tudo”
+      {DETECTOR.map((e, i) => {
+        const y = 36 + i * 42;
+        const p = e.x * e.w;
+        return (
+          <g key={e.nome}>
+            <rect x={20} y={y} width={380} height={34} rx={10} fill="#FFFFFF" />
+            <text x={36} y={y + 22} fontSize={13} fill={TEXTO}>
+              {e.nome}
+            </text>
+            <text x={384} y={y + 22} textAnchor="end" fontSize={13} fontFamily={MONO} fill={TEXTO}>
+              {formatar(e.x)} × {formatar(e.w)} ={" "}
+              <tspan fontWeight={700} fill={p === 0 ? SUTIL : textoDoPeso(p)}>
+                {formatar(p)}
+              </tspan>
+            </text>
+          </g>
+        );
+      })}
+      <text x={210} y={182} textAnchor="middle" fontSize={12} fill={MUDO}>
+        soma tudo
       </text>
-      <text x={210} y={110} textAnchor="middle" fontSize={14} fontFamily={MONO} fill={MUDO}>
-        z = 0,72 + 0,30 + (−0,03)
+      <text x={210} y={216} textAnchor="middle" fontSize={24} fontWeight={700} fontFamily={MONO} fill={TEXTO}>
+        2,00 + 0,28 + 0,00 = {formatar(Z)}
       </text>
-      <text x={210} y={140} textAnchor="middle" fontSize={20} fontWeight={700} fontFamily={MONO} fill={AQUA_TEXTO}>
-        z = {formatar(Z)}
+      <rect x={x0} y={240} width={300} height={22} rx={4} fill={BORDA} />
+      <rect data-cresce x={x0} y={240} width={r * porUnidade} height={22} fill={VERDE} />
+      <rect data-cresce x={x0 + r * porUnidade} y={240} width={g * porUnidade} height={22} fill={VERDE_CLARO} />
+      <text x={x0 + (r * porUnidade) / 2} y={255} textAnchor="middle" fontSize={10.5} fontWeight={700} fill="#FFFFFF">
+        vermelho {formatar(r)}
       </text>
-      <text x={x0} y={176} fontSize={10} fill={MUDO}>
-        0
+      <text x={x0 + r * porUnidade + (g * porUnidade) / 2} y={278} textAnchor="middle" fontSize={10} fill={VERDE_TEXTO}>
+        verde {formatar(g)}
       </text>
-      <rect x={x0} y={186} width={319} height={22} rx={4} fill={BORDA} />
-      <rect data-cresce x={x0} y={186} width={xTempo - x0} height={22} fill={VERDE} />
-      <rect data-cresce x={xTempo} y={186} width={xAntes - xTempo} height={22} fill={VERDE_CLARO} />
-      <text x={(x0 + xTempo) / 2} y={201} textAnchor="middle" fontSize={10} fontWeight={700} fill="#FFFFFF">
-        massa {formatar(massa)}
-      </text>
-      <text x={(xTempo + xZ) / 2} y={201} textAnchor="middle" fontSize={10} fontWeight={700} fill="#0B4D2C">
-        tempo {formatar(tempo)}
-      </text>
-      <text x={xAntes + 6} y={201} fontSize={10} fill={MUDO}>
-        {formatar(massa + tempo)}
-      </text>
-      <rect data-cresce="direita" x={xZ} y={226} width={xAntes - xZ} height={14} fill={VERMELHO} />
-      <text x={xZ - 6} y={237} textAnchor="end" fontSize={10} fontWeight={700} fill={VERMELHO}>
-        a música tira {formatar(-musica)}
-      </text>
-      <rect x={xZ - 1} y={178} width={2} height={68} fill={TEXTO} />
-      <text x={xZ} y={172} textAnchor="middle" fontSize={11} fontWeight={700} fill={TEXTO}>
-        z = {formatar(Z)}
-      </text>
-      <text x={210} y={279} textAnchor="middle" fontSize={11} fill={MUDO}>
-        quanto maior o z, mais tudo indica: “hora de virar!”
+      <text x={x0 + 308} y={255} fontSize={12} fontWeight={700} fontFamily={MONO} fill={TEXTO}>
+        {formatar(Z)}
       </text>
       <NoLab texto="no laboratório: o painel de contas mostra cada parcela" largura={300} />
     </svg>
@@ -373,120 +367,103 @@ export function Soma() {
 
 /* ---------------- Passo 8 · Função de ativação ---------------- */
 
-/** Um gráfico pequeno: f(z) de −3 a 3, com o ponto em z = 0,99. */
-function Grafico({ x, f, max }: { x: number; f: (z: number) => number; max: number }) {
-  const [z0, z1] = [-3, 3];
-  const largura = 156;
-  const [yBase, yTopo] = [168, 82];
-  const px = (z: number) => x + ((z - z0) / (z1 - z0)) * largura;
-  const py = (v: number) => yBase - (v / max) * (yBase - yTopo);
-  const caminho = Array.from({ length: 61 }, (_, i) => z0 + i * 0.1)
-    .map((z, i) => `${i ? "L" : "M"}${px(z).toFixed(1)} ${Math.max(yTopo - 4, py(f(z))).toFixed(1)}`)
-    .join(" ");
-  return (
-    <g>
-      <line x1={px(0)} y1={yTopo - 4} x2={px(0)} y2={yBase + 4} stroke="#D2D2D7" />
-      <line x1={px(Z)} y1={py(f(Z))} x2={px(Z)} y2={yBase} stroke={TEXTO} strokeDasharray="2 2" />
-      <path data-traco d={caminho} fill="none" stroke={AQUA} strokeWidth={2.5} strokeLinejoin="round" />
-      <circle cx={px(Z)} cy={py(f(Z))} r={5} fill={AQUA_TEXTO} />
-    </g>
-  );
-}
-
 export function Ativacao() {
+  const px = (s: number) => 210 + s * 55;
+  const py = (v: number) => 222 - v * 55;
   return (
-    <svg viewBox={VIEWBOX} className="h-auto w-full" role="img" aria-label="A mesma soma 0,99 na ReLU dá 0,99 e na sigmoide dá 0,73: 73% de certeza.">
-      <text x={210} y={28} textAnchor="middle" fontSize={13} fontWeight={700} fontFamily={MONO} fill={TEXTO}>
-        a = f(z), com z = {formatar(Z)}
-      </text>
-      <rect x={18} y={44} width={178} height={202} rx={12} fill="#FFFFFF" stroke={BORDA} />
-      <rect x={220} y={44} width={182} height={202} rx={12} fill="#FFFFFF" stroke={AQUA} strokeWidth={2} />
-      <text x={107} y={70} textAnchor="middle" fontSize={12} fontWeight={700} fill={TEXTO}>
+    <svg viewBox={VIEWBOX} className="h-auto w-full" role="img" aria-label="ReLU: a soma do laranja, 2,28, é positiva e o detector acende. A do azul, −1,03, é negativa e passa 0.">
+      <rect x={14} y={8} width={392} height={240} rx={12} fill="#FFFFFF" />
+      <Em x={30} y={20}>
+        <AquaAcendendo unidade={3} rotulo="A Aqua ligada a uma lâmpada acesa" />
+      </Em>
+      <text x={392} y={30} textAnchor="end" fontSize={13} fontWeight={700} fill={AQUA_TEXTO}>
         ReLU
       </text>
-      <text x={311} y={70} textAnchor="middle" fontSize={12} fontWeight={700} fill={TEXTO}>
-        sigmoide
+      <text x={392} y={46} textAnchor="end" fontSize={10.5} fill={SUTIL}>
+        negativo vira 0 · positivo passa igual
       </text>
-      <Grafico x={29} f={(z) => Math.max(0, z)} max={2.4} />
-      <Grafico x={233} f={sigmoide} max={1.05} />
-      {[
-        { x: 107, formula: "max(0, z)", papel: "negativo vira 0", exemplo: "−0,50 → 0 · 0,99 → 0,99" },
-        { x: 311, formula: "1 / (1 + e⁻ᶻ)", papel: "sempre entre 0 e 1", exemplo: `0 → 0,5 · 0,99 → ${formatar(sigmoide(Z))}` },
-      ].map((c) => (
-        <g key={c.formula}>
-          <text x={c.x} y={198} textAnchor="middle" fontSize={10} fontFamily={MONO} fill={MUDO}>
-            {c.formula}
-          </text>
-          <text x={c.x} y={212} textAnchor="middle" fontSize={10} fill={MUDO}>
-            {c.papel}
-          </text>
-          <text x={c.x} y={234} textAnchor="middle" fontSize={10.5} fontWeight={700} fontFamily={MONO} fill={AQUA_TEXTO}>
-            {c.exemplo}
-          </text>
-        </g>
-      ))}
-      <Em x={134} y={262}>
-        <AquaReacao reacao="confiante" unidade={4} rotulo="A Aqua confiante" />
-      </Em>
-      <text x={186} y={296} fontSize={13} fontWeight={700} fill={TEXTO}>
-        {Math.round(sigmoide(Z) * 100)}% de certeza:
+      <line x1={36} y1={py(0)} x2={392} y2={py(0)} stroke="#C7C7CC" />
+      <line x1={px(0)} y1={60} x2={px(0)} y2={py(0) + 8} stroke={BORDA} strokeDasharray="3 3" />
+      <text x={px(0)} y={py(0) + 20} textAnchor="middle" fontSize={10} fill={SUTIL}>
+        soma 0
       </text>
-      <text x={186} y={314} fontSize={13} fontWeight={700} fill={TEXTO}>
-        está no ponto, vira!
+      <path
+        data-traco
+        d={`M40 ${py(0)} L${px(0)} ${py(0)} L${px(3)} ${py(3)}`}
+        fill="none"
+        stroke={AQUA_TEXTO}
+        strokeWidth={4}
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+      <circle cx={px(Z_AZUL)} cy={py(0)} r={8} fill={AZUL} stroke="#FFFFFF" strokeWidth={2.5} />
+      <rect x={px(Z_AZUL) - 70} y={py(0) - 40} width={140} height={24} rx={12} fill="#F5F5F7" />
+      <text x={px(Z_AZUL)} y={py(0) - 24} textAnchor="middle" fontSize={11.5} fill={MUDO}>
+        azul {formatar(Z_AZUL)} → passa 0
       </text>
-      <text x={210} y={352} textAnchor="middle" fontSize={11} fill={MUDO}>
-        como a previsão do tempo: “73% de chance de chuva”
+      <circle cx={px(Z)} cy={py(Z)} r={9} fill={LARANJA} stroke="#FFFFFF" strokeWidth={3} />
+      <rect x={px(Z) - 170} y={py(Z) - 12} width={146} height={24} rx={12} fill={VERDE} />
+      <text x={px(Z) - 97} y={py(Z) + 4} textAnchor="middle" fontSize={11.5} fontWeight={700} fill="#FFFFFF">
+        laranja {formatar(Z)} → acende
       </text>
+      <rect x={14} y={258} width={392} height={100} rx={12} fill="#FFFFFF" stroke="#BFEFF2" />
+      <text x={30} y={282} fontSize={12} fontWeight={700} fill={AQUA_TEXTO}>
+        E o último neurônio?
+      </text>
+      <text x={30} y={302} fontSize={12} fill="#3B6E72">
+        Usa outra regra, a sigmoide, que deixa tudo
+      </text>
+      <text x={30} y={319} fontSize={12} fill="#3B6E72">
+        entre 0 e 1. Ela tem um tutorial só dela.
+      </text>
+      <Link href="/tutoriais/sigmoide">
+        <text x={390} y={344} textAnchor="end" fontSize={11.5} fontWeight={700} fill={AQUA_TEXTO} className="hover:underline">
+          Tutorial 03 · A sigmoide →
+        </text>
+      </Link>
     </svg>
   );
 }
 
 /* ---------------- Passo 9 · Revisão ---------------- */
 
-const REVISAO: { reacao: ReacaoAqua; titulo: string; nome: string; texto: string; conta: string }[] = [
-  { reacao: "observando", titulo: "1 · Olha", nome: "entradas", texto: "dá uma nota de 0 a 1 para massa, tempo e música", conta: "x = (0,90; 0,60; 0,30)" },
-  { reacao: "pesando", titulo: "2 · Confia mais em umas", nome: "pesos", texto: "massa muito, tempo médio, música quase nada", conta: "w = (0,80; 0,50; −0,10)" },
-  { reacao: "somando", titulo: "3 · Junta tudo", nome: "soma ponderada", texto: "como a média da escola, sem dividir", conta: `z = Σ wᵢ·xᵢ = ${formatar(Z)}` },
-  { reacao: "decidindo", titulo: "4 · Decide", nome: "função de ativação", texto: "a sigmoide vira certeza de 0 a 1", conta: `a = sigmoide(${formatar(Z)}) = ${formatar(sigmoide(Z))}` },
+const REVISAO = [
+  { titulo: "1 · Olha", nome: "entradas", conta: "vermelho 1,00 · verde 0,55 · azul 0,00" },
+  { titulo: "2 · Confia mais em umas", nome: "pesos", conta: "vermelho 2,00 · verde 0,50 · azul −2,00" },
+  { titulo: "3 · Junta tudo", nome: "soma ponderada", conta: `2,00 + 0,28 + 0,00 = ${formatar(Z)}` },
+  { titulo: "4 · Decide", nome: "função de ativação", conta: `positiva, então acende: ${formatar(Z)}` },
 ];
 
 export function Revisao() {
   return (
-    <svg viewBox={VIEWBOX} className="h-auto w-full" role="img" aria-label="Revisão: a Aqua olha, confia mais em umas coisas, junta tudo e decide. A panqueca fica no ponto.">
-      <text x={210} y={25} textAnchor="middle" fontSize={11} fontWeight={700} fill={MUDO}>
-        a Aqua virando a panqueca, do começo ao fim
+    <svg viewBox={VIEWBOX} className="h-auto w-full" role="img" aria-label="Revisão: a Aqua olha a cor, confia mais em umas partes, junta tudo e decide. O detector de laranja acende.">
+      <text x={210} y={18} textAnchor="middle" fontSize={11} fontWeight={700} fill={MUDO}>
+        o detector de laranja, do começo ao fim
       </text>
       {REVISAO.map((r, i) => {
-        const y = 38 + i * 62;
+        const y = 28 + i * 60;
         return (
           <g key={r.titulo}>
-            <Em x={28} y={y + 4}>
-              <AquaReacao reacao={r.reacao} unidade={3} />
-            </Em>
-            <text x={82} y={y + 12} fontSize={12.5} fontWeight={700} fill={TEXTO}>
+            <rect x={14} y={y} width={392} height={52} rx={10} fill="#FFFFFF" />
+            <text x={30} y={y + 21} fontSize={12.5} fontWeight={700} fill={TEXTO}>
               {r.titulo}
             </text>
-            <text x={396} y={y + 12} textAnchor="end" fontSize={10.5} fontWeight={700} fill={AQUA_TEXTO}>
+            <text x={390} y={y + 21} textAnchor="end" fontSize={10.5} fontWeight={700} fill={AQUA_TEXTO}>
               {r.nome}
             </text>
-            <text x={82} y={y + 29} fontSize={11.5} fill={MUDO}>
-              {r.texto}
-            </text>
-            <text x={82} y={y + 46} fontSize={11.5} fontWeight={700} fontFamily={MONO} fill={AQUA_TEXTO}>
+            <text x={30} y={y + 40} fontSize={11.5} fontFamily={MONO} fill={MUDO}>
               {r.conta}
             </text>
           </g>
         );
       })}
-      <rect x={14} y={294} width={392} height={64} rx={12} fill="#FFFFFF" stroke={BORDA} />
-      <Em x={26} y={306}>
-        <AquaCozinhando noPonto unidade={3} />
-      </Em>
-      <text x={128} y={318} fontSize={13} fontWeight={700} fill={TEXTO}>
-        panqueca no ponto!
+      <rect x={14} y={276} width={392} height={64} rx={12} fill="#FFFFFF" stroke={VERDE} />
+      <rect x={30} y={292} width={32} height={32} rx={6} fill={LARANJA} />
+      <text x={76} y={305} fontSize={14} fontWeight={700} fill={VERDE_TEXTO}>
+        detector de laranja acendeu!
       </text>
-      <text x={128} y={339} fontSize={12} fontWeight={700} fontFamily={MONO} fill={AQUA_TEXTO}>
-        o neurônio inteiro: a = f(Σ wᵢ·xᵢ)
+      <text x={76} y={324} fontSize={11} fill={MUDO}>
+        é o 1º neurônio da Camada 1 da montagem básica
       </text>
     </svg>
   );
@@ -494,92 +471,101 @@ export function Revisao() {
 
 /* ---------------- Passo 10 · Teste rápido ---------------- */
 
-/** Panqueca nova do teste: sem música, com os pesos que a Aqua aprendeu. */
-export const TESTE_PANQUECA = [
-  { nome: "cor da massa", x: 0.5, w: 0.8, icone: "panqueca" as const },
-  { nome: "tempo", x: 0.4, w: 0.5, icone: "relogio" as const },
-];
-const Z_TESTE = TESTE_PANQUECA.reduce((s, e) => s + e.x * e.w, 0); // 0,60
-
 export type EstadoTeste = "pergunta" | "certo" | "errado";
 
-function Caixa({ x, largura, titulo, valor, destaque }: { x: number; largura: number; titulo: string; valor: string; destaque?: boolean }) {
-  return (
-    <g>
-      <rect x={x} y={200} width={largura} height={44} rx={8} fill="#FFFFFF" stroke={destaque ? AQUA : BORDA} strokeWidth={destaque ? 2 : 1} />
-      <text x={x + largura / 2} y={216} textAnchor="middle" fontSize={9} fontWeight={700} fill={MUDO}>
-        {titulo}
-      </text>
-      <text data-pulo={destaque ? "" : undefined} x={x + largura / 2} y={235} textAnchor="middle" fontSize={12} fontWeight={700} fontFamily={MONO} fill={destaque ? AQUA_TEXTO : TEXTO}>
-        {valor}
-      </text>
-    </g>
-  );
-}
-
-export function TestePanqueca({ estado }: { estado: EstadoTeste }) {
+/** O roxo no detector de laranja: na 1ª pergunta, quanto dá a soma; na 2ª, se acende. */
+export function TesteCor({ fase, estado }: { fase: "soma" | "acende"; estado: EstadoTeste }) {
   const certo = estado === "certo";
-  const reacao: ReacaoAqua = certo ? "decidindo" : estado === "errado" ? "preocupada" : "pensando";
-  const porta: [number, number] = [300, 100];
+  const acende = fase === "acende";
+  const no: [number, number] = [334, 120];
+  const valorNo = acende ? (certo ? "0,00" : formatar(Z_ROXO)) : certo ? formatar(Z_ROXO) : "?";
   return (
-    <svg viewBox={VIEWBOX} className="h-auto w-full" role="img" aria-label="Teste: cor da massa 0,50 com peso 0,80 e tempo 0,40 com peso 0,50. Quanto dá z, e a certeza da Aqua?">
+    <svg
+      viewBox={VIEWBOX}
+      className="h-auto w-full"
+      role="img"
+      aria-label={
+        acende
+          ? "O roxo no detector de laranja: a soma deu −1,00. O detector acende?"
+          : "Teste: roxo (0,50; 0,00; 1,00) com os pesos 2,00, 0,50 e −2,00. Quanto dá a soma?"
+      }
+    >
       <text x={210} y={22} textAnchor="middle" fontSize={11} fontWeight={700} fill={MUDO}>
-        a Aqua tenta uma panqueca nova (hoje sem música)
+        {acende ? "o roxo: a soma já deu −1,00" : "uma cor nova no mesmo detector de laranja"}
       </text>
-      {TESTE_PANQUECA.map((e, i) => {
-        const y = 70 + i * 70;
-        return (
-          <g key={e.nome}>
-            <line data-traco x1={166} y1={y} x2={porta[0]} y2={porta[1]} stroke={VERDE} strokeWidth={1 + e.w * 6} strokeLinecap="round" />
-            <Icone nome={e.icone} x={20} y={y - (e.icone === "panqueca" ? 7 : 10)} />
-            <text x={48} y={y} fontSize={12} fontWeight={700} fill={TEXTO}>
-              {e.nome}
-            </text>
-            <text x={48} y={y + 13} fontSize={9} fill={SUTIL}>
-              x{["₁", "₂"][i]}
-            </text>
-            <circle cx={148} cy={y} r={18} fill="#FFFFFF" stroke="#D2D2D7" />
-            <text x={148} y={y + 4} textAnchor="middle" fontSize={11} fontWeight={700} fontFamily={MONO} fill={TEXTO}>
-              {formatar(e.x)}
-            </text>
-            <Pilula x={232} y={y + (porta[1] - y) * 0.5} texto={`w${["₁", "₂"][i]} = ${formatar(e.w)}`} cor={VERDE} largura={58} />
-          </g>
-        );
-      })}
-      <g key={reacao} data-pulo>
-        <Em x={300} y={40}>
-          <AquaReacao reacao={reacao} unidade={6} />
-        </Em>
+      <rect x={14} y={100} width={40} height={40} rx={8} fill={ROXO} />
+      <text x={34} y={156} textAnchor="middle" fontSize={10} fill={MUDO}>
+        roxo
+      </text>
+      <g opacity={acende ? 0.35 : 1}>
+        {DETECTOR.map((e, i) => {
+          const y = 60 + i * 60;
+          return (
+            <g key={e.nome}>
+              <line x1={104} y1={y} x2={no[0]} y2={no[1]} stroke={corDoPeso(e.w)} strokeWidth={espessura(e.w)} strokeLinecap="round" />
+              <circle cx={90} cy={y} r={16} fill="#FFFFFF" stroke={e.cor} strokeWidth={2} />
+              <text x={90} y={y + 3.5} textAnchor="middle" fontSize={10} fontWeight={700} fontFamily={MONO} fill={TEXTO}>
+                {formatar(ROXO_X[i])}
+              </text>
+              {!acende && <Pilula x={210} y={y + (no[1] - y) * 0.45} texto={formatar(e.w)} cor={textoDoPeso(e.w)} largura={50} />}
+            </g>
+          );
+        })}
       </g>
-      <text x={330} y={133} textAnchor="middle" fontSize={11} fill={MUDO}>
-        a Aqua decide
-      </text>
-      <text x={330} y={147} textAnchor="middle" fontSize={11} fill={MUDO}>
-        (usa a sigmoide)
-      </text>
-      <Caixa x={14} largura={94} titulo="w₁·x₁" valor="0,80 × 0,50" />
-      <text x={118} y={227} textAnchor="middle" fontSize={14} fill={MUDO}>+</text>
-      <Caixa x={128} largura={100} titulo="w₂·x₂" valor="0,50 × 0,40" />
-      <text x={241} y={227} textAnchor="middle" fontSize={14} fill={MUDO}>→</text>
-      <Caixa x={254} largura={62} titulo="z" valor={certo ? formatar(Z_TESTE) : "?"} destaque />
-      <text x={326} y={227} textAnchor="middle" fontSize={14} fill={MUDO}>→</text>
-      <Caixa x={336} largura={72} titulo="sigmoide(z)" valor={certo ? formatar(sigmoide(Z_TESTE)) : "?"} destaque />
-      {[
-        [61, "multiplica"],
-        [178, "multiplica"],
-        [285, "soma"],
-        [372, "ativação"],
-      ].map(([x, t], i) => (
-        <text key={i} x={x} y={262} textAnchor="middle" fontSize={9.5} fontWeight={700} fill={SUTIL}>
-          {t}
+      <g data-pulo={certo ? "" : undefined}>
+        <circle cx={no[0]} cy={no[1]} r={24} fill={acende && certo ? BORDA : "#FFFFFF"} stroke={AQUA} strokeWidth={3} />
+        <text
+          x={no[0]}
+          y={no[1] + 5}
+          textAnchor="middle"
+          fontSize={valorNo === "?" ? 16 : 12}
+          fontWeight={700}
+          fontFamily={MONO}
+          fill={valorNo === "?" ? AQUA_TEXTO : valorNo === "0,00" ? MUDO : VERMELHO_TEXTO}
+        >
+          {valorNo}
         </text>
-      ))}
-      <rect x={40} y={288} width={340} height={56} rx={12} fill="#FFFFFF" stroke={BORDA} />
-      <text x={56} y={308} fontSize={11} fontWeight={700} fill={AQUA_TEXTO}>
-        lembrete: a sigmoide
+      </g>
+      <text x={no[0]} y={no[1] + 42} textAnchor="middle" fontSize={11} fill={MUDO}>
+        {acende && certo ? "não acendeu: passa 0" : "soma"}
       </text>
-      <text x={56} y={330} fontSize={12} fontWeight={700} fontFamily={MONO} fill={TEXTO}>
-        z = 0 → 0,5 · z positivo → mais de 0,5
+      {acende ? (
+        <g>
+          <rect x={20} y={222} width={380} height={108} rx={12} fill="#FFFFFF" />
+          <text x={36} y={246} fontSize={12.5} fontWeight={700} fill={AQUA_TEXTO}>
+            Lembrete: a regra (ReLU)
+          </text>
+          <rect x={36} y={258} width={166} height={56} rx={10} fill="#EEFBF2" />
+          <text x={119} y={281} textAnchor="middle" fontSize={12} fontWeight={700} fill={VERDE_TEXTO}>
+            soma positiva
+          </text>
+          <text x={119} y={300} textAnchor="middle" fontSize={12} fill={TEXTO}>
+            acende, passa igual
+          </text>
+          <rect x={218} y={258} width={166} height={56} rx={10} fill="#F5F5F7" />
+          <text x={301} y={281} textAnchor="middle" fontSize={12} fontWeight={700} fill={MUDO}>
+            soma negativa
+          </text>
+          <text x={301} y={300} textAnchor="middle" fontSize={12} fill={TEXTO}>
+            não acende, passa 0
+          </text>
+        </g>
+      ) : (
+        <g>
+          <rect x={20} y={222} width={380} height={96} rx={12} fill="#FFFFFF" />
+          <text x={36} y={244} fontSize={11} fill={SUTIL}>
+            a conta, de cabeça
+          </text>
+          <text x={36} y={272} fontSize={13.5} fontFamily={MONO} fill={TEXTO}>
+            0,50 × 2,00 + 0,00 × 0,50 + 1,00 × −2,00
+          </text>
+          <text data-pulo={certo ? "" : undefined} x={36} y={298} fontSize={15} fontWeight={700} fontFamily={MONO} fill={certo ? VERMELHO_TEXTO : AQUA_TEXTO}>
+            = {certo ? formatar(Z_ROXO) : "?"}
+          </text>
+        </g>
+      )}
+      <text x={210} y={352} textAnchor="middle" fontSize={11} fill={SUTIL}>
+        {acende ? "olhe o sinal da soma" : "verde soma, vermelho tira"}
       </text>
     </svg>
   );

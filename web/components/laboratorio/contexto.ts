@@ -1,7 +1,10 @@
 "use client";
 
 import { createContext, useContext } from "react";
-import type { Vista } from "@/lib/rede";
+import type { EntradaData, SaidaData, Vista } from "@/lib/rede";
+import type { Exemplo } from "@/lib/treino";
+import type { VistaVolta } from "@/lib/backward";
+import type { Treino } from "@/components/laboratorio/Treinar";
 
 /** O que os blocos e linhas precisam do laboratório, sem passar por props do React Flow. */
 type Laboratorio = {
@@ -20,6 +23,19 @@ type Laboratorio = {
   informarLinha: (id: string, s: { sx: number; sy: number; tx: number; ty: number }) => void;
   /** Ponto da linha (0 a 1) onde o número do peso fica. */
   posicaoDoPeso: Map<string, number>;
+  /** O que a Entrada manda agora (o Backward pass procura a cor dela nos Dados). */
+  entrada: EntradaData | null;
+  /** Os Dados do Treinar: cada cor com a resposta certa. O Backward pass lê e acrescenta (ADR-0025). */
+  dados: Exemplo[];
+  setDados: (d: Exemplo[]) => void;
+  /** A volta (Backward pass, ADR-0025): null na ida ou quando o bloco não está ligado. */
+  volta: VistaVolta | null;
+  /** Mostrar (os pesos não mudam) ou Salvar, como estava quando o aluno clicou em Rodar. */
+  modoVolta: "mostrar" | "salvar";
+  /** O Treinar: os controles ficam no bloco Backward pass; o treino passando, no painel. */
+  treino: Treino;
+  /** O que 0 e 1 significam, da Saída da montagem. */
+  rotulos: Pick<SaidaData, "rotulo0" | "cor0" | "rotulo1" | "cor1">;
 };
 
 export const LabContexto = createContext<Laboratorio | null>(null);

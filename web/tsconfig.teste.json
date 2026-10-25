@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["es2023", "dom"],
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "module": "commonjs",
+    "moduleResolution": "node10",
+    "types": ["node"],
+    "outDir": ".teste",
+    "rootDir": "."
+  },
+  "include": ["lib/**/*.test.ts"]
+}

@@ -34,7 +34,7 @@ Fontes: [ADR-0013](adr/0013-formato-tutoriais-e-laboratorio.md), [ADR-0014](adr/
 - Ao clicar em **Rodar**, a montagem é conferida; se algo estiver errado, os blocos com problema ficam em vermelho e a mensagem aparece no painel.
 - **Camada solta** (sem fio vindo da Entrada) **não é erro, é só um aviso** *(decidido pelo autor em 2026-10-19)*: ela fica com borda tracejada âmbar, o painel avisa que ficou de fora das contas, e a rodada continua.
 - As contas aparecem **uma multiplicação de cada vez**. A **linha da vez fica destacada** (aqua), as já feitas ficam normais e as que ainda não vieram ficam apagadas. O painel mostra só aquela parcela (ex.: `0,55 × 0,50 = 0,28`), depois a próxima, e **só no fim a soma**.
-- Depois da soma: nas camadas do meio, positivo **acende** e passa adiante, negativo **apaga** e passa 0 (ReLU). Na camada ligada à Saída, a soma é **espremida entre 0 e 1** (sigmoide). Por fim, a Saída decide: abaixo de 0,50 é 0, a partir de 0,50 é 1.
+- Depois da soma: nas camadas do meio, positivo **acende** e passa adiante, negativo **apaga** e passa 0 (ReLU). Na camada ligada à Saída, a soma passa pela **sigmoide**, que a deixa entre 0 e 1: o painel mostra uma curva em S pequena com o ponto da soma e a conta em 3 passos (troca o sinal, e elevado a isso, 1 ÷ (1 + …)); a fórmula geral fica no tutorial 03 ([ADR-0023](adr/0023-sigmoide-em-passos-e-tutorial-01-com-o-lab.md)). Por fim, a Saída decide: abaixo de 0,50 é 0, a partir de 0,50 é 1.
 - O usuário avança **manualmente** (Anterior/Próximo) ou no modo **automático**.
 - Mexer na montagem (bloco, fio, peso, entrada) cancela a rodada; é preciso rodar de novo.
 
@@ -42,17 +42,23 @@ Fontes: [ADR-0013](adr/0013-formato-tutoriais-e-laboratorio.md), [ADR-0014](adr/
 - Botão **"Treinar"**, do zero (pesos aleatórios) **ou** a partir de uma rede já treinada (pesos salvos).
 - O usuário escolhe **quantas repetições** (ex.: 1000), e o treino corre até lá **em alta velocidade** (~x100): cálculo real → gravação → reprodução.
 - Mostra tudo passando rápido; no fim, mostra as saídas registradas durante o treinamento.
+- Detalhes (exemplos editáveis, erro ao vivo, gráfico + tabela antes/depois, passinho pequeno/médio/grande): [ADR-0024](adr/0024-treinar-com-backpropagation.md).
 - **Backward pass passo a passo** (modo "debug"): **depois da v1**, ver [ADR-0016](adr/0016-modo-debug-backward-pass.md).
 
-**O que já funciona no teste técnico:** Entrada (cor e números), Camada, Neurônio, Saída com objetivo, fios, peso na linha com duplo clique, Rodar com erros (vermelho) e avisos (âmbar) marcados e contas passo a passo (manual e automático). **No site real (`web/`, [ADR-0020](adr/0020-laboratorio-em-codigo.md)):** tudo isso, mais o layout do Figma, abas (só Redes neurais ativa) e o projeto salvo no navegador. **Ainda não:** Treinar e a lista de projetos.
+**O que já funciona no teste técnico:** Entrada (cor e números), Camada, Neurônio, Saída com objetivo, fios, peso na linha com duplo clique, Rodar com erros (vermelho) e avisos (âmbar) marcados e contas passo a passo (manual e automático). **No site real (`web/`, [ADR-0020](adr/0020-laboratorio-em-codigo.md)):** tudo isso, mais o layout do Figma, abas (só Redes neurais ativa) e o projeto salvo no navegador. Também o **Treinar** ([ADR-0024](adr/0024-treinar-com-backpropagation.md)): exemplos editáveis, passinho, reprodução x1/x10/x100 com o erro caindo e a janela de resultado; a conta fica em `web/lib/treino.ts`, com testes em `npm test`. E o **Backward pass** ([ADR-0025](adr/0025-bloco-backward-pass.md)), o lugar do aprendizado: os Dados e os controles do Treinar moram nele (sem o bloco, não há Treinar; o topo só tem o Rodar). Ligado na Saída, ele faz o Rodar voltar a culpa depois da ida, com bolinha de culpa, sinais + − =, lupa no peso da vez e termômetro na Saída; a resposta certa vem dos Dados; Mostrar ou Salvar. A conta fica em `web/lib/backward.ts`. E o **Modo Foco** ([ADR-0026](adr/0026-modo-foco.md)): um botão no painel abre a conta da vez num quadro por cima do canvas, na ida e na volta, com a soma inteira, de onde vem a culpa, o teste "e se?" e o "ver conta" (a conta armada, número por número, com a Aqua). **Ainda não:** a lista de projetos.
 
 ### Em aberto
 
 - Busca por significado: o [ADR-0014](adr/0014-laboratorio-abas-projetos-e-erros.md) coloca a aba na v1, mas a Home e a tela Novo projeto a mostram como "Em breve" porque ela ainda não foi desenhada. Faltam os blocos e a montagem básica.
-- Formato da tela de saídas no fim do treino.
 - Mover um neurônio de uma camada para outra.
 - *Bias* (um número extra somado em cada neurônio): ainda não entrou.
 - Como o tutorial "mostra" o laboratório?
+- **Backward pass à mão** (decidido pelo autor em 2026-10-22, liga com a [ADR-0016](adr/0016-modo-debug-backward-pass.md)): um bloco **Backward pass** ligado na Saída. Com ele, o Rodar faz a ida (forward) e depois volta a culpa passo a passo; sem ele, só o forward, como hoje. A culpa aparece só na linha da vez, e a conta no painel Contas. Dentro do bloco, uma opção: **mostrar** o aprendizado (os pesos não mudam) ou **salvar** o aprendizado (cada peso anda um passinho). Decidido na [ADR-0025](adr/0025-bloco-backward-pass.md), com telas no Figma. Feito no código em 2026-10-23.
+- **Aprendizado por reforço** (ideia do autor em 2026-10-22, para uma ADR futura, não agora): treinar com recompensa e punição em vez de gabarito. Proposta da IA: numa aba própria, porque precisa de ambiente, ações e pontuação ao longo do tempo (ex.: a Aqua aprendendo a pegar algo que cai); para separar cores, o supervisionado já é o mais adequado.
+- **Mais de duas respostas** (ideia do autor em 2026-10-22, para uma ADR futura, depois do backward): por exemplo azul (0), laranja (1) e roxo (2). Pede vários neurônios finais e a softmax no lugar da sigmoide (classificação multiclasse); mexe na Saída, no Rodar, no Treinar, no backward e nos tutoriais.
+- **Aba de configuração** (ideias do autor em 2026-10-21 e 2026-10-22, para uma ADR futura): ligar e desligar o que aparece na tela, por exemplo:
+  - esconder os números dos pesos, para o canvas não ficar cheio;
+  - desligar a mensagem que explica o resultado no passo final do Rodar.
 
 ---
 
