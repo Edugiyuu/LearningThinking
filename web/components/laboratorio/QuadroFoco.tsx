@@ -430,20 +430,25 @@ function LousaOndeEstamos({ mapa, onde, passo }: { mapa: MapaDaRede; onde: OndeE
     const la = { x: a.left + a.width / 2 - (b.left + b.width / 2), y: a.top + a.height / 2 - (b.top + b.height / 2), scale: a.width / b.width };
     const fase = (f: Zoom["fase"]) => () => setZoom((z) => (z ? { ...z, fase: f } : null));
     const tl = gsap.timeline({ onComplete: () => setZoom(null) });
-    tl.from(caixa, { ...la, duration: 0.5, ease: "power2.out" })
+    tl.set(embaixo, { autoAlpha: 0 }, 0)
+      .from(caixa, { ...la, duration: 0.5, ease: "power2.out" }, 0)
       .call(fase("anda"), [], 0.5)
       .call(fase("parada"), [], 1.4)
-      .to(caixa, { ...la, duration: 0.45, ease: "power2.in" }, 2.4);
-    if (quadro) tl.to(quadro, { filter: "brightness(0.6) blur(1.5px)", duration: 0.3 }, 0).to(quadro, { filter: "brightness(1) blur(0px)", duration: 0.3 }, 2.4);
+      // na descida, a lousa grande encolhe até o lugar da pequena e some enquanto a pequena aparece
+      .to(caixa, { ...la, duration: 0.55, ease: "power2.inOut" }, 2.4)
+      .to(caixa, { autoAlpha: 0, duration: 0.25, ease: "power1.in" }, 2.7)
+      .to(embaixo, { autoAlpha: 1, duration: 0.25, ease: "power1.out" }, 2.7);
+    if (quadro) tl.to(quadro, { filter: "brightness(0.6) blur(1.5px)", duration: 0.3 }, 0).to(quadro, { filter: "brightness(1) blur(0px)", duration: 0.4 }, 2.4);
     return () => {
       tl.kill();
+      gsap.set(embaixo, { clearProps: "opacity,visibility" });
       if (quadro) gsap.set(quadro, { clearProps: "filter" });
     };
   }, [zoomDoPasso]);
 
   return (
     <>
-      <div ref={pequena} className={`foco-onde ${zoom ? "escondida" : ""}`} aria-label={`Onde estamos: ${onde.frase}`}>
+      <div ref={pequena} className="foco-onde" aria-label={`Onde estamos: ${onde.frase}`}>
         <div className="foco-onde-topo">
           <span>Onde estamos</span>
           <b>{onde.frase}</b>
@@ -491,6 +496,7 @@ function MapaOnde({
 }) {
   const n = mapa.colunas.length;
   const pct = (c: number) => `${((c + 0.5) / n) * 100}%`;
+  const entre = (c: number) => ({ left: `calc(${pct(c)} + var(--folga))`, width: `calc(${100 / n}% - 2 * var(--folga))` });
   // a Aqua anda até a coluna nova (GSAP); na primeira vez ela já aparece no lugar
   const aquaRef = useRef<HTMLSpanElement>(null);
   const aquaAntes = useRef(aqua);
@@ -506,10 +512,11 @@ function MapaOnde({
   }, [aqua, n]);
   return (
     <div className="foco-onde-mapa">
-      <span className="foco-onde-trilho" style={{ left: pct(0), right: pct(0) }} aria-hidden />
-      {seta && (
-        <span className={`foco-onde-seta ${sentido}`} style={{ left: pct(Math.min(seta.de, seta.para)), width: `${(1 / n) * 100}%` }} aria-hidden />
-      )}
+      {/* as linhas param antes dos nós, como no Figma: começam e terminam a uma folga de cada coluna */}
+      {mapa.colunas.slice(1).map((c, i) => (
+        <span key={c.nome + i} className="foco-onde-trilho" style={entre(i)} aria-hidden />
+      ))}
+      {seta && <span className={`foco-onde-seta ${sentido}`} style={entre(Math.min(seta.de, seta.para))} aria-hidden />}
       {mapa.colunas.map((c, i) => (
         <div key={c.nome + i} className={`foco-onde-coluna ${i === coluna ? "agora" : ""}`} style={{ left: pct(i) }}>
           <div className="foco-onde-nos">

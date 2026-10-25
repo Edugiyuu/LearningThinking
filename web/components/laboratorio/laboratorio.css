@@ -2548,6 +2548,8 @@
 }
 
 .foco-onde-mapa {
+  /* distância entre o centro da coluna e o começo da linha */
+  --folga: 16px;
   position: relative;
   height: 84px;
 }
@@ -2646,10 +2648,6 @@
 }
 
 /* o zoom da lousa (ADR-0026, item 13): sobe para o meio, a Aqua anda, depois desce */
-.foco-onde.escondida {
-  visibility: hidden;
-}
-
 /* no meio da tela; o GSAP leva ela de onde a lousa pequena está e traz de volta */
 .foco-onde.grande {
   position: absolute;
@@ -2689,6 +2687,7 @@
 }
 
 .foco-onde.grande .foco-onde-mapa {
+  --folga: 40px;
   height: 250px;
 }
 
