@@ -2648,6 +2648,15 @@
 }
 
 /* o zoom da lousa (ADR-0026, item 13): sobe para o meio, a Aqua anda, depois desce */
+/* o véu do zoom: escurece o quadro atrás da lousa grande */
+.foco-veu {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: rgba(29, 29, 31, 0.4);
+  pointer-events: none;
+}
+
 /* no meio da tela; o GSAP leva ela de onde a lousa pequena está e traz de volta */
 .foco-onde.grande {
   position: absolute;
@@ -2661,6 +2670,7 @@
   border-radius: 14px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
   cursor: pointer;
+  will-change: transform, opacity;
 }
 
 .foco-onde.grande .foco-onde-topo {

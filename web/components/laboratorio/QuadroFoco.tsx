@@ -69,15 +69,30 @@ export default function QuadroFoco({ rodada, volta, atual, corDaEntrada, rotuloD
 
   const etapa = naVolta ? `BACKWARD · PASSO ${atual - daIda + 1} DE ${volta.length}` : `FORWARD · PASSO ${atual + 1} DE ${daIda}`;
 
+  // o quadro abre com um fade curto, e cada passo novo entra de leve (ADR-0026, item 15)
+  const fundo = useRef<HTMLDivElement>(null);
+  const quadro = useRef<HTMLDivElement>(null);
+  const conteudo = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    if (semMovimento()) return;
+    const tl = gsap.timeline();
+    tl.from(fundo.current, { autoAlpha: 0, duration: 0.25, ease: "power1.out" }).from(quadro.current, { y: 16, scale: 0.98, duration: 0.35, ease: "power2.out" }, "<");
+    return () => {
+      // revert, e não kill: no modo estrito o efeito roda duas vezes e o "from" ficaria preso no começo
+      tl.revert();
+    };
+  }, []);
+  useTroca(conteudo, atual);
+
   return (
-    <div className="foco" role="dialog" aria-label="Modo Foco: a conta da vez">
-      <div className="foco-quadro">
+    <div ref={fundo} className="foco" role="dialog" aria-label="Modo Foco: a conta da vez">
+      <div ref={quadro} className="foco-quadro">
         <button className="foco-fechar" onClick={onFechar} aria-label="Fechar o Modo Foco">
           ×
         </button>
         <div className="foco-etapa">{etapa}</div>
         <div className="foco-caixa">
-          <div className="foco-conteudo">
+          <div ref={conteudo} className="foco-conteudo">
             {naVolta ? (
               <Volta passos={volta} atual={atual - daIda} nomeNeuronio={nomeNeuronio} origem={origem} verConta={setConta} />
             ) : (
@@ -382,6 +397,8 @@ function RedeToda({
 
 /** O zoom da lousa quando o passo muda de camada (ADR-0026, item 13): sobe, a Aqua anda, para e desce. */
 type Zoom = { passo: number; de: number; para: number; titulo: string; frase: string; fase: "sobe" | "anda" | "parada" };
+const DESENHO_IDA = "inset(-14px 100% -14px 0%)";
+const DESENHO_VOLTA = "inset(-14px 0% -14px 100%)";
 
 /**
  * A lousa "Onde estamos" (ADR-0026, item 11), embaixo do quadro: as colunas da rede, a da vez
@@ -394,6 +411,7 @@ function LousaOndeEstamos({ mapa, onde, passo }: { mapa: MapaDaRede; onde: OndeE
   const [zoom, setZoom] = useState<Zoom | null>(null);
   const pequena = useRef<HTMLDivElement>(null);
   const grande = useRef<HTMLDivElement>(null);
+  const veu = useRef<HTMLDivElement>(null);
   // o mapa é refeito a cada passo: o efeito olha só os nomes das colunas
   const colunas = mapa.colunas.map((c) => c.nome).join("|");
   const passoAntes = useRef(passo);
@@ -424,26 +442,30 @@ function LousaOndeEstamos({ mapa, onde, passo }: { mapa: MapaDaRede; onde: OndeE
     const caixa = grande.current;
     const embaixo = pequena.current;
     if (zoomDoPasso === null || !caixa || !embaixo) return;
-    const quadro = caixa.closest(".foco")?.querySelector(".foco-quadro") ?? null;
     const a = embaixo.getBoundingClientRect();
     const b = caixa.getBoundingClientRect();
     const la = { x: a.left + a.width / 2 - (b.left + b.width / 2), y: a.top + a.height / 2 - (b.top + b.height / 2), scale: a.width / b.width };
     const fase = (f: Zoom["fase"]) => () => setZoom((z) => (z ? { ...z, fase: f } : null));
+    const seta = caixa.querySelector(".foco-onde-seta");
     const tl = gsap.timeline({ onComplete: () => setZoom(null) });
     tl.set(embaixo, { autoAlpha: 0 }, 0)
-      .from(caixa, { ...la, duration: 0.5, ease: "power2.out" }, 0)
-      .call(fase("anda"), [], 0.5)
-      .call(fase("parada"), [], 1.4)
+      // um véu escuro por cima do quadro (mais leve que borrar o quadro inteiro)
+      .fromTo(veu.current, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.35, ease: "power1.out" }, 0)
+      .from(caixa, { ...la, duration: 0.55, ease: "power3.out" }, 0)
+      .call(fase("anda"), [], 0.55);
+    // a seta se desenha no sentido da conta enquanto a Aqua anda
+    if (seta) tl.fromTo(seta, { clipPath: onde.sentido === "ida" ? DESENHO_IDA : DESENHO_VOLTA }, { clipPath: "inset(-14px 0% -14px 0%)", duration: 0.8, ease: "power2.inOut" }, 0.55);
+    tl.call(fase("parada"), [], 1.5)
       // na descida, a lousa grande encolhe até o lugar da pequena e some enquanto a pequena aparece
-      .to(caixa, { ...la, duration: 0.55, ease: "power2.inOut" }, 2.4)
-      .to(caixa, { autoAlpha: 0, duration: 0.25, ease: "power1.in" }, 2.7)
-      .to(embaixo, { autoAlpha: 1, duration: 0.25, ease: "power1.out" }, 2.7);
-    if (quadro) tl.to(quadro, { filter: "brightness(0.6) blur(1.5px)", duration: 0.3 }, 0).to(quadro, { filter: "brightness(1) blur(0px)", duration: 0.4 }, 2.4);
+      .to(caixa, { ...la, duration: 0.6, ease: "power3.inOut" }, 2.5)
+      .to(veu.current, { autoAlpha: 0, duration: 0.5, ease: "power1.inOut" }, 2.5)
+      .to(caixa, { autoAlpha: 0, duration: 0.25, ease: "power1.in" }, 2.85)
+      .to(embaixo, { autoAlpha: 1, duration: 0.25, ease: "power1.out" }, 2.85);
     return () => {
       tl.kill();
       gsap.set(embaixo, { clearProps: "opacity,visibility" });
-      if (quadro) gsap.set(quadro, { clearProps: "filter" });
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- o sentido é o do passo que abriu o zoom
   }, [zoomDoPasso]);
 
   return (
@@ -455,6 +477,7 @@ function LousaOndeEstamos({ mapa, onde, passo }: { mapa: MapaDaRede; onde: OndeE
         </div>
         <MapaOnde mapa={mapa} coluna={onde.coluna} no={onde.no} seta={onde.seta} sentido={onde.sentido} aqua={onde.coluna} unidade={3} />
       </div>
+      {zoom && <div ref={veu} className="foco-veu" aria-hidden />}
       {zoom && (
         <div ref={grande} className="foco-onde grande" role="status" onClick={() => setZoom(null)}>
           <div className="foco-onde-topo">
@@ -470,6 +493,7 @@ function LousaOndeEstamos({ mapa, onde, passo }: { mapa: MapaDaRede; onde: OndeE
             sentido={onde.sentido}
             aqua={zoom.fase === "sobe" ? zoom.de : zoom.para}
             unidade={8}
+            realcar
           />
         </div>
       )}
@@ -485,6 +509,7 @@ function MapaOnde({
   sentido,
   aqua,
   unidade,
+  realcar = false,
 }: {
   mapa: MapaDaRede;
   coluna: number;
@@ -493,6 +518,7 @@ function MapaOnde({
   sentido: OndeEstamos["sentido"];
   aqua: number;
   unidade: number;
+  realcar?: boolean;
 }) {
   const n = mapa.colunas.length;
   const pct = (c: number) => `${((c + 0.5) / n) * 100}%`;
@@ -505,13 +531,27 @@ function MapaOnde({
     const de = aquaAntes.current;
     aquaAntes.current = aqua;
     if (!el || de === aqua || semMovimento()) return;
-    const t = gsap.fromTo(el, { left: `${((de + 0.5) / n) * 100}%` }, { left: `${((aqua + 0.5) / n) * 100}%`, duration: 0.9, ease: "power1.inOut" });
+    const tl = gsap.timeline();
+    tl.fromTo(el, { left: `${((de + 0.5) / n) * 100}%` }, { left: `${((aqua + 0.5) / n) * 100}%`, duration: 0.9, ease: "sine.inOut" })
+      .to(el, { y: -unidade * 1.5, duration: 0.15, ease: "sine.out", yoyo: true, repeat: 5 }, 0);
     return () => {
-      t.kill();
+      tl.kill();
+      gsap.set(el, { y: 0 });
     };
-  }, [aqua, n]);
+  }, [aqua, n, unidade]);
+  // só na lousa grande: quando a Aqua chega, a coluna da vez e o nó aceso aparecem com um pop
+  const mapaRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const m = mapaRef.current;
+    if (!realcar || !m || coluna < 0 || semMovimento()) return;
+    const alvos = [m.querySelector(".foco-onde-coluna.agora .foco-onde-nos"), m.querySelector("i.aceso")].filter(Boolean);
+    const t = gsap.from(alvos, { scale: 0.6, autoAlpha: 0, duration: 0.4, ease: "back.out(2)", stagger: 0.08, clearProps: "transform,opacity,visibility" });
+    return () => {
+      t.revert();
+    };
+  }, [realcar, coluna, no]);
   return (
-    <div className="foco-onde-mapa">
+    <div ref={mapaRef} className="foco-onde-mapa">
       {/* as linhas param antes dos nós, como no Figma: começam e terminam a uma folga de cada coluna */}
       {mapa.colunas.slice(1).map((c, i) => (
         <span key={c.nome + i} className="foco-onde-trilho" style={entre(i)} aria-hidden />
@@ -754,6 +794,18 @@ function DiagramaVolta({
   );
 }
 
+/** Fade curto quando o conteúdo troca (passo novo, tela nova do "ver conta"); os números não animam. */
+function useTroca(ref: React.RefObject<HTMLElement | null>, chave: unknown) {
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el || semMovimento()) return;
+    const t = gsap.fromTo(el, { autoAlpha: 0, y: 6 }, { autoAlpha: 1, y: 0, duration: 0.25, ease: "power2.out", clearProps: "opacity,visibility,transform" });
+    return () => {
+      t.revert();
+    };
+  }, [ref, chave]);
+}
+
 /* ---------- As bolinhas andando (ADR-0026, item 14) ---------- */
 
 type Ponto = { x: number; y: number };
@@ -780,15 +832,26 @@ function BolinhaDaIda({ de, para, entrada, parte }: { de: Ponto; para: Ponto; en
       colocar();
       return;
     }
-    const tl = gsap.timeline({ repeat: -1, repeatDelay: 0.8 });
-    tl.set(g, { opacity: 1 })
-      .call(() => setFez(false))
-      .fromTo(prog, { p: 0 }, { p: PONTO_DO_PESO, duration: 1.1, ease: "power1.in", onUpdate: colocar })
+    const bola = g.querySelector("circle");
+    const neuronio = g.ownerSVGElement?.querySelector("circle.destino") ?? null;
+    // seno nas duas metades: a velocidade não dá tranco quando passa pelo peso
+    const tl = gsap.timeline({ repeat: -1, repeatDelay: 0.7 });
+    tl.call(() => setFez(false))
+      .set(bola, { attr: { r: 9 } })
+      .set(prog, { p: 0, onComplete: colocar })
+      .fromTo(g, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.25, ease: "power1.out" })
+      .to(prog, { p: PONTO_DO_PESO, duration: 1.1, ease: "sine.in", onUpdate: colocar }, "<")
       .call(() => setFez(true))
-      .to(prog, { p: 1, duration: 0.7, ease: "power1.out", onUpdate: colocar })
-      .to(g, { opacity: 0, duration: 0.25 });
+      // a conta acontece no peso: a bolinha incha um pouco e já sai com a cor do resultado
+      .to(bola, { attr: { r: 12 }, duration: 0.15, ease: "power2.out", yoyo: true, repeat: 1 })
+      .to(prog, { p: 1, duration: 0.75, ease: "sine.out", onUpdate: colocar }, "<")
+      // entra no neurônio: encolhe e some, e o neurônio recebe com um pulinho
+      .to(bola, { attr: { r: 3 }, duration: 0.25, ease: "power1.in" })
+      .to(g, { autoAlpha: 0, duration: 0.25, ease: "power1.in" }, "<");
+    if (neuronio) tl.fromTo(neuronio, { scale: 1 }, { scale: 1.06, transformOrigin: "50% 50%", duration: 0.15, ease: "power1.out", yoyo: true, repeat: 1 }, "<0.1");
     return () => {
       tl.kill();
+      if (neuronio) gsap.set(neuronio, { clearProps: "transform" });
     };
   }, [de.x, de.y, para.x, para.y, parada]);
   const tipo = !fez ? "neutra" : parte > 0 ? "positiva" : parte < 0 ? "negativa" : "zero";
@@ -812,8 +875,11 @@ function BolinhaDeCulpa() {
       gsap.set(g, { x: 400, y: 56 });
       return;
     }
-    const tl = gsap.timeline({ repeat: -1, repeatDelay: 0.8 });
-    tl.fromTo(g, { x: 508, y: 56, opacity: 1 }, { x: 132, duration: 1.6, ease: "power1.inOut" }).to(g, { opacity: 0, duration: 0.25 });
+    const tl = gsap.timeline({ repeat: -1, repeatDelay: 0.7 });
+    tl.set(g, { x: 508, y: 56, scale: 1 })
+      .fromTo(g, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.25, ease: "power1.out" })
+      .to(g, { x: 132, duration: 1.6, ease: "sine.inOut" }, "<")
+      .to(g, { autoAlpha: 0, scale: 0.4, duration: 0.25, ease: "power1.in" });
     return () => {
       tl.kill();
     };
@@ -863,9 +929,20 @@ function VerConta({ conta, onFechar }: { conta: Conta; onFechar: () => void }) {
   const total = telas.length + (conta.fim ? 1 : 0);
   const [i, setI] = useState(0);
   const tela = telas[i];
+  const caixa = useRef<HTMLDivElement>(null);
+  const corpo = useRef<HTMLDivElement>(null);
+  // o pop-up abre por cima do quadro; cada tela da conta entra com um fade curto
+  useLayoutEffect(() => {
+    if (semMovimento()) return;
+    const t = gsap.from(caixa.current, { autoAlpha: 0, y: 12, scale: 0.98, duration: 0.3, ease: "power2.out" });
+    return () => {
+      t.revert();
+    };
+  }, []);
+  useTroca(corpo, i);
   const legenda = `${conta.a} = ${conta.nomeA} · ${conta.b} = ${conta.nomeB}`;
   return (
-    <div className="ver-conta" role="dialog" aria-label={`A conta ${conta.a} × ${conta.b}, passo a passo`}>
+    <div ref={caixa} className="ver-conta" role="dialog" aria-label={`A conta ${conta.a} × ${conta.b}, passo a passo`}>
       <div className="ver-conta-topo">
         <button className="foco-link" onClick={onFechar}>
           ← voltar ao quadro
@@ -876,7 +953,7 @@ function VerConta({ conta, onFechar }: { conta: Conta; onFechar: () => void }) {
       </div>
       <h3>{tela ? tela.titulo : `Onde esse ${resultadoDe(telas)} entra`}</h3>
       <p className="ver-conta-legenda">{legenda}</p>
-      <div className="ver-conta-corpo">{tela ? <Corpo corpo={tela.corpo} conta={conta} primeira={i === 0} /> : conta.fim}</div>
+      <div ref={corpo} className="ver-conta-corpo">{tela ? <Corpo corpo={tela.corpo} conta={conta} primeira={i === 0} /> : conta.fim}</div>
       <div className="ver-conta-fala">
         <Aqua unidade={4} />
         <p>{tela ? tela.fala : `${resultadoDe(telas)} é a ${conta.nomeResultado}. Cada linha entrega a sua parte, e o neurônio soma todas.`}</p>

@@ -36,6 +36,20 @@ Na volta, o aluno viu "erro 0,03 → × 0,03 → culpa 0,001" e não entendeu de
 12. **O quadro vai sempre até a lousa "Onde estamos"** (decidido em 2026-10-24, o autor achou que sobrava tela). A letra tem **um tamanho só para todos os passos**: muda só com a altura da tela, nunca de um passo para outro (o autor viu que ampliar cada passo deixava letras grandes num e pequenas no outro). Os passos com pouca coisa (erro, culpa chegando, fim da volta) ficam no centro do quadro; o nome da etapa fica fixo no topo. Tela "· 7 quadro sempre alto". Depois (pedido do autor): o título fica em cima, o desenho cresce no meio e a conta e o "e se?" ficam embaixo, para o espaço ir para o desenho; e a letra do quadro ficou maior (título 28 px, números 30 a 36 px; 24 a 30 px em telas baixas, 32 a 42 px em telas altas).
 13. **Zoom do "Onde estamos" ao mudar de camada** (decidido em 2026-10-25; o autor achou que só a lousa de baixo não deixava claro onde a conta estava). Quando o passo muda de camada, a lousa sobe para o meio da tela e cresce, e o quadro fica escurecido atrás. Depois a Aqua anda até a próxima coluna, a coluna e o nó da vez acendem, e a lousa volta para baixo. Só então o quadro mostra a conta. São cerca de 2,7 s, em 4 tempos: sobe 0,4 s, anda 0,9 s, parada 1 s, desce 0,4 s. Vale também na volta, com "Camada anterior!" e a Aqua andando para trás. Um clique em Próximo (ou na lousa) pula a animação. O zoom acontece só na troca de camada, não em todo passo. A seta da lousa passou a usar o aqua claro (o autor não gostou do aqua escuro), e uma linha cinza fina liga as colunas. Frame "· 9 Onde estamos com zoom (4 tempos)". Ajustes de 2026-10-25, a pedido do autor: a lousa sai do lugar dela embaixo e volta para o mesmo lugar, e todo o movimento usa GSAP. O nó aceso e a caixa tracejada da coluna da vez também passaram para o aqua claro. O zoom não pode criar barra de rolagem durante a animação. Na descida, a lousa grande encolhe até o lugar da pequena e some enquanto a pequena aparece, sem pulo. As linhas entre as colunas param antes dos nós, como no Figma, em vez de atravessar o nó de centro a centro.
 14. **Bolinhas andando no Modo Foco, como no canvas** (pedido do autor em 2026-10-25). Na ida, a bolinha da linha da vez sai com "o que passou" e faz a conta ao passar pela pílula do peso. Ali ela vira a parte desta linha (verde +, vermelha −, cinza 0) e entra no neurônio. Na volta, a bolinha de culpa (aqua) sai da direita e volta pela linha até a origem. As duas repetem enquanto o passo está na tela, com uma pausa curta entre uma viagem e outra. Com *reduced motion*, a bolinha fica parada no meio da linha.
+15. **Animações suaves, só onde ajudam a entender** (pedido do autor em 2026-10-25: "caprichar para ficar smooth", olhando antes o que precisa e o que não precisa). Tudo é feito com GSAP e nada se mexe com *reduced motion*.
+    - **Animam:**
+      - **Abertura do quadro:** fade com uma leve subida.
+      - **Troca de passo:** fade curto, para notar que mudou.
+      - **"Ver conta":** abre com fade, e cada tela da conta entra com fade.
+      - **Bolinha da ida:** aparece suave e anda com curva seno, sem tranco no peso. Incha um pouco quando faz a conta, encolhe ao entrar, e o neurônio dá um pulinho ao receber.
+      - **Bolinha de culpa:** aparece e some suave.
+      - **Zoom da lousa:**
+        - um véu escuro no lugar do blur, mais leve para o computador;
+        - curvas mais macias na subida e na descida;
+        - a seta se desenha no sentido da conta;
+        - a Aqua dá pulinhos enquanto anda;
+        - a coluna e o nó da vez aparecem com um "pop" quando ela chega.
+    - **Não animam** (é leitura, e o movimento atrapalharia): os números da cadeia, da soma e do "e se?", que não contam de 0 até o valor; o painel; os botões; o fechar do quadro.
 
 ## Detalhes propostos pela IA (a confirmar no Figma)
 
