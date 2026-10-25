@@ -2130,6 +2130,8 @@
   justify-content: center;
   gap: 18px;
   padding: 24px;
+  /* o zoom da lousa passa por fora durante a animação: sem barra de rolagem */
+  overflow: hidden;
   background: rgba(29, 29, 31, 0.45);
 }
 
@@ -2276,9 +2278,10 @@
   fill: var(--text);
 }
 
-.foco-bolinha {
-  fill: #d2d2d7;
-  stroke: var(--text);
+/* a bolinha andando no Modo Foco: o número maior que no canvas */
+.foco-viajante text {
+  font-size: 14px;
+  stroke: #fff;
 }
 
 .foco-culpa {
@@ -2588,7 +2591,7 @@
 }
 
 .foco-onde-coluna.agora .foco-onde-nos {
-  border-color: var(--destaque-texto);
+  border-color: var(--destaque);
 }
 
 .foco-onde-coluna.agora .foco-onde-nos i {
@@ -2597,7 +2600,7 @@
 
 .foco-onde-nos i.aceso {
   border-color: var(--text);
-  background: var(--destaque-texto);
+  background: var(--destaque);
 }
 
 .foco-onde-seta {
@@ -2640,14 +2643,6 @@
   top: 0;
   margin-left: 26px;
   line-height: 0;
-  /* a Aqua anda até a próxima coluna */
-  transition: left 0.9s ease-in-out;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .foco-onde-aqua {
-    transition: none;
-  }
 }
 
 /* o zoom da lousa (ADR-0026, item 13): sobe para o meio, a Aqua anda, depois desce */
@@ -2655,42 +2650,19 @@
   visibility: hidden;
 }
 
-.foco:has(.foco-onde.grande) .foco-quadro {
-  filter: brightness(0.6) blur(1.5px);
-  transition: filter 0.3s;
-}
-
+/* no meio da tela; o GSAP leva ela de onde a lousa pequena está e traz de volta */
 .foco-onde.grande {
   position: absolute;
-  top: 46%;
-  left: 50%;
+  inset: 0;
   z-index: 2;
   width: min(700px, calc(100% - 48px));
+  height: fit-content;
+  margin: auto;
   padding: 26px 32px 22px;
   border-width: 10px;
   border-radius: 14px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-  transform: translate(-50%, -50%);
   cursor: pointer;
-  animation: foco-sobe 0.4s ease-out;
-}
-
-.foco-onde.grande.desce {
-  animation: foco-desce 0.4s ease-in forwards;
-}
-
-@keyframes foco-sobe {
-  from {
-    opacity: 0;
-    transform: translate(-50%, 40%) scale(0.6);
-  }
-}
-
-@keyframes foco-desce {
-  to {
-    opacity: 0;
-    transform: translate(-50%, 60%) scale(0.6);
-  }
 }
 
 .foco-onde.grande .foco-onde-topo {

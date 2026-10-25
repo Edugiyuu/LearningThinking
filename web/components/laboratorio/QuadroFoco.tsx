@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import type { PassoVolta } from "@/lib/backward";
 import {
   contaArmada,
@@ -17,6 +17,7 @@ import {
 } from "@/lib/foco";
 import { formatar, type Rodada } from "@/lib/rede";
 import { Aqua } from "@/components/mascote";
+import gsap from "gsap";
 
 type Props = {
   rodada: Rodada;
@@ -202,7 +203,6 @@ function DiagramaIda({ partes, destino, valor }: { partes: ParteDaSoma[]; destin
             <line x1={118} y1={y} x2={338} y2={dy} stroke={cor} strokeWidth={p.agora ? 5 : 2.5} strokeLinecap="round" />
             {p.agora && (
               <>
-                <circle cx={118 + (338 - 118) * 0.35} cy={y + (dy - y) * 0.35} r={7} className="foco-bolinha" />
                 <g transform={`translate(${118 + (338 - 118) * 0.6} ${y + (dy - y) * 0.6 + 20})`}>
                   <rect x={-44} y={-13} width={88} height={26} rx={13} className={`foco-pilula ${p.peso < 0 ? "negativo" : "positivo"}`} />
                   <text textAnchor="middle" y={4.5}>
@@ -228,6 +228,9 @@ function DiagramaIda({ partes, destino, valor }: { partes: ParteDaSoma[]; destin
       <text x={374} y={dy + 52} textAnchor="middle" className="foco-no-nome destino">
         {destino}
       </text>
+      {partes.map((p, i) =>
+        p.agora ? <BolinhaDaIda key={p.linha} de={{ x: 118, y: yDe(i) }} para={{ x: 340, y: dy }} entrada={p.entrada} parte={p.parte} /> : null,
+      )}
     </svg>
   );
 }
@@ -377,25 +380,20 @@ function RedeToda({
   );
 }
 
+/** O zoom da lousa quando o passo muda de camada (ADR-0026, item 13): sobe, a Aqua anda, para e desce. */
+type Zoom = { passo: number; de: number; para: number; titulo: string; frase: string; fase: "sobe" | "anda" | "parada" };
+
 /**
  * A lousa "Onde estamos" (ADR-0026, item 11), embaixo do quadro: as colunas da rede, a da vez
- * marcada, o nó da vez aceso e a Aqua em cima. Quando a ida passa para a próxima camada, a Aqua
- * anda até lá (a transição do CSS) e a lousa avisa por um instante.
+ * marcada, o nó da vez aceso e a Aqua em cima. Na troca de camada, a lousa faz o zoom (item 13).
  */
-/** O zoom da lousa quando o passo muda de camada (ADR-0026, item 13): sobe, a Aqua anda, para e desce. */
-type Zoom = { de: number; para: number; titulo: string; frase: string; fase: "sobe" | "anda" | "parada" | "desce" };
-const TEMPOS: [Zoom["fase"] | null, number][] = [
-  ["anda", 400],
-  ["parada", 1300],
-  ["desce", 2300],
-  [null, 2700],
-];
-
 function LousaOndeEstamos({ mapa, onde, passo }: { mapa: MapaDaRede; onde: OndeEstamos; passo: number }) {
   const anterior = useRef(onde.coluna);
   // na volta, a camada mais à esquerda a que a culpa já chegou: só passar dela é camada nova
   const menor = useRef(onde.coluna);
   const [zoom, setZoom] = useState<Zoom | null>(null);
+  const pequena = useRef<HTMLDivElement>(null);
+  const grande = useRef<HTMLDivElement>(null);
   // o mapa é refeito a cada passo: o efeito olha só os nomes das colunas
   const colunas = mapa.colunas.map((c) => c.nome).join("|");
   const passoAntes = useRef(passo);
@@ -410,26 +408,42 @@ function LousaOndeEstamos({ mapa, onde, passo }: { mapa: MapaDaRede; onde: OndeE
     const naIda = onde.sentido === "ida" && onde.coluna === de + 1 && de !== 0;
     const naVolta = onde.sentido === "volta" && onde.coluna < de && onde.coluna < menor.current;
     if (onde.sentido === "volta") menor.current = Math.min(menor.current, onde.coluna);
-    const semMovimento = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     // qualquer outro passo (inclusive Próximo no meio do zoom) pula a animação
-    if (!(naIda || naVolta) || semMovimento) return setZoom(null);
+    if (!(naIda || naVolta) || semMovimento()) return setZoom(null);
     setZoom(
       naIda
-        ? { de, para: onde.coluna, titulo: "Próxima camada!", frase: `Os resultados da ${nomes[de]} viram as entradas da ${nomes[onde.coluna]}.`, fase: "sobe" }
-        : { de, para: onde.coluna, titulo: "Camada anterior!", frase: `A culpa volta da ${nomes[de]} para a ${nomes[onde.coluna]}.`, fase: "sobe" },
+        ? { passo, de, para: onde.coluna, titulo: "Próxima camada!", frase: `Os resultados da ${nomes[de]} viram as entradas da ${nomes[onde.coluna]}.`, fase: "sobe" }
+        : { passo, de, para: onde.coluna, titulo: "Camada anterior!", frase: `A culpa volta da ${nomes[de]} para a ${nomes[onde.coluna]}.`, fase: "sobe" },
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps -- o zoom recomeça a cada passo
   }, [passo]);
-  const ativo = !!zoom;
-  useEffect(() => {
-    if (!ativo) return;
-    const ts = TEMPOS.map(([fase, ms]) => setTimeout(() => setZoom((z) => (z && fase ? { ...z, fase } : null)), ms));
-    return () => ts.forEach(clearTimeout);
-  }, [ativo, passo]);
+
+  // a lousa sai de onde está embaixo, cresce no meio da tela e volta para o mesmo lugar
+  const zoomDoPasso = zoom?.passo ?? null;
+  useLayoutEffect(() => {
+    const caixa = grande.current;
+    const embaixo = pequena.current;
+    if (zoomDoPasso === null || !caixa || !embaixo) return;
+    const quadro = caixa.closest(".foco")?.querySelector(".foco-quadro") ?? null;
+    const a = embaixo.getBoundingClientRect();
+    const b = caixa.getBoundingClientRect();
+    const la = { x: a.left + a.width / 2 - (b.left + b.width / 2), y: a.top + a.height / 2 - (b.top + b.height / 2), scale: a.width / b.width };
+    const fase = (f: Zoom["fase"]) => () => setZoom((z) => (z ? { ...z, fase: f } : null));
+    const tl = gsap.timeline({ onComplete: () => setZoom(null) });
+    tl.from(caixa, { ...la, duration: 0.5, ease: "power2.out" })
+      .call(fase("anda"), [], 0.5)
+      .call(fase("parada"), [], 1.4)
+      .to(caixa, { ...la, duration: 0.45, ease: "power2.in" }, 2.4);
+    if (quadro) tl.to(quadro, { filter: "brightness(0.6) blur(1.5px)", duration: 0.3 }, 0).to(quadro, { filter: "brightness(1) blur(0px)", duration: 0.3 }, 2.4);
+    return () => {
+      tl.kill();
+      if (quadro) gsap.set(quadro, { clearProps: "filter" });
+    };
+  }, [zoomDoPasso]);
 
   return (
     <>
-      <div className={`foco-onde ${zoom ? "escondida" : ""}`} aria-label={`Onde estamos: ${onde.frase}`}>
+      <div ref={pequena} className={`foco-onde ${zoom ? "escondida" : ""}`} aria-label={`Onde estamos: ${onde.frase}`}>
         <div className="foco-onde-topo">
           <span>Onde estamos</span>
           <b>{onde.frase}</b>
@@ -437,7 +451,7 @@ function LousaOndeEstamos({ mapa, onde, passo }: { mapa: MapaDaRede; onde: OndeE
         <MapaOnde mapa={mapa} coluna={onde.coluna} no={onde.no} seta={onde.seta} sentido={onde.sentido} aqua={onde.coluna} unidade={3} />
       </div>
       {zoom && (
-        <div className={`foco-onde grande ${zoom.fase}`} role="status" onClick={() => setZoom(null)}>
+        <div ref={grande} className="foco-onde grande" role="status" onClick={() => setZoom(null)}>
           <div className="foco-onde-topo">
             <span>Onde estamos</span>
             <b>{zoom.titulo}</b>
@@ -446,7 +460,7 @@ function LousaOndeEstamos({ mapa, onde, passo }: { mapa: MapaDaRede; onde: OndeE
           <MapaOnde
             mapa={mapa}
             coluna={zoom.fase === "sobe" ? zoom.de : zoom.fase === "anda" ? -1 : zoom.para}
-            no={zoom.fase === "parada" || zoom.fase === "desce" ? onde.no : null}
+            no={zoom.fase === "parada" ? onde.no : null}
             seta={{ de: zoom.de, para: zoom.para }}
             sentido={onde.sentido}
             aqua={zoom.fase === "sobe" ? zoom.de : zoom.para}
@@ -477,6 +491,19 @@ function MapaOnde({
 }) {
   const n = mapa.colunas.length;
   const pct = (c: number) => `${((c + 0.5) / n) * 100}%`;
+  // a Aqua anda até a coluna nova (GSAP); na primeira vez ela já aparece no lugar
+  const aquaRef = useRef<HTMLSpanElement>(null);
+  const aquaAntes = useRef(aqua);
+  useLayoutEffect(() => {
+    const el = aquaRef.current;
+    const de = aquaAntes.current;
+    aquaAntes.current = aqua;
+    if (!el || de === aqua || semMovimento()) return;
+    const t = gsap.fromTo(el, { left: `${((de + 0.5) / n) * 100}%` }, { left: `${((aqua + 0.5) / n) * 100}%`, duration: 0.9, ease: "power1.inOut" });
+    return () => {
+      t.kill();
+    };
+  }, [aqua, n]);
   return (
     <div className="foco-onde-mapa">
       <span className="foco-onde-trilho" style={{ left: pct(0), right: pct(0) }} aria-hidden />
@@ -493,7 +520,7 @@ function MapaOnde({
           <small>{c.nome}</small>
         </div>
       ))}
-      <span className="foco-onde-aqua" style={{ left: pct(aqua) }} aria-hidden>
+      <span ref={aquaRef} className="foco-onde-aqua" style={{ left: pct(aqua) }} aria-hidden>
         <Aqua unidade={unidade} />
       </span>
     </div>
@@ -681,10 +708,6 @@ function DiagramaVolta({
     <svg className="foco-diagrama volta" viewBox="0 0 640 134" role="img" aria-label={`A culpa volta de ${para} para ${de}`}>
       <line x1={132} y1={56} x2={508} y2={56} stroke={cor} strokeWidth={5} strokeLinecap="round" />
       <path d="M 146 56 l 14 -9 v 18 z" className="foco-seta" />
-      <circle cx={400} cy={56} r={10} className="foco-culpa" />
-      <text x={400} y={34} textAnchor="middle" className="foco-culpa-nome">
-        culpa
-      </text>
       <g transform="translate(310 82)">
         <rect x={-44} y={-13} width={88} height={26} rx={13} className={`foco-pilula ${peso < 0 ? "negativo" : "positivo"}`} />
         <text textAnchor="middle" y={4.5}>
@@ -719,7 +742,82 @@ function DiagramaVolta({
           número correto: {objetivo}
         </text>
       )}
+      <BolinhaDeCulpa key={`${de}->${para}`} />
     </svg>
+  );
+}
+
+/* ---------- As bolinhas andando (ADR-0026, item 14) ---------- */
+
+type Ponto = { x: number; y: number };
+const PONTO_DO_PESO = 0.6; // onde fica a pílula do peso: ali a bolinha faz a conta
+const semMovimento = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/**
+ * A bolinha da linha da vez, como no canvas: sai com o que passou, faz a conta no peso, vira a
+ * parte desta linha (verde +, vermelha −, cinza 0) e entra no neurônio. Repete enquanto o passo
+ * está na tela, para dar tempo de ver.
+ */
+function BolinhaDaIda({ de, para, entrada, parte }: { de: Ponto; para: Ponto; entrada: number; parte: number }) {
+  const ref = useRef<SVGGElement>(null);
+  // sem movimento, a bolinha fica parada no peso, já com a parte desta linha
+  const [parada] = useState(semMovimento);
+  const [fez, setFez] = useState(parada);
+  useEffect(() => {
+    const g = ref.current;
+    if (!g) return;
+    const prog = { p: 0 };
+    const colocar = () => g.setAttribute("transform", `translate(${de.x + (para.x - de.x) * prog.p} ${de.y + (para.y - de.y) * prog.p})`);
+    if (parada) {
+      prog.p = PONTO_DO_PESO;
+      colocar();
+      return;
+    }
+    const tl = gsap.timeline({ repeat: -1, repeatDelay: 0.8 });
+    tl.set(g, { opacity: 1 })
+      .call(() => setFez(false))
+      .fromTo(prog, { p: 0 }, { p: PONTO_DO_PESO, duration: 1.1, ease: "power1.in", onUpdate: colocar })
+      .call(() => setFez(true))
+      .to(prog, { p: 1, duration: 0.7, ease: "power1.out", onUpdate: colocar })
+      .to(g, { opacity: 0, duration: 0.25 });
+    return () => {
+      tl.kill();
+    };
+  }, [de.x, de.y, para.x, para.y, parada]);
+  const tipo = !fez ? "neutra" : parte > 0 ? "positiva" : parte < 0 ? "negativa" : "zero";
+  return (
+    <g ref={ref} className={`bolinha foco-viajante ${tipo}`} aria-hidden>
+      <circle r={9} />
+      <text textAnchor="middle" y={-15}>
+        {formatar(fez ? parte : entrada)}
+      </text>
+    </g>
+  );
+}
+
+/** A bolinha de culpa (ADR-0025): aqua, sai da direita e volta pela linha até a origem. Repete. */
+function BolinhaDeCulpa() {
+  const ref = useRef<SVGGElement>(null);
+  useEffect(() => {
+    const g = ref.current;
+    if (!g) return;
+    if (semMovimento()) {
+      gsap.set(g, { x: 400, y: 56 });
+      return;
+    }
+    const tl = gsap.timeline({ repeat: -1, repeatDelay: 0.8 });
+    tl.fromTo(g, { x: 508, y: 56, opacity: 1 }, { x: 132, duration: 1.6, ease: "power1.inOut" }).to(g, { opacity: 0, duration: 0.25 });
+    return () => {
+      tl.kill();
+    };
+  }, []);
+  return (
+    <g ref={ref} aria-hidden>
+      <circle r={10} className="foco-culpa" />
+      <text y={-22} textAnchor="middle" className="foco-culpa-nome">
+        culpa
+      </text>
+    </g>
   );
 }
 
