@@ -294,6 +294,13 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
     return `${formatar(valor)} → ${rotulo} (${resposta})`;
   };
 
+  // o fim da ida no Modo Foco pinta a Saída com a cor da resposta (ADR-0026, item 9)
+  const rotuloDaResposta = (saidaId: string, resposta: 0 | 1) => {
+    const saida = nodes.find((n) => n.id === saidaId);
+    if (saida?.type !== "saida") return { rotulo: String(resposta), cor: null };
+    return resposta === 1 ? { rotulo: saida.data.rotulo1, cor: saida.data.cor1 } : { rotulo: saida.data.rotulo0, cor: saida.data.cor0 };
+  };
+
   const onNodesChange = useCallback((changes: NodeChange<NoDaRede>[]) => {
     setNodes((ns) => {
       const atualizados = applyNodeChanges(changes, ns);
@@ -471,7 +478,14 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
 
           {/* cobre a paleta e o canvas; o painel com Anterior / Próximo continua à vista */}
           {foco && rodada && treino.fase === "pronto" && (
-            <QuadroFoco rodada={rodada} volta={voltaPassos} atual={atual} textoResposta={textoResposta} onFechar={fecharFoco} />
+            <QuadroFoco
+              rodada={rodada}
+              volta={voltaPassos}
+              atual={atual}
+              corDaEntrada={entrada?.tipo === "cor" ? entrada.cor : null}
+              rotuloDaResposta={rotuloDaResposta}
+              onFechar={fecharFoco}
+            />
           )}
         </div>
       </div>

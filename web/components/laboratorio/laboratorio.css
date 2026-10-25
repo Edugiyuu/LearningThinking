@@ -2650,8 +2650,14 @@
   margin: 8px 0;
 }
 
-.foco-no-valor.pequeno {
-  font-size: 14px;
+.foco-no-nome.pequeno {
+  font-size: 11px;
+}
+
+.foco-pilula-resposta {
+  font-size: 13px;
+  font-weight: 700;
+  fill: #fff;
 }
 
 .foco-nota.esquerda {

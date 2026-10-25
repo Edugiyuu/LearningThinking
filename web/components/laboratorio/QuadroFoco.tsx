@@ -23,7 +23,9 @@ type Props = {
   /** Os passos da volta, que vêm depois dos da ida (ADR-0025). */
   volta: PassoVolta[] | null;
   atual: number;
-  textoResposta: (saidaId: string, valor: number, resposta: 0 | 1) => string;
+  /** A cor da Entrada, quando ela é uma cor: aparece no fim da ida. */
+  corDaEntrada: string | null;
+  rotuloDaResposta: (saidaId: string, resposta: 0 | 1) => { rotulo: string; cor: string | null };
   onFechar: () => void;
 };
 
@@ -40,7 +42,7 @@ type Conta = { a: string; b: string; nomeA: string; nomeB: string; nomeResultado
  * pequena apontando. Na ida, todas as linhas do neurônio e a soma inteira, com a linha da vez acesa;
  * na volta, de onde vem a culpa e o teste "e se?". Frames "Laboratório · Modo Foco · 1 a 4" no Figma.
  */
-export default function QuadroFoco({ rodada, volta, atual, textoResposta, onFechar }: Props) {
+export default function QuadroFoco({ rodada, volta, atual, corDaEntrada, rotuloDaResposta, onFechar }: Props) {
   const [conta, setConta] = useState<Conta | null>(null);
   const daIda = rodada.passos.length;
   const naVolta = !!volta && atual >= daIda;
@@ -78,7 +80,15 @@ export default function QuadroFoco({ rodada, volta, atual, textoResposta, onFech
             {naVolta ? (
               <Volta passos={volta} atual={atual - daIda} nomeNeuronio={nomeNeuronio} origem={origem} verConta={setConta} />
             ) : (
-              <Ida rodada={rodada} mapa={mapa} atual={atual} nomeNeuronio={nomeNeuronio} textoResposta={textoResposta} verConta={setConta} />
+              <Ida
+                rodada={rodada}
+                mapa={mapa}
+                atual={atual}
+                nomeNeuronio={nomeNeuronio}
+                corDaEntrada={corDaEntrada}
+                rotuloDaResposta={rotuloDaResposta}
+                verConta={setConta}
+              />
             )}
           </div>
         </div>
@@ -96,24 +106,31 @@ function Ida({
   mapa,
   atual,
   nomeNeuronio,
-  textoResposta,
+  corDaEntrada,
+  rotuloDaResposta,
   verConta,
 }: {
   rodada: Rodada;
   mapa: MapaDaRede;
   atual: number;
   nomeNeuronio: (id: string) => string;
-  textoResposta: Props["textoResposta"];
+  corDaEntrada: string | null;
+  rotuloDaResposta: Props["rotuloDaResposta"];
   verConta: (c: Conta) => void;
 }) {
   const q = quadroDaIda(rodada, atual);
   if (!q) return null;
   if (q.tipo === "saida") {
+    const quantos = mapa.colunas[0].nos.length;
+    const meio = mapa.colunas.slice(1, -1).map((c) => `pela ${c.nome}`);
+    const caminho = meio.length ? `passou ${meio.join(" e ")}` : "foi direto para a Saída";
     return (
       <>
         <h2 className="foco-titulo">A rede toda</h2>
-        <p className="foco-nota esquerda">A entrada passou pelas camadas e virou a resposta: {textoResposta(q.saida, q.valor, q.resposta)}.</p>
-        <RedeToda mapa={mapa} />
+        <p className="foco-nota esquerda">
+          {corDaEntrada ? "A cor" : "A Entrada"} entrou como {quantos} {quantos === 1 ? "número" : "números"}, {caminho} e virou a resposta.
+        </p>
+        <RedeToda mapa={mapa} corDaEntrada={corDaEntrada} valor={q.valor} resposta={{ ...rotuloDaResposta(q.saida, q.resposta), n: q.resposta }} />
         <p className="foco-nota esquerda">Linha verde: peso positivo · vermelha: negativo · mais grossa: peso maior.</p>
       </>
     );
@@ -253,17 +270,44 @@ function SomaDoNeuronio({
 }
 
 /** Fim da ida (ADR-0026, item 8): a rede toda, com o valor de cada nó e cada linha com a cor e a espessura do peso. */
-function RedeToda({ mapa }: { mapa: MapaDaRede }) {
+function RedeToda({
+  mapa,
+  corDaEntrada,
+  valor,
+  resposta,
+}: {
+  mapa: MapaDaRede;
+  corDaEntrada: string | null;
+  valor: number;
+  resposta: { rotulo: string; cor: string | null; n: 0 | 1 };
+}) {
   const largura = 720;
-  const passo = 64;
+  const passo = 76;
+  const r = 26;
   const maior = Math.max(...mapa.colunas.map((c) => c.nos.length));
-  const altura = maior * passo + 50;
-  const x = (c: number) => 70 + (c * (largura - 140)) / Math.max(1, mapa.colunas.length - 1);
+  const topo = 76;
+  const meio = topo + ((maior - 1) * passo) / 2;
+  const altura = topo + (maior - 1) * passo + r + 62;
+  const x = (c: number) => 130 + (c * (largura - 230)) / Math.max(1, mapa.colunas.length - 1);
   const pos = new Map<string, { x: number; y: number }>();
-  mapa.colunas.forEach((c, i) => c.nos.forEach((n, j) => pos.set(n.id, { x: x(i), y: 40 + (j - (c.nos.length - 1) / 2) * passo + (maior * passo) / 2 - passo / 2 })));
+  mapa.colunas.forEach((c, i) => c.nos.forEach((n, j) => pos.set(n.id, { x: x(i), y: meio + (j - (c.nos.length - 1) / 2) * passo })));
   const ultima = mapa.colunas.length - 1;
+  // o que cada coluna faz, embaixo do nome (frame "Modo Foco · 6 fim da ida")
+  const funcao = (i: number) => (i === 0 ? (corDaEntrada ? "a cor" : "os números") : i === ultima ? "sigmoide" : "ReLU");
+  const cor = resposta.cor ?? "var(--destaque-texto)";
+  const pilula = `${resposta.rotulo} (${resposta.n})`;
+  const larguraPilula = pilula.length * 7.6 + 28;
+  const saida = mapa.colunas[ultima].nos.length === 1 ? pos.get(mapa.colunas[ultima].nos[0].id) : null;
   return (
-    <svg className="foco-rede" viewBox={`0 0 ${largura} ${altura}`} role="img" aria-label="A rede toda, da Entrada até a Saída">
+    <svg className="foco-rede" viewBox={`0 0 ${largura} ${altura}`} role="img" aria-label={`A rede toda: ${formatar(valor)} → ${pilula}`}>
+      {corDaEntrada && (
+        <g>
+          <rect x={22} y={meio - 16} width={32} height={32} rx={6} fill={corDaEntrada} stroke="var(--text)" strokeWidth={1.5} />
+          <text x={38} y={meio + 32} textAnchor="middle" className="foco-no-nome pequeno">
+            a cor
+          </text>
+        </g>
+      )}
       {mapa.linhas.map((l) => {
         const a = pos.get(l.de);
         const b = pos.get(l.para);
@@ -278,33 +322,57 @@ function RedeToda({ mapa }: { mapa: MapaDaRede }) {
             stroke={l.peso < 0 ? "var(--erro)" : "var(--positivo)"}
             strokeWidth={1.5 + Math.min(5, Math.abs(l.peso) * 2)}
             strokeLinecap="round"
-            opacity={0.7}
+            opacity={0.75}
           />
         );
       })}
       {mapa.colunas.map((c, i) => (
         <g key={c.nome + i}>
-          <text x={x(i)} y={14} textAnchor="middle" className="foco-no-nome destino">
+          <text x={x(i)} y={16} textAnchor="middle" className="foco-no-nome destino">
             {c.nome}
+          </text>
+          <text x={x(i)} y={32} textAnchor="middle" className="foco-no-nome pequeno">
+            {funcao(i)}
           </text>
           {c.nos.map((n) => {
             const p = pos.get(n.id)!;
+            const fim = i === ultima;
             return (
               <g key={n.id}>
-                <circle cx={p.x} cy={p.y} r={i === ultima ? 26 : 22} className={`foco-no ${i === ultima ? "destino" : ""}`} />
-                <text x={p.x} y={p.y + 5} textAnchor="middle" className="foco-no-valor pequeno">
+                {fim && <circle cx={p.x} cy={p.y} r={r + 6} fill="#fff" />}
+                {fim && <circle cx={p.x} cy={p.y} r={r + 6} fill={cor} fillOpacity={0.15} />}
+                <circle cx={p.x} cy={p.y} r={fim ? r + 6 : r} className="foco-no" style={fim ? { stroke: cor, strokeWidth: 3, fill: "none" } : undefined} />
+                <text x={p.x} y={p.y + 6} textAnchor="middle" className="foco-no-valor">
                   {formatar(n.valor)}
                 </text>
-                {i === 0 && (
-                  <text x={p.x - 32} y={p.y + 4} textAnchor="end" className="foco-no-nome">
+                {i === 0 ? (
+                  <text x={p.x - r - 14} y={p.y + 4} textAnchor="end" className="foco-no-nome">
                     {n.nome}
                   </text>
+                ) : (
+                  !fim && (
+                    <text x={p.x} y={p.y + r + 18} textAnchor="middle" className="foco-no-nome">
+                      {n.nome}
+                    </text>
+                  )
                 )}
               </g>
             );
           })}
         </g>
       ))}
+      {saida && (
+        <g>
+          {/* a Aqua em cima da resposta */}
+          <foreignObject x={saida.x - 20} y={saida.y - r - 6 - 34} width={40} height={24}>
+            <Aqua unidade={4} />
+          </foreignObject>
+          <rect x={saida.x - larguraPilula / 2} y={saida.y + r + 14} width={larguraPilula} height={26} rx={13} fill={cor} />
+          <text x={saida.x} y={saida.y + r + 31.5} textAnchor="middle" className="foco-pilula-resposta">
+            {pilula}
+          </text>
+        </g>
+      )}
     </svg>
   );
 }
