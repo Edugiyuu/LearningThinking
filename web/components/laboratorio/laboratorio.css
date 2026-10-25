@@ -2604,7 +2604,15 @@
   position: absolute;
   top: 41px;
   height: 2.5px;
-  background: var(--destaque-texto);
+  background: var(--destaque);
+}
+
+/* a linha fina que liga as colunas, embaixo da seta */
+.foco-onde-trilho {
+  position: absolute;
+  top: 41.5px;
+  height: 1.5px;
+  background: #e5e5ea;
 }
 
 .foco-onde-seta::after {
@@ -2618,12 +2626,12 @@
 }
 
 .foco-onde-seta.ida::after {
-  border-left: 10px solid var(--destaque-texto);
+  border-left: 10px solid var(--destaque);
   border-right: 0;
 }
 
 .foco-onde-seta.volta::after {
-  border-right: 10px solid var(--destaque-texto);
+  border-right: 10px solid var(--destaque);
   border-left: 0;
 }
 
@@ -2640,6 +2648,128 @@
   .foco-onde-aqua {
     transition: none;
   }
+}
+
+/* o zoom da lousa (ADR-0026, item 13): sobe para o meio, a Aqua anda, depois desce */
+.foco-onde.escondida {
+  visibility: hidden;
+}
+
+.foco:has(.foco-onde.grande) .foco-quadro {
+  filter: brightness(0.6) blur(1.5px);
+  transition: filter 0.3s;
+}
+
+.foco-onde.grande {
+  position: absolute;
+  top: 46%;
+  left: 50%;
+  z-index: 2;
+  width: min(700px, calc(100% - 48px));
+  padding: 26px 32px 22px;
+  border-width: 10px;
+  border-radius: 14px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  animation: foco-sobe 0.4s ease-out;
+}
+
+.foco-onde.grande.desce {
+  animation: foco-desce 0.4s ease-in forwards;
+}
+
+@keyframes foco-sobe {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 40%) scale(0.6);
+  }
+}
+
+@keyframes foco-desce {
+  to {
+    opacity: 0;
+    transform: translate(-50%, 60%) scale(0.6);
+  }
+}
+
+.foco-onde.grande .foco-onde-topo {
+  display: block;
+}
+
+.foco-onde.grande .foco-onde-topo span {
+  font-size: 14px;
+}
+
+.foco-onde.grande .foco-onde-topo b {
+  display: block;
+  margin-top: 10px;
+  font-size: 26px;
+  font-weight: 700;
+  text-align: left;
+}
+
+.foco-onde.grande .foco-onde-topo p {
+  margin: 6px 0 0;
+  font-size: 17px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.foco-onde.grande .foco-onde-mapa {
+  height: 250px;
+}
+
+.foco-onde.grande .foco-onde-coluna {
+  top: 80px;
+  gap: 14px;
+  font-size: 18px;
+}
+
+.foco-onde.grande .foco-onde-nos {
+  gap: 10px;
+  min-width: 92px;
+  min-height: 128px;
+  border-width: 2px;
+  border-radius: 14px;
+}
+
+.foco-onde.grande .foco-onde-nos i {
+  width: 28px;
+  height: 28px;
+  border-width: 2.5px;
+}
+
+.foco-onde.grande .foco-onde-seta {
+  top: 142px;
+  height: 5px;
+}
+
+.foco-onde.grande .foco-onde-seta::after {
+  top: -9px;
+  left: calc(50% - 10px);
+  border-width: 11px;
+}
+
+.foco-onde.grande .foco-onde-seta.ida::after {
+  border-left-width: 20px;
+  border-right: 0;
+}
+
+.foco-onde.grande .foco-onde-seta.volta::after {
+  border-right-width: 20px;
+  border-left: 0;
+}
+
+.foco-onde.grande .foco-onde-trilho {
+  top: 143.5px;
+  height: 2px;
+}
+
+/* na lousa grande a Aqua fica em cima da coluna */
+.foco-onde.grande .foco-onde-aqua {
+  top: 22px;
+  margin-left: -40px;
 }
 
 /* fim da ida: a rede toda */

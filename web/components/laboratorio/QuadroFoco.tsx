@@ -93,7 +93,7 @@ export default function QuadroFoco({ rodada, volta, atual, corDaEntrada, rotuloD
           </div>
         </div>
       </div>
-      <LousaOndeEstamos mapa={mapa} onde={onde} />
+      <LousaOndeEstamos mapa={mapa} onde={onde} passo={atual} />
       {conta && <VerConta key={`${conta.a}×${conta.b}`} conta={conta} onFechar={() => setConta(null)} />}
     </div>
   );
@@ -382,55 +382,120 @@ function RedeToda({
  * marcada, o nó da vez aceso e a Aqua em cima. Quando a ida passa para a próxima camada, a Aqua
  * anda até lá (a transição do CSS) e a lousa avisa por um instante.
  */
-function LousaOndeEstamos({ mapa, onde }: { mapa: MapaDaRede; onde: OndeEstamos }) {
+/** O zoom da lousa quando o passo muda de camada (ADR-0026, item 13): sobe, a Aqua anda, para e desce. */
+type Zoom = { de: number; para: number; titulo: string; frase: string; fase: "sobe" | "anda" | "parada" | "desce" };
+const TEMPOS: [Zoom["fase"] | null, number][] = [
+  ["anda", 400],
+  ["parada", 1300],
+  ["desce", 2300],
+  [null, 2700],
+];
+
+function LousaOndeEstamos({ mapa, onde, passo }: { mapa: MapaDaRede; onde: OndeEstamos; passo: number }) {
   const anterior = useRef(onde.coluna);
-  const [aviso, setAviso] = useState<string | null>(null);
+  // na volta, a camada mais à esquerda a que a culpa já chegou: só passar dela é camada nova
+  const menor = useRef(onde.coluna);
+  const [zoom, setZoom] = useState<Zoom | null>(null);
   // o mapa é refeito a cada passo: o efeito olha só os nomes das colunas
   const colunas = mapa.colunas.map((c) => c.nome).join("|");
+  const passoAntes = useRef(passo);
   useEffect(() => {
     const de = anterior.current;
     anterior.current = onde.coluna;
-    if (onde.sentido !== "ida" || onde.coluna !== de + 1 || de === 0) return;
+    const voltou = passo < passoAntes.current;
+    passoAntes.current = passo;
+    // Anterior desfaz o caminho: a camada da vez volta a ser a mais à esquerda
+    if (onde.sentido === "ida" || voltou) menor.current = onde.sentido === "ida" ? mapa.colunas.length : onde.coluna;
     const nomes = colunas.split("|");
-    setAviso(`Próxima camada! Os resultados da ${nomes[de]} viram as entradas da ${nomes[onde.coluna]}.`);
-  }, [onde.coluna, onde.sentido, colunas]);
+    const naIda = onde.sentido === "ida" && onde.coluna === de + 1 && de !== 0;
+    const naVolta = onde.sentido === "volta" && onde.coluna < de && onde.coluna < menor.current;
+    if (onde.sentido === "volta") menor.current = Math.min(menor.current, onde.coluna);
+    const semMovimento = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // qualquer outro passo (inclusive Próximo no meio do zoom) pula a animação
+    if (!(naIda || naVolta) || semMovimento) return setZoom(null);
+    setZoom(
+      naIda
+        ? { de, para: onde.coluna, titulo: "Próxima camada!", frase: `Os resultados da ${nomes[de]} viram as entradas da ${nomes[onde.coluna]}.`, fase: "sobe" }
+        : { de, para: onde.coluna, titulo: "Camada anterior!", frase: `A culpa volta da ${nomes[de]} para a ${nomes[onde.coluna]}.`, fase: "sobe" },
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- o zoom recomeça a cada passo
+  }, [passo]);
+  const ativo = !!zoom;
   useEffect(() => {
-    if (!aviso) return;
-    const t = setTimeout(() => setAviso(null), 2600);
-    return () => clearTimeout(t);
-  }, [aviso]);
+    if (!ativo) return;
+    const ts = TEMPOS.map(([fase, ms]) => setTimeout(() => setZoom((z) => (z && fase ? { ...z, fase } : null)), ms));
+    return () => ts.forEach(clearTimeout);
+  }, [ativo, passo]);
 
+  return (
+    <>
+      <div className={`foco-onde ${zoom ? "escondida" : ""}`} aria-label={`Onde estamos: ${onde.frase}`}>
+        <div className="foco-onde-topo">
+          <span>Onde estamos</span>
+          <b>{onde.frase}</b>
+        </div>
+        <MapaOnde mapa={mapa} coluna={onde.coluna} no={onde.no} seta={onde.seta} sentido={onde.sentido} aqua={onde.coluna} unidade={3} />
+      </div>
+      {zoom && (
+        <div className={`foco-onde grande ${zoom.fase}`} role="status" onClick={() => setZoom(null)}>
+          <div className="foco-onde-topo">
+            <span>Onde estamos</span>
+            <b>{zoom.titulo}</b>
+            <p>{zoom.frase}</p>
+          </div>
+          <MapaOnde
+            mapa={mapa}
+            coluna={zoom.fase === "sobe" ? zoom.de : zoom.fase === "anda" ? -1 : zoom.para}
+            no={zoom.fase === "parada" || zoom.fase === "desce" ? onde.no : null}
+            seta={{ de: zoom.de, para: zoom.para }}
+            sentido={onde.sentido}
+            aqua={zoom.fase === "sobe" ? zoom.de : zoom.para}
+            unidade={8}
+          />
+        </div>
+      )}
+    </>
+  );
+}
+
+function MapaOnde({
+  mapa,
+  coluna,
+  no,
+  seta,
+  sentido,
+  aqua,
+  unidade,
+}: {
+  mapa: MapaDaRede;
+  coluna: number;
+  no: string | null;
+  seta: OndeEstamos["seta"];
+  sentido: OndeEstamos["sentido"];
+  aqua: number;
+  unidade: number;
+}) {
   const n = mapa.colunas.length;
   const pct = (c: number) => `${((c + 0.5) / n) * 100}%`;
   return (
-    <div className="foco-onde" aria-label={`Onde estamos: ${onde.frase}`}>
-      <div className="foco-onde-topo">
-        <span>Onde estamos</span>
-        {/* o aviso de camada nova é só da ida: na volta, a frase da volta */}
-        <b>{(onde.sentido === "ida" && aviso) || onde.frase}</b>
-      </div>
-      <div className="foco-onde-mapa">
-        {onde.seta && (
-          <span
-            className={`foco-onde-seta ${onde.sentido}`}
-            style={{ left: pct(Math.min(onde.seta.de, onde.seta.para)), width: `${(1 / n) * 100}%` }}
-            aria-hidden
-          />
-        )}
-        {mapa.colunas.map((c, i) => (
-          <div key={c.nome + i} className={`foco-onde-coluna ${i === onde.coluna ? "agora" : ""}`} style={{ left: pct(i) }}>
-            <div className="foco-onde-nos">
-              {c.nos.map((no) => (
-                <i key={no.id} className={no.id === onde.no ? "aceso" : ""} />
-              ))}
-            </div>
-            <small>{c.nome}</small>
+    <div className="foco-onde-mapa">
+      <span className="foco-onde-trilho" style={{ left: pct(0), right: pct(0) }} aria-hidden />
+      {seta && (
+        <span className={`foco-onde-seta ${sentido}`} style={{ left: pct(Math.min(seta.de, seta.para)), width: `${(1 / n) * 100}%` }} aria-hidden />
+      )}
+      {mapa.colunas.map((c, i) => (
+        <div key={c.nome + i} className={`foco-onde-coluna ${i === coluna ? "agora" : ""}`} style={{ left: pct(i) }}>
+          <div className="foco-onde-nos">
+            {c.nos.map((n) => (
+              <i key={n.id} className={n.id === no ? "aceso" : ""} />
+            ))}
           </div>
-        ))}
-        <span className="foco-onde-aqua" style={{ left: pct(onde.coluna) }} aria-hidden>
-          <Aqua unidade={3} />
-        </span>
-      </div>
+          <small>{c.nome}</small>
+        </div>
+      ))}
+      <span className="foco-onde-aqua" style={{ left: pct(aqua) }} aria-hidden>
+        <Aqua unidade={unidade} />
+      </span>
     </div>
   );
 }
