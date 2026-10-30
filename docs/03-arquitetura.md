@@ -124,13 +124,15 @@ LearningThinking/
    │  ├─ rede.ts              # contas da rede: pesos, soma, ReLU/sigmoid, posicionarPesos
    │  └─ projetos.ts          # salvar/ler projetos no localStorage
    ├─ public/ilustracoes/     # imagens servidas direto pela URL
-   └─ next.config.ts          # configuração do Next (equivale ao vite.config)
+   ├─ next.config.ts          # configuração do Next (equivale ao vite.config)
+   └─ jest.config.mjs        # configuração dos testes (ADR-0027)
 ```
 
 - **Rotas por pasta:** criar `app/aulas/page.tsx` cria `/aulas`; não existe arquivo de rotas como no `react-router`. Uma pasta entre colchetes (`app/aulas/[aula]/page.tsx`) vira uma rota com parâmetro (`/aulas/sigmoid`, `/aulas/relu`…), com uma página só para todas as aulas.
 - **`"use client"`:** por padrão, o Next roda o componente no servidor. Componentes com estado, cliques ou `localStorage` precisam dessa linha no topo. O laboratório ainda é carregado com `dynamic(..., { ssr: false })`, porque lê o `localStorage`.
 - **Estilo:** Tailwind nas telas comuns (Home, Novo projeto); CSS comum em `laboratorio.css`, porque o React Flow gera os próprios elementos e os estados (apagada, agora, positivo) ficam mais legíveis assim.
 - **GSAP:** só na bolinha de `PesoEdge.tsx`.
+- **Testes ([ADR-0027](adr/0027-testes-com-jest.md)):** `npm test` = `tsc --noEmit && jest`. A primeira etapa confere os tipos do projeto inteiro; a segunda roda os testes de `lib/**/*.test.ts` com o **Jest** (`expect`, `describe`). Hoje existem testes só para as funções puras de `lib/` (`backward`, `foco`, `treino`); nenhum componente é testado ainda, e por isso a verificação de tela continua manual.
 
 ### 6.2 Para onde vai (proposta)
 

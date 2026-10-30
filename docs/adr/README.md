@@ -39,3 +39,4 @@ Registro das decisões de arquitetura do projeto. Formato baseado em [MADR](http
 | [0024](0024-treinar-com-backpropagation.md) | Treinar: backpropagation no laboratório (exemplos editáveis, erro ao vivo, gráfico + tabela, passinho em 3 opções) | **Aceita** (autor), detalhes técnicos propostos pela IA |
 | [0025](0025-bloco-backward-pass.md) | Bloco Backward pass: a culpa voltando passo a passo (Mostrar/Salvar, termômetro, bolinha de culpa, sinais + − =, lupa) | **Aceita** (autor) |
 | [0026](0026-modo-foco.md) | Modo Foco no Rodar: zoom no passo da vez, culpa com sinal e de onde ela vem | **Aceita** (autor), falta Figma |
+| [0027](0027-testes-com-jest.md) | Testes automatizados com Jest (tipos conferidos no `npm test`, `expect` no lugar do `assert`) | **Aceita** (autor), em implementação |
