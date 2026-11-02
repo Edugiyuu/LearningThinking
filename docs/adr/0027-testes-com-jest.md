@@ -1,6 +1,6 @@
 # ADR-0027 · Testes automatizados com Jest
 
-- **Status:** Aceita, em implementação
+- **Status:** Aceita e implementada
 - **Data:** 2026-10-30
 - **Decisores:** Eduardo (autor), com propostas da IA
 - **Usa:** [ADR-0017](0017-stack.md) (stack), [ADR-0024](0024-treinar-com-backpropagation.md) e [ADR-0025](0025-bloco-backward-pass.md) (o que os testes de hoje cobrem)

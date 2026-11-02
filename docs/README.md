@@ -15,4 +15,5 @@
 | [05 · Laboratório](05-laboratorio.md) | O que o laboratório faz | ✅ Topo atualizado; o resto é proposta antiga |
 | [06 · Roadmap](06-roadmap.md) | Fases de entrega | Proposta da IA, em revisão (progresso real no topo) |
 | [07 · Guia de conteúdo](07-guia-de-conteudo.md) | Como escrever uma aula | Proposta da IA, em revisão |
+| [08 · Testes](08-testes.md) | Cola dos comandos, do molde de um teste e das armadilhas | ✅ |
 | [ADRs](adr/README.md) | Decisões e seus porquês | ✅ |

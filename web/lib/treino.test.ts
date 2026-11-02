@@ -12,6 +12,17 @@ const basica = () => {
 
 const lado = (r: number) => (r >= 0.5 ? 1 : 0);
 
+describe("a cor virando as entradas da rede", () => {
+  test("o laranja #FF8C00 vira 1 · 0,55 · 0", () => {
+    expect(corParaEntradas("#FF8C00")).toEqual([1, 0.55, 0]);
+  });
+
+  test("preto é tudo 0 e branco é tudo 1", () => {
+    expect(corParaEntradas("#000000")).toEqual([0, 0, 0]);
+    expect(corParaEntradas("#FFFFFF")).toEqual([1, 1, 1]);
+  });
+});
+
 describe("o forward e o gradiente", () => {
   test("o forward do treino dá o mesmo resultado do Rodar", () => {
     const { m, rede, pesos } = basica();
