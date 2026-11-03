@@ -40,7 +40,7 @@ Há um problema de fundo. A rede do lab só sabe responder "azul ou laranja": a 
 - **O que conta como "treinada":** o projeto passa a guardar a informação de que um treino terminou, no mesmo momento em que os pesos novos são salvos (`aplicar` em `Treinar.tsx`). Hoje o projeto guarda os pesos, mas não sabe de onde eles vieram.
 - **Só com a Entrada de cor.** Com a Entrada de números livres, a aba não abre (a dica explica o motivo).
 
-### B. A Aqua se mexendo (GSAP)
+### B. A Aqua se mexendo (quadros + GSAP)
 
 **Decidido pelo autor (2026-11-02): não basta trocar o ícone.** A Aqua ganha **poses de corpo inteiro**, no estilo do Clawd (o mascote do Claude Code). Exemplo dado pelo autor: **pensando = a mãozinha no queixo**. Movimento só com GSAP. Regras de desenho, revistas pelo autor no mesmo dia:
 
@@ -62,6 +62,17 @@ Poses propostas. A primeira versão está no Figma, no frame "Mascote · versõe
 - O tempo de "pensando" é encenação: a conta leva milissegundos. Ele existe para o aluno ver que a Aqua está fazendo alguma coisa.
 - Com "reduzir movimento" ligado, a Aqua troca de reação sem se mexer ([ADR-0011](0011-acessibilidade-e-movimento.md)).
 
+**Animada por quadros, não só deslocada (autor, 2026-11-03).** Mexer a pose inteira com o GSAP (subir, descer, girar) não basta: o **desenho** também muda, quadro a quadro, como um sprite de pixel art. Cada pose ganha uma sequência curta de quadros na mesma grade de 16 × 10:
+
+- **Piscar:** de tempos em tempos (intervalo sorteado, ~3 a 6 s), olhos abertos → meio fechados → fechados → abertos.
+- **Respirar:** o corpo amassa e estica um pixel (quadro mais baixo e largo, quadro normal), em vez de só subir e descer a imagem.
+- **Entre uma pose e outra:** um ou dois quadros do meio (o bracinho passa por uma posição intermediária antes de chegar ao queixo, os olhos passam por meio fechados antes de virar ^ ^).
+- **Pensando:** a ponta do bracinho no queixo bate de leve (2 quadros), e os olhos olham para um lado e para o outro.
+- **Em dúvida:** o bracinho coça a cabeça (2 a 3 quadros indo e voltando).
+- **Dormindo (aba bloqueada):** os olhos fechados e o corpo amassando devagar, com os "z" saindo.
+
+O GSAP continua sendo o relógio: uma timeline troca o quadro visível (passos inteiros, sem misturar quadros) e, junto, faz o pulinho e o balanço. Nada de keyframes de CSS. Os quadros são desenhados no Figma antes do código, ao lado das 12 poses.
+
 ### C. A resposta vem só do forward pass
 
 Decidido pelo autor: **funciona igual ao Rodar do lab.** A Aqua roda o forward pass com a cor escolhida e os pesos do projeto, e a resposta é o número da Saída. Não há checagem à parte de "cor conhecida": se um laranja mais claro sai como laranja ou não depende só de como a rede foi treinada.
@@ -81,6 +92,16 @@ Decidido pelo autor: **funciona igual ao Rodar do lab.** A Aqua roda o forward p
 4. **Voltar para a Aqua:** um botão "← Voltar para a Aqua" no topo faz o zoom ao contrário (o lab some no branco, a cabeça encolhe e a Aqua volta, com a mesma resposta na tela).
 5. A cor escolhida **não** entra nos Dados nem muda a Entrada salva do projeto. É só uma consulta.
 6. Com "reduzir movimento", troca direto de tela, sem zoom.
+
+### E. Hoje a entrada é cor, amanhã pode não ser (autor, 2026-11-03)
+
+O lab ainda está na parte de **redes neurais com cores**: a única Entrada com significado é a cor (R G B). O autor avisou que **virão outras entradas além de cores**, sem saber ainda quais. Por isso a aba é montada em três partes que não dependem uma da outra:
+
+1. **A Aqua** (poses, quadros, balão): não sabe nada de cor. Recebe só o momento (esperando, pensando, certa, em dúvida) e a frase.
+2. **O seletor da entrada:** hoje é a roda de cores + R G B. É a única peça que sabe que a entrada é uma cor. Ela entrega para a rede os mesmos números que a Entrada do lab usaria.
+3. **A leitura da Saída:** transforma o número da Saída na frase ("É laranja!", "Acho que é azul"). Hoje, perto de 0 = azul e perto de 1 = laranja.
+
+Quando o lab ganhar uma entrada nova (com ADR própria antes), ela traz o seu seletor e a sua leitura da Saída, e a Aqua e o zoom continuam iguais. **Nada disso é construído agora:** não existe um "tipo de entrada" genérico no código antes de existir uma segunda entrada no lab. É só não misturar a cor dentro da Aqua.
 
 ## Pontos alinhados (2026-11-02)
 
@@ -102,6 +123,8 @@ Telas desenhadas, à esquerda do arquivo (x < −1600):
 4. **"· 4 resposta certa"**: apontando para a amostra; "É laranja!", "resposta da rede: 0,97 (perto de 1 = laranja, perto de 0 = azul)" e o botão "ver como ela pensou →" com a Aqua de lupa.
 5. **"· 5 em dúvida"**: coçando a cabeça com o "?"; "Hmm… não tenho certeza. Acho que é laranja." e "resposta da rede: 0,58 (bem no meio)".
 6. **"· 6 ver como ela pensou (zoom na cabeça, 4 tempos)"**: aproxima da cabeça (0,4 s), a cabeça cobre tudo (0,4 s), branco (0,2 s), o lab aparece com "← Voltar para a Aqua" (0,4 s).
+
+**Quadros da animação (2026-11-03):** frame "Aqua · quadros da animação", logo abaixo de "Mascote · versões", com 7 sequências na mesma grade: piscar (4 quadros), respirar (3), esperando → pensando (3), pensando (4), em dúvida (4), pulinho da resposta certa (4) e dormindo (2).
 
 Na mesma revisão, o frame do laboratório foi conferido com o código rodando e atualizado ("Laboratório · Desktop · v3 (igual ao código em 2026-11-02)"): o topo só tem o Rodar, a paleta ganhou o Backward pass e o painel Contas tem Anterior/Próximo, Modo Foco e Passo a passo no topo, sem a seção Treinar. Em "Tutoriais · Desktop", os minutos e a descrição do tutorial 01 foram acertados. Home e Novo projeto já batiam com o código.
 
