@@ -1,6 +1,6 @@
 # ADR-0028 · Aba da Aqua: usar a rede treinada
 
-- **Status:** Proposta (ideias do autor; detalhes propostos pela IA, a alinhar ponto a ponto antes do Figma)
+- **Status:** Aceita (autor), falta Figma
 - **Data:** 2026-11-02
 - **Decisores:** Eduardo (autor), com propostas da IA
 - **Usa:** [ADR-0024](0024-treinar-com-backpropagation.md) (os pesos treinados ficam no projeto), [ADR-0026](0026-modo-foco.md) (o passo a passo que o "ver como ela pensou" abre), [ADR-0021](0021-bolinhas-cores-e-espremer.md) (azul = 0, laranja = 1)
@@ -21,14 +21,18 @@ Há um problema de fundo. A rede do lab só sabe responder "azul ou laranja": a 
 4. **A Aqua não fica parada.** A imagem muda conforme o momento (esperando, pensando, respondendo) e conforme a certeza da resposta, com **poses do corpo inteiro** (ex.: mãozinha no queixo ao pensar), e não só o ícone acima da cabeça.
 5. **"Ver como ela pensou"** abre o canvas do projeto no passo a passo, igual ao Rodar de hoje, com a cor que o aluno escolheu.
 6. **Zoom na cabeça da Aqua** ao clicar em "ver como ela pensou": a tela entra na cabeça dela, fica branca e o laboratório aparece, como se a rede estivesse dentro da cabeça da Aqua.
-7. **A Aqua fica confusa com cores muito diferentes dos exemplos**, mas **sem** errar por besteira: um laranja um pouco mais claro do que o dos Dados continua sendo laranja para ela. O aluno não deve precisar dizer se a cor é laranja ou azul.
+7. **A resposta é só a do forward pass, igual ao lab** (alinhado em 2026-11-02). Não existe nenhuma regra à parte para decidir se a Aqua "conhece" a cor. Um laranja diferente dos Dados é reconhecido ou não dependendo de como a rede foi treinada, exatamente como no Rodar. O aluno nunca diz se a cor é laranja ou azul.
+8. **Nome da aba: "Perguntar à Aqua"**, um terceiro botão no topo do laboratório, ao lado de Treinar e Rodar.
+9. **Seletor de cor: roda de cores + R G B.** A roda serve para brincar; o R G B embaixo usa os mesmos números da Entrada do lab.
+10. **Peso mudado à mão depois do treino:** a aba continua aberta, e a Aqua responde com os pesos atuais.
+11. **"Ver como ela pensou" abre com o Modo Foco desligado:** depois do zoom aparece o canvas inteiro (o "cérebro" dela), e o aluno liga o Foco se quiser.
 
-## Propostas da IA (a alinhar)
+## Detalhes (propostos pela IA e alinhados com o autor)
 
 ### A. A tela da aba
 
-- **Nome da aba:** "Aqua" (proposta). Fica ao lado do Rodar no topo do laboratório.
-- **Tela:** a Aqua grande no centro. Embaixo dela, o seletor de cor (uma amostra grande e os controles R G B, os mesmos números que a Entrada do lab usa) e um botão **"Perguntar"**.
+- **Nome da aba:** "Perguntar à Aqua", ao lado de Treinar e Rodar no topo do laboratório.
+- **Tela:** a Aqua grande no centro. Embaixo dela, o seletor de cor (uma roda de cores e, embaixo, os controles R G B, os mesmos números que a Entrada do lab usa) e um botão **"Perguntar"**.
 - **Resposta:** um balão ao lado da Aqua com a frase e o número da Saída, por exemplo "Acho que é **laranja**" e, menor, "resposta da rede: 0,87". O número continua aparecendo para não esconder que é uma conta.
 - **Aba bloqueada:** sem treino, o botão da aba fica apagado, com a dica "Treine a Aqua primeiro (Backward pass → Treinar)".
 - **O que conta como "treinada":** o projeto passa a guardar a informação de que um treino terminou, no mesmo momento em que os pesos novos são salvos (`aplicar` em `Treinar.tsx`). Hoje o projeto guarda os pesos, mas não sabe de onde eles vieram.
@@ -45,67 +49,55 @@ Poses propostas (a desenhar no Figma primeiro):
 | Esperando a cor | em pé, braços para baixo | respira devagar (sobe e desce um pouco) |
 | Pensando (~1 s) | **mãozinha no queixo** | balança de leve; o texto "pensando…" com os três pontos animados |
 | Resposta perto de 0 ou de 1 | braço levantado / apontando para a cor | um pulinho |
-| Resposta no meio (perto de 0,50) | as duas mãos abertas, "hmm" | inclina para o lado |
-| Cor muito diferente dos exemplos | coçando a cabeça, com um "?" acima | olha para os lados |
+| Resposta no meio (perto de 0,50) | coçando a cabeça, com um "?" acima | olha para os lados |
 
-- **Faixas de certeza:** abaixo de 0,30 ou acima de 0,70 = confiante; entre as duas = em dúvida. Os limites são uma proposta.
+- **Faixas de certeza:** abaixo de 0,30 ou acima de 0,70 = confiante; entre as duas = em dúvida.
 - O tempo de "pensando" é encenação: a conta leva milissegundos. Ele existe para o aluno ver que a Aqua está fazendo alguma coisa.
 - Com "reduzir movimento" ligado, a Aqua troca de reação sem se mexer ([ADR-0011](0011-acessibilidade-e-movimento.md)).
 
-### C. A Aqua confusa sem errar por besteira
+### C. A resposta vem só do forward pass
 
-O nome real disso é **detecção de fora da distribuição** (*out-of-distribution*): perceber que uma entrada não se parece com nada do treino. A rede não faz isso sozinha. É uma **checagem separada**, ao lado da rede, e a tela diz isso.
+Decidido pelo autor: **funciona igual ao Rodar do lab.** A Aqua roda o forward pass com a cor escolhida e os pesos do projeto, e a resposta é o número da Saída. Não há checagem à parte de "cor conhecida": se um laranja mais claro sai como laranja ou não depende só de como a rede foi treinada.
 
-**Proposta: comparar pelo tom da cor, e não pela cor exata.** Laranja claro, laranja escuro e laranja vivo têm o mesmo tom (a posição na roda de cores). O que muda neles é o claro/escuro e o quanto a cor é viva. Então:
+- **Confiante** (abaixo de 0,30 ou acima de 0,70): "É **laranja**!" (ou azul), com o número embaixo.
+- **Em dúvida** (entre 0,30 e 0,70): a Aqua coça a cabeça com o "?" e diz "Hmm… nunca vi uma cor assim. Minha rede diz **laranja** (0,58)." A resposta da rede aparece sempre.
+- A lição de que "a IA só conhece o que foi treinada para conhecer" aparece sozinha: o aluno vê a rede responder até verde ou roxo, às vezes com toda a certeza, e o "ver como ela pensou" mostra por quê.
+- **Preto** (0, 0, 0): como o lab ainda não tem *bias*, toda soma dá 0 e a rede responde exatamente 0,50. A Aqua fica em dúvida no preto seja qual for o treino. É a rede de verdade, e liga com a [ADR-0024](0024-treinar-com-backpropagation.md) (quando entrar o bias).
 
-1. Para cada cor dos Dados, calcular o tom (o *matiz* do HSL, de 0° a 360°).
-2. Para a cor escolhida, também.
-3. Se o tom estiver perto do tom de algum exemplo (por exemplo, até 30° de distância), a Aqua **não** fica confusa: responde normalmente, confiante ou em dúvida, pelo número da rede.
-4. Se estiver longe de todos (verde e roxo, com Dados só de laranjas e azuis), ela fica **confusa**: "Nunca vi uma cor assim… mas minha rede diz **azul** (0,12)". A resposta da rede aparece mesmo assim, porque ela sempre responde.
-5. Cores quase sem tom (branco, preto, cinza) não têm um matiz confiável. Elas contam como "nunca vi" se nenhum exemplo for parecido também no claro/escuro.
-
-Por que isso resolve o incômodo: clarear ou escurecer um laranja não muda o tom, então a Aqua continua reconhecendo. Também não é preciso marcar nada à mão, porque a régua vem dos próprios Dados do projeto.
-
-**Uma coisa continua possível, e é de propósito:** a rede pode errar um laranja muito claro mesmo ele sendo "conhecido" pelo tom. Nesse caso a Aqua não fica confusa: ela responde errado, com a certeza que a rede tiver. É um erro da rede, não da checagem, e o "ver como ela pensou" mostra por quê.
-
-**Opções descartadas:**
-- *Distância da cor exata (R G B)* até o exemplo mais perto: é justamente o que confundiria a Aqua com um laranja um pouco mais claro.
-- *Usar a certeza da rede* (resposta perto de 0,50 = confusa): a rede pode estar muito certa sobre uma cor que nunca viu. Esse é o ponto da lição.
-- *O aluno diz se é laranja ou azul*: recusado pelo autor.
+**Descartado:** uma checagem separada pelo tom da cor (detecção de fora da distribuição). Ela mudaria a resposta da Aqua por uma regra que não está na rede, e não seria mais "igual ao lab". Fazer a **própria rede** dizer "não sei" (uma terceira resposta "outra cor" nos Dados) muda o backward pass e fica para outra ADR.
 
 ### D. "Ver como ela pensou" e o zoom na cabeça
 
 1. **Zoom (GSAP, ~1,2 s):** a tela aproxima até a cabeça da Aqua, que cresce até cobrir tudo e fica branca. Depois o laboratório aparece aos poucos, vindo do branco.
 2. **Onde cai:** o canvas do projeto, com a Entrada já na cor escolhida, e o Rodar já começado no primeiro passo (manual, com Anterior / Próximo e o Modo Foco disponível, como hoje).
-3. **Só a ida.** Mesmo com o bloco Backward pass na Saída, esse passo a passo para no fim da ida: uma cor fora dos Dados não tem "resposta certa", então não há culpa para voltar (fica para a ADR do backward).
+3. **Só a ida, com o Modo Foco desligado.** Mesmo com o bloco Backward pass na Saída, esse passo a passo para no fim da ida: uma cor perguntada não tem "resposta certa" nos Dados, então não há culpa para voltar (fica para a ADR do backward).
 4. **Voltar para a Aqua:** um botão "← Voltar para a Aqua" no topo faz o zoom ao contrário (o lab some no branco, a cabeça encolhe e a Aqua volta, com a mesma resposta na tela).
 5. A cor escolhida **não** entra nos Dados nem muda a Entrada salva do projeto. É só uma consulta.
 6. Com "reduzir movimento", troca direto de tela, sem zoom.
 
-## Pontos para alinhar
+## Pontos alinhados (2026-11-02)
 
-1. O nome da aba: "Aqua", "Perguntar à Aqua" ou outro?
-2. O seletor de cor: R G B (igual à Entrada do lab), uma roda de cores, ou os dois?
-3. As faixas de certeza (0,30 / 0,70) e a distância de tom (30°) ficam assim para começar?
-4. Branco, preto e cinza: confusa sempre, ou só quando nenhum exemplo for parecido?
-5. Se o aluno mudar um peso à mão depois de treinar, a aba continua aberta?
-6. No passo a passo do "ver como ela pensou", o Modo Foco já abre ligado?
-7. A frase da Aqua confusa mostra a resposta da rede ("…mas minha rede diz azul") ou só "Nunca vi uma cor assim"?
+1. Nome da aba: **"Perguntar à Aqua"**.
+2. Seletor: **roda de cores + R G B**.
+3. Faixas de certeza: **0,30 / 0,70** para começar (ajustáveis depois de testar).
+4. Cores sem tom (branco, preto, cinza): **sem regra especial**, vale o forward pass.
+5. Peso mudado à mão depois do treino: **a aba continua aberta**.
+6. "Ver como ela pensou": **Modo Foco desligado** ao abrir.
+7. Frase em dúvida: **"nunca vi uma cor assim" + a resposta da rede**.
 
 ## Consequências
 
 **Positivas**
 - Fecha o ciclo do laboratório: montar → treinar → usar.
-- Ensina sem texto longo que a rede sempre responde, mesmo sobre o que nunca viu, e que perceber isso é um trabalho à parte.
+- Ensina sem texto longo que a rede sempre responde, mesmo sobre o que nunca viu.
 - O zoom na cabeça liga a Aqua à rede: a rede é o "cérebro" dela.
 
 **Negativas / custos**
 - Cinco poses novas de corpo inteiro da Aqua e as telas novas no Figma antes do código.
 - O projeto passa a guardar se já foi treinado (mudança pequena no formato salvo).
-- A checagem de tom é uma regra simples, não um método de pesquisa. Pode errar em cores no limite (um laranja-avermelhado, por exemplo).
 
 **Riscos e mitigação**
-- *O aluno achar que a confusão vem da rede:* a tela diz que é uma comparação com os exemplos, e o número da rede aparece sempre.
+- *O aluno não perceber que a resposta é só uma conta:* o número da Saída aparece sempre, e o "ver como ela pensou" leva à conta inteira.
 - *Animação demorar demais e virar espera:* "pensando" curto (~1 s), e um clique pula o zoom.
 
 ## Quando revisitar
