@@ -40,3 +40,4 @@ Registro das decisões de arquitetura do projeto. Formato baseado em [MADR](http
 | [0025](0025-bloco-backward-pass.md) | Bloco Backward pass: a culpa voltando passo a passo (Mostrar/Salvar, termômetro, bolinha de culpa, sinais + − =, lupa) | **Aceita** (autor) |
 | [0026](0026-modo-foco.md) | Modo Foco no Rodar: zoom no passo da vez, culpa com sinal e de onde ela vem | **Aceita** (autor), falta Figma |
 | [0027](0027-testes-com-jest.md) | Testes automatizados com Jest (tipos conferidos no `npm test`, `expect` no lugar do `assert`) | **Aceita** (autor) |
+| [0028](0028-aba-da-aqua.md) | Aba da Aqua: perguntar uma cor para a rede treinada (Aqua animada, confusa com cores fora dos exemplos, zoom na cabeça para ver como ela pensou) | Proposta, a alinhar |
