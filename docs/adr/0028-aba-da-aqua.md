@@ -18,7 +18,7 @@ Há um problema de fundo. A rede do lab só sabe responder "azul ou laranja": a 
 1. **Uma aba nova, só da Aqua.** Ela fica no laboratório e usa o projeto aberto, mas, quando abre, a tela é toda da Aqua: sem canvas, sem paleta, sem painel Contas.
 2. **Só abre se a rede já foi treinada.** Projeto nunca treinado não entra na aba (não basta um aviso dentro dela).
 3. **Enquanto pensa, não mostra a rede.** Só um texto curto, como "pensando…" ou "rodando a rede neural…", e a Aqua com o ícone de pensando.
-4. **A Aqua não fica parada.** A imagem muda conforme o momento (esperando, pensando, respondendo) e conforme a certeza da resposta.
+4. **A Aqua não fica parada.** A imagem muda conforme o momento (esperando, pensando, respondendo) e conforme a certeza da resposta, com **poses do corpo inteiro** (ex.: mãozinha no queixo ao pensar), e não só o ícone acima da cabeça.
 5. **"Ver como ela pensou"** abre o canvas do projeto no passo a passo, igual ao Rodar de hoje, com a cor que o aluno escolheu.
 6. **Zoom na cabeça da Aqua** ao clicar em "ver como ela pensou": a tela entra na cabeça dela, fica branca e o laboratório aparece, como se a rede estivesse dentro da cabeça da Aqua.
 7. **A Aqua fica confusa com cores muito diferentes dos exemplos**, mas **sem** errar por besteira: um laranja um pouco mais claro do que o dos Dados continua sendo laranja para ela. O aluno não deve precisar dizer se a cor é laranja ou azul.
@@ -36,15 +36,17 @@ Há um problema de fundo. A rede do lab só sabe responder "azul ou laranja": a 
 
 ### B. A Aqua se mexendo (GSAP)
 
-Usa as reações que já existem em `components/mascote.tsx` (`ReacaoAqua`), com o rosto fixo e a emoção no ícone acima da cabeça. Movimento só com GSAP.
+**Decidido pelo autor (2026-11-02): não basta trocar o ícone.** A Aqua ganha **poses de corpo inteiro**, desenhadas no mesmo pixel art das que já existem (as fantasias da linha do tempo, `AquaFantasia`, e `AquaSeparando` / `AquaAcendendo` em `components/mascote.tsx`). Exemplo dado pelo autor: **pensando = a mãozinha no queixo**. O rosto continua fixo (sem boca); a emoção vem da pose do corpo e, quando ajudar, de um ícone acima da cabeça. Movimento só com GSAP.
 
-| Momento | Ícone | Movimento |
+Poses propostas (a desenhar no Figma primeiro):
+
+| Momento | Pose do corpo | Movimento |
 |---|---|---|
-| Esperando a cor | `observando` | respira devagar (sobe e desce um pouco) |
-| Pensando (~1 s) | `pensando` | balança de leve; o texto "pensando…" com os três pontos animados |
-| Resposta perto de 0 ou de 1 | `confiante` | um pulinho |
-| Resposta no meio (perto de 0,50) | `preocupada` | inclina para o lado |
-| Cor muito diferente dos exemplos | **`confusa` (nova)** | olha para os lados; o ícone é um "?" |
+| Esperando a cor | em pé, braços para baixo | respira devagar (sobe e desce um pouco) |
+| Pensando (~1 s) | **mãozinha no queixo** | balança de leve; o texto "pensando…" com os três pontos animados |
+| Resposta perto de 0 ou de 1 | braço levantado / apontando para a cor | um pulinho |
+| Resposta no meio (perto de 0,50) | as duas mãos abertas, "hmm" | inclina para o lado |
+| Cor muito diferente dos exemplos | coçando a cabeça, com um "?" acima | olha para os lados |
 
 - **Faixas de certeza:** abaixo de 0,30 ou acima de 0,70 = confiante; entre as duas = em dúvida. Os limites são uma proposta.
 - O tempo de "pensando" é encenação: a conta leva milissegundos. Ele existe para o aluno ver que a Aqua está fazendo alguma coisa.
@@ -98,7 +100,7 @@ Por que isso resolve o incômodo: clarear ou escurecer um laranja não muda o to
 - O zoom na cabeça liga a Aqua à rede: a rede é o "cérebro" dela.
 
 **Negativas / custos**
-- Um ícone novo da Aqua (`confusa`) e as telas novas no Figma antes do código.
+- Cinco poses novas de corpo inteiro da Aqua e as telas novas no Figma antes do código.
 - O projeto passa a guardar se já foi treinado (mudança pequena no formato salvo).
 - A checagem de tom é uma regra simples, não um método de pesquisa. Pode errar em cores no limite (um laranja-avermelhado, por exemplo).
 
