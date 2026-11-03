@@ -1,6 +1,6 @@
 # ADR-0029 · Saída com várias cores (o aluno escolhe as cores)
 
-- **Status:** Proposta (pedido do autor; desenho técnico proposto pela IA, a alinhar)
+- **Status:** Proposta, **adiada** (2026-11-02, decisão do autor: o lab ainda só tem duas cores; primeiro vem a aba da Aqua com duas cores, e só depois o lab ganha várias cores, com esta ADR alinhada antes do código)
 - **Data:** 2026-11-02
 - **Decisores:** Eduardo (autor), com propostas da IA
 - **Muda:** [ADR-0021](0021-bolinhas-cores-e-espremer.md) (Saída azul = 0 / laranja = 1), [ADR-0024](0024-treinar-com-backpropagation.md) (Dados com 2 cores, sigmoide no fim)
@@ -48,7 +48,7 @@ Todas usam o mesmo desenho: **um neurônio por classe na Saída e softmax no fim
 2. O limite de 2 a 5 cores está bom?
 3. Entra o rótulo "outra cor", ou fica para depois?
 4. O backward pass com várias cores: o Modo Foco precisa mostrar a culpa de cada neurônio da Saída. Mostramos todas de uma vez, ou uma cor por vez?
-5. A ordem: fazer esta ADR **antes** da aba da Aqua (a aba já nasce com várias cores), ou depois (a aba nasce com 2 cores e muda)?
+5. ~~A ordem~~ **Decidido (2026-11-02): depois.** A aba da Aqua nasce com 2 cores, como o lab de hoje. Esta ADR só volta quando o lab for ganhar mais cores.
 
 ## Consequências
 

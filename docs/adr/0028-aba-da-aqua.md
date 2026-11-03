@@ -11,6 +11,8 @@ Hoje o aluno monta a rede, roda passo a passo e treina, mas nunca **usa** a rede
 
 Há um problema de fundo. A rede do lab só sabe responder "azul ou laranja": a saída é um número entre 0 e 1. Ela não tem como dizer "não sei". Para verde ou roxo, ela responde mesmo assim, às vezes com toda a certeza. Isso ensina uma coisa importante (**a IA só conhece aquilo para que foi treinada**), mas a tela precisa mostrar isso de um jeito que não incomode quem está usando.
 
+**Só duas cores (azul e laranja), como o lab de hoje.** Várias cores ficam para a [ADR-0029](0029-saida-com-varias-cores.md), adiada até o lab ter isso.
+
 **Foco desta ADR: só a ida (forward pass).** O que a aba da Aqua muda no backward pass (a culpa, o erro de uma cor que não está nos Dados) fica para depois.
 
 ## Decisões do autor (2026-11-02)
