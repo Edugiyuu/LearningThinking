@@ -42,7 +42,7 @@ Há um problema de fundo. A rede do lab só sabe responder "azul ou laranja": a 
 
 **Decidido pelo autor (2026-11-02): não basta trocar o ícone.** A Aqua ganha **poses de corpo inteiro**, desenhadas no mesmo pixel art das que já existem (as fantasias da linha do tempo, `AquaFantasia`, e `AquaSeparando` / `AquaAcendendo` em `components/mascote.tsx`). Exemplo dado pelo autor: **pensando = a mãozinha no queixo**. O rosto continua fixo (sem boca); a emoção vem da pose do corpo e, quando ajudar, de um ícone acima da cabeça. Movimento só com GSAP.
 
-Poses propostas (a desenhar no Figma primeiro):
+Poses propostas. A primeira versão está no Figma, no frame "Mascote · versões", seção "Aqua · poses de corpo inteiro". Lá há 12 poses: as 5 da tabela e outras que podem servir depois (comemorando, mostrando a cor no alto, acenando ao abrir a aba, dormindo na aba bloqueada, olhando a roda de cores, lupa para o "ver como ela pensou"). Os bracinhos saem das portas laterais, em aqua escuro.
 
 | Momento | Pose do corpo | Movimento |
 |---|---|---|
