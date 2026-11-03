@@ -60,7 +60,7 @@ Poses propostas (a desenhar no Figma primeiro):
 Decidido pelo autor: **funciona igual ao Rodar do lab.** A Aqua roda o forward pass com a cor escolhida e os pesos do projeto, e a resposta é o número da Saída. Não há checagem à parte de "cor conhecida": se um laranja mais claro sai como laranja ou não depende só de como a rede foi treinada.
 
 - **Confiante** (abaixo de 0,30 ou acima de 0,70): "É **laranja**!" (ou azul), com o número embaixo.
-- **Em dúvida** (entre 0,30 e 0,70): a Aqua coça a cabeça com o "?" e diz "Hmm… nunca vi uma cor assim. Minha rede diz **laranja** (0,58)." A resposta da rede aparece sempre.
+- **Em dúvida** (entre 0,30 e 0,70): a Aqua coça a cabeça com o "?" e diz "Hmm… não tenho certeza. Acho que é **laranja** (0,58)." A resposta da rede aparece sempre. (Revisto em 2026-11-02: "nunca vi uma cor assim" era mentira para um laranja dos Dados. Um 0,58 diz que a rede está **insegura sobre aquela cor**: pode ser um treino fraco, ou uma cor no meio do caminho entre os exemplos.)
 - A lição de que "a IA só conhece o que foi treinada para conhecer" aparece sozinha: o aluno vê a rede responder até verde ou roxo, às vezes com toda a certeza, e o "ver como ela pensou" mostra por quê.
 - **Preto** (0, 0, 0): como o lab ainda não tem *bias*, toda soma dá 0 e a rede responde exatamente 0,50. A Aqua fica em dúvida no preto seja qual for o treino. É a rede de verdade, e liga com a [ADR-0024](0024-treinar-com-backpropagation.md) (quando entrar o bias).
 
@@ -83,7 +83,7 @@ Decidido pelo autor: **funciona igual ao Rodar do lab.** A Aqua roda o forward p
 4. Cores sem tom (branco, preto, cinza): **sem regra especial**, vale o forward pass.
 5. Peso mudado à mão depois do treino: **a aba continua aberta**.
 6. "Ver como ela pensou": **Modo Foco desligado** ao abrir.
-7. Frase em dúvida: **"nunca vi uma cor assim" + a resposta da rede**.
+7. Frase em dúvida: **"não tenho certeza" + a resposta da rede** (revisto: "nunca vi" não vale para uma cor que está nos Dados).
 
 ## Consequências
 
@@ -102,6 +102,7 @@ Decidido pelo autor: **funciona igual ao Rodar do lab.** A Aqua roda o forward p
 
 ## Quando revisitar
 
+- Quando a Saída tiver mais de duas cores ([ADR-0029](0029-saida-com-varias-cores.md)): a resposta vira "a cor com a maior porcentagem", e as faixas de certeza mudam.
 - Quando o backward pass precisar funcionar com uma cor perguntada na aba (culpa sem resposta certa).
 - Se a Entrada de números livres ganhar Dados próprios: aí a aba pode valer para ela também.
 - Se entrar uma terceira cor nos Dados (a Saída passa a ter mais de duas respostas).
