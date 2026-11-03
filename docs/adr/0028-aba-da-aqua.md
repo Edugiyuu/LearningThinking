@@ -1,6 +1,6 @@
 # ADR-0028 · Aba da Aqua: usar a rede treinada
 
-- **Status:** Aceita (autor), falta Figma
+- **Status:** Aceita (autor), telas no Figma; falta o código
 - **Data:** 2026-11-02
 - **Decisores:** Eduardo (autor), com propostas da IA
 - **Usa:** [ADR-0024](0024-treinar-com-backpropagation.md) (os pesos treinados ficam no projeto), [ADR-0026](0026-modo-foco.md) (o passo a passo que o "ver como ela pensou" abre), [ADR-0021](0021-bolinhas-cores-e-espremer.md) (azul = 0, laranja = 1)
@@ -92,6 +92,19 @@ Decidido pelo autor: **funciona igual ao Rodar do lab.** A Aqua roda o forward p
 6. "Ver como ela pensou": **Modo Foco desligado** ao abrir.
 7. Frase em dúvida: **"não tenho certeza" + a resposta da rede** (revisto: "nunca vi" não vale para uma cor que está nos Dados).
 
+## Figma (2026-11-02)
+
+Telas desenhadas, à esquerda do arquivo (x < −1600):
+
+1. **"Perguntar à Aqua · 1 botão bloqueado (rede sem treino)"**: o lab com o botão novo apagado no topo (Aqua dormindo) e a dica "Treine a Aqua primeiro · Ligue o Backward pass na Saída e clique em Treinar."
+2. **"· 2 esperando a cor"**: a aba ocupa a tela toda abaixo do topo. Aqua grande acenando, balão "Oi! Escolha uma cor e me pergunte o que ela é.", cartão com a roda de cores, a amostra (hex) e R G B de 0 a 1 (como a Entrada do lab), e o botão Perguntar. "← Voltar ao laboratório" no canto.
+3. **"· 3 pensando"**: mão no queixo e balão de pensamento; "Pensando… rodando a rede neural"; botão apagado.
+4. **"· 4 resposta certa"**: apontando para a amostra; "É laranja!", "resposta da rede: 0,97 (perto de 1 = laranja, perto de 0 = azul)" e o botão "ver como ela pensou →" com a Aqua de lupa.
+5. **"· 5 em dúvida"**: coçando a cabeça com o "?"; "Hmm… não tenho certeza. Acho que é laranja." e "resposta da rede: 0,58 (bem no meio)".
+6. **"· 6 ver como ela pensou (zoom na cabeça, 4 tempos)"**: aproxima da cabeça (0,4 s), a cabeça cobre tudo (0,4 s), branco (0,2 s), o lab aparece com "← Voltar para a Aqua" (0,4 s).
+
+Na mesma revisão, o frame do laboratório foi conferido com o código rodando e atualizado ("Laboratório · Desktop · v3 (igual ao código em 2026-11-02)"): o topo só tem o Rodar, a paleta ganhou o Backward pass e o painel Contas tem Anterior/Próximo, Modo Foco e Passo a passo no topo, sem a seção Treinar. Em "Tutoriais · Desktop", os minutos e a descrição do tutorial 01 foram acertados. Home e Novo projeto já batiam com o código.
+
 ## Consequências
 
 **Positivas**
@@ -100,7 +113,7 @@ Decidido pelo autor: **funciona igual ao Rodar do lab.** A Aqua roda o forward p
 - O zoom na cabeça liga a Aqua à rede: a rede é o "cérebro" dela.
 
 **Negativas / custos**
-- Cinco poses novas de corpo inteiro da Aqua e as telas novas no Figma antes do código.
+- Poses novas de corpo inteiro da Aqua e seis telas novas no Figma antes do código.
 - O projeto passa a guardar se já foi treinado (mudança pequena no formato salvo).
 
 **Riscos e mitigação**
