@@ -40,15 +40,20 @@ Há um problema de fundo. A rede do lab só sabe responder "azul ou laranja": a 
 
 ### B. A Aqua se mexendo (GSAP)
 
-**Decidido pelo autor (2026-11-02): não basta trocar o ícone.** A Aqua ganha **poses de corpo inteiro**, desenhadas no mesmo pixel art das que já existem (as fantasias da linha do tempo, `AquaFantasia`, e `AquaSeparando` / `AquaAcendendo` em `components/mascote.tsx`). Exemplo dado pelo autor: **pensando = a mãozinha no queixo**. O rosto continua fixo (sem boca); a emoção vem da pose do corpo e, quando ajudar, de um ícone acima da cabeça. Movimento só com GSAP.
+**Decidido pelo autor (2026-11-02): não basta trocar o ícone.** A Aqua ganha **poses de corpo inteiro**, no estilo do Clawd (o mascote do Claude Code). Exemplo dado pelo autor: **pensando = a mãozinha no queixo**. Movimento só com GSAP. Regras de desenho, revistas pelo autor no mesmo dia:
 
-Poses propostas. A primeira versão está no Figma, no frame "Mascote · versões", seção "Aqua · poses de corpo inteiro". Lá há 12 poses: as 5 da tabela e outras que podem servir depois (comemorando, mostrando a cor no alto, acenando ao abrir a aba, dormindo na aba bloqueada, olhando a roda de cores, lupa para o "ver como ela pensou"). Os bracinhos saem das portas laterais, em aqua escuro.
+- **Sem boca nem sobrancelhas**, mas **os olhos mudam com a reação**: ^ ^ (feliz), > < (comemorando), meio fechados (hmm), olhando para cima (pensando), para o lado (apontando), fechados (dormindo).
+- **Um tamanho de pixel só.** Para caber olhos com forma, o corpo passou para a grade de **16 × 10 pixels** (o dobro da antiga), e todo o desenho usa esse mesmo pixel.
+- **Os bracinhos são as portas laterais (2 × 2 pixels):** só mudam de lugar (de lado, em cima, embaixo do rosto), nunca viram braço comprido.
+- Poses diferentes precisam ser claramente diferentes.
+
+Poses propostas. A primeira versão está no Figma, no frame "Mascote · versões", seção "Aqua · poses de corpo inteiro". Lá há 12 poses: as 5 da tabela e outras que podem servir depois (comemorando, mostrando a cor no alto, acenando ao abrir a aba, dormindo na aba bloqueada, olhando a roda de cores, lupa para o "ver como ela pensou"). 
 
 | Momento | Pose do corpo | Movimento |
 |---|---|---|
 | Esperando a cor | em pé, braços para baixo | respira devagar (sobe e desce um pouco) |
-| Pensando (~1 s) | **mãozinha no queixo** | balança de leve; o texto "pensando…" com os três pontos animados |
-| Resposta perto de 0 ou de 1 | braço levantado / apontando para a cor | um pulinho |
+| Pensando (~1 s) | **mãozinha no queixo**, olhos para cima, balão | balança de leve; o texto "pensando…" com os três pontos animados |
+| Resposta perto de 0 ou de 1 | olhos ^ ^, pulinho (ou apontando para a cor) | um pulinho |
 | Resposta no meio (perto de 0,50) | coçando a cabeça, com um "?" acima | olha para os lados |
 
 - **Faixas de certeza:** abaixo de 0,30 ou acima de 0,70 = confiante; entre as duas = em dúvida.
