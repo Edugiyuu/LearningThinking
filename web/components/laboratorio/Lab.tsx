@@ -120,8 +120,8 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
   const [chegou, setChegou] = useState<number | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const [salvamento, setSalvamento] = useState<Salvamento>(projeto ? "salvo" : "nao-salvo");
-  // Aba "Perguntar à Aqua" (ADR-0028): só abre depois de um treino que gravou os pesos
-  const [treinada, setTreinada] = useState(inicial.treinada ?? false);
+  // Aba "Perguntar à Aqua" (ADR-0028): abre depois que a rede rodou sem erro uma vez (Rodar ou Treinar)
+  const [rodou, setRodou] = useState(inicial.rodou ?? false);
   const [tela, setTela] = useState<"lab" | "aqua">("lab");
   const [conversa, setConversa] = useState<ConversaAqua>({ cor: "#EE8C2B", resposta: null });
   // "ver como ela pensou": a cor perguntada entra só na conta mostrada, nunca na montagem salva
@@ -142,15 +142,15 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
     }
     setSalvamento("salvando");
     const t = setTimeout(() => {
-      setSalvamento(salvarMontagem(projeto.id, { nodes, fios, pesos, exemplos, treinada }) ? "salvo" : "nao-salvo");
+      setSalvamento(salvarMontagem(projeto.id, { nodes, fios, pesos, exemplos, rodou }) ? "salvo" : "nao-salvo");
     }, ESPERA_SALVAR);
     return () => clearTimeout(t);
-  }, [projeto, nodes, fios, pesos, exemplos, treinada]);
+  }, [projeto, nodes, fios, pesos, exemplos, rodou]);
 
   // Treinar (ADR-0024): a rede aprende com os exemplos; no fim, os pesos novos entram no projeto
   const aplicarPesos = useCallback((novos: Pesos) => {
     setPesos((atuais) => ({ ...atuais, ...novos }));
-    setTreinada(true);
+    setRodou(true);
   }, []);
   const treino = useTreino({
     exemplos,
@@ -202,6 +202,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
     setConsulta(null);
     setTela("lab");
     const { rodada, erros } = prepararRodada(nodes, fios, pesos);
+    if (rodada) setRodou(true);
     setChegou(null);
     setExecucao({ estrutura: estruturaDe(nodes, fios, pesos), rodada, erros, atual: 0, ...(rodada ? prepararVolta() : { volta: null, modo: "mostrar" }), salvou: false });
   };
@@ -305,7 +306,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
 
   /* ---------- Perguntar à Aqua (ADR-0028) ---------- */
 
-  const motivoAquaFechada = motivoParaNaoPerguntar(nodes, fios, pesos, treinada);
+  const motivoAquaFechada = motivoParaNaoPerguntar(nodes, fios, pesos, rodou);
   const perguntar = (cor: string) => perguntarCor(nodes, fios, pesos, cor);
 
   // "ver como ela pensou": o lab abre no primeiro passo da ida, com a cor perguntada e o Modo Foco desligado.
@@ -483,8 +484,8 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
                   <span id="aqua-dica" role="tooltip" className="aqua-dica">
                     <AquaAnimada momento="dormindo" unidade={2} />
                     <span>
-                      <b>{treinada ? "A Aqua não pode responder agora" : "Treine a Aqua primeiro"}</b>
-                      {treinada ? motivoAquaFechada : "Ligue o Backward pass na Saída e clique em Treinar."}
+                      <b>{rodou ? "A Aqua não pode responder agora" : "Rode a rede primeiro"}</b>
+                      {rodou ? motivoAquaFechada : "Clique em Rodar e a Aqua passa a responder com ela."}
                     </span>
                   </span>
                 )}

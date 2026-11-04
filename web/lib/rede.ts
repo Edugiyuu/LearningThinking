@@ -106,9 +106,9 @@ export function criarFio(source: string, target: string): Fio {
 
 /**
  * A montagem salva no projeto. Os exemplos do Treinar (ADR-0024) vêm junto; sem eles, a lista pronta.
- * `treinada` fica true quando um treino termina e grava os pesos (abre a aba da Aqua, ADR-0028).
+ * `rodou` fica true quando o aluno roda a rede sem erro (Rodar ou Treinar): abre a aba da Aqua (ADR-0028).
  */
-export type Montagem = { nodes: NoDaRede[]; fios: Fio[]; pesos: Pesos; exemplos?: { cor: string; objetivo: 0 | 1 }[]; treinada?: boolean };
+export type Montagem = { nodes: NoDaRede[]; fios: Fio[]; pesos: Pesos; exemplos?: { cor: string; objetivo: 0 | 1 }[]; rodou?: boolean };
 
 /**
  * Básico pronto: a cor entra, a Camada 1 tem um detector de laranja e um de azul,

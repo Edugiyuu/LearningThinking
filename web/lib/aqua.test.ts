@@ -60,11 +60,11 @@ describe("comCorPerguntada", () => {
 describe("motivoParaNaoPerguntar", () => {
   const { nodes, fios, pesos } = montagemBasica();
 
-  test("sem treino a aba não abre", () => {
-    expect(motivoParaNaoPerguntar(nodes, fios, pesos, false)).toMatch(/Treine a Aqua/);
+  test("sem rodar a rede a aba não abre", () => {
+    expect(motivoParaNaoPerguntar(nodes, fios, pesos, false)).toMatch(/Rode a rede/);
   });
 
-  test("treinada e com a Entrada de cor, a aba abre", () => {
+  test("depois de rodar, com a Entrada de cor, a aba abre (sem precisar treinar)", () => {
     expect(motivoParaNaoPerguntar(nodes, fios, pesos, true)).toBeNull();
   });
 

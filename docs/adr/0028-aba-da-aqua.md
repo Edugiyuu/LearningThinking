@@ -18,7 +18,7 @@ Há um problema de fundo. A rede do lab só sabe responder "azul ou laranja": a 
 ## Decisões do autor (2026-11-02)
 
 1. **Uma aba nova, só da Aqua.** Ela fica no laboratório e usa o projeto aberto, mas, quando abre, a tela é toda da Aqua: sem canvas, sem paleta, sem painel Contas.
-2. **Só abre se a rede já foi treinada.** Projeto nunca treinado não entra na aba (não basta um aviso dentro dela).
+2. **Só abre depois que a rede rodou.** Projeto que nunca rodou não entra na aba (não basta um aviso dentro dela). *Revisto em 2026-11-04 pelo autor:* basta clicar em **Rodar** (sem erro); não precisa treinar nem do bloco Backward pass. Pela [ADR-0015](0015-aba-redes-neurais-montagem.md), "rede já treinada" é a rede **com os pesos salvos**, e o Básico pronto já vem com pesos que funcionam.
 3. **Enquanto pensa, não mostra a rede.** Só um texto curto, como "pensando…" ou "rodando a rede neural…", e a Aqua com o ícone de pensando.
 4. **A Aqua não fica parada.** A imagem muda conforme o momento (esperando, pensando, respondendo) e conforme a certeza da resposta, com **poses do corpo inteiro** (ex.: mãozinha no queixo ao pensar), e não só o ícone acima da cabeça.
 5. **"Ver como ela pensou"** abre o canvas do projeto no passo a passo, igual ao Rodar de hoje, com a cor que o aluno escolheu.
@@ -36,8 +36,8 @@ Há um problema de fundo. A rede do lab só sabe responder "azul ou laranja": a 
 - **Nome da aba:** "Perguntar à Aqua", ao lado de Treinar e Rodar no topo do laboratório.
 - **Tela:** a Aqua grande no centro. Embaixo dela, o seletor de cor (uma roda de cores e, embaixo, os controles R G B, os mesmos números que a Entrada do lab usa) e um botão **"Perguntar"**.
 - **Resposta:** um balão ao lado da Aqua com a frase e o número da Saída, por exemplo "Acho que é **laranja**" e, menor, "resposta da rede: 0,87". O número continua aparecendo para não esconder que é uma conta.
-- **Aba bloqueada:** sem treino, o botão da aba fica apagado, com a dica "Treine a Aqua primeiro (Backward pass → Treinar)".
-- **O que conta como "treinada":** o projeto passa a guardar a informação de que um treino terminou, no mesmo momento em que os pesos novos são salvos (`aplicar` em `Treinar.tsx`). Hoje o projeto guarda os pesos, mas não sabe de onde eles vieram.
+- **Aba bloqueada:** enquanto a rede nunca rodou, o botão da aba fica apagado, com a dica "Rode a rede primeiro · Clique em Rodar e a Aqua passa a responder com ela."
+- **O que destrava:** o projeto guarda `rodou` quando o Rodar monta a rodada sem erro (ou quando um treino termina). *Erro corrigido em 2026-11-04:* a primeira versão exigia um treino terminado, o que obrigava o aluno a ligar o Backward pass só para conversar com a Aqua, contra a ADR-0015 e contra o foco desta ADR (só a ida).
 - **Só com a Entrada de cor.** Com a Entrada de números livres, a aba não abre (a dica explica o motivo).
 
 ### B. A Aqua se mexendo (quadros + GSAP)
@@ -117,7 +117,7 @@ Quando o lab ganhar uma entrada nova (com ADR própria antes), ela traz o seu se
 
 Telas desenhadas, à esquerda do arquivo (x < −1600):
 
-1. **"Perguntar à Aqua · 1 botão bloqueado (rede sem treino)"**: o lab com o botão novo apagado no topo (Aqua dormindo) e a dica "Treine a Aqua primeiro · Ligue o Backward pass na Saída e clique em Treinar."
+1. **"Perguntar à Aqua · 1 botão bloqueado (rede sem treino)"**: o lab com o botão novo apagado no topo (Aqua dormindo) e a dica "Rode a rede primeiro · Clique em Rodar e a Aqua passa a responder com ela." (texto trocado em 2026-11-04)
 2. **"· 2 esperando a cor"**: a aba ocupa a tela toda abaixo do topo. Aqua grande acenando, balão "Oi! Escolha uma cor e me pergunte o que ela é.", cartão com a roda de cores, a amostra (hex) e R G B de 0 a 1 (como a Entrada do lab), e o botão Perguntar. "← Voltar ao laboratório" no canto.
 3. **"· 3 pensando"**: mão no queixo e balão de pensamento; "Pensando… rodando a rede neural"; botão apagado.
 4. **"· 4 resposta certa"**: apontando para a amostra; "É laranja!", "resposta da rede: 0,97 (perto de 1 = laranja, perto de 0 = azul)" e o botão "ver como ela pensou →" com a Aqua de lupa.
@@ -136,12 +136,12 @@ Na mesma revisão, o frame do laboratório foi conferido com o código rodando e
 | `web/components/aqua-animada.tsx` | A Aqua de corpo inteiro (grade 30 × 24, corpo 16 × 10) com os quadros do Figma. O GSAP é só o relógio: uma timeline troca o quadro inteiro; o piscar é sorteado entre 3 e 6 s. Não sabe que a entrada é cor (seção E). |
 | `web/components/laboratorio/AbaAqua.tsx` | A tela da aba: balão, roda de cores (só a matiz, como no Figma) + R G B de 0 a 1, o "pensando" de 1 s e o zoom na cabeça. |
 | `web/components/laboratorio/Lab.tsx` | O botão no topo (apagado com a dica e a Aqua dormindo), a troca de tela e o "ver como ela pensou": a cor perguntada entra só na tela (`consulta`), a rodada é só a ida, o Modo Foco desliga e o resultado do treino sai da frente. |
-| `web/lib/rede.ts`, `web/lib/projetos.ts` | A montagem salva ganhou `treinada`, que vira true quando um treino termina e grava os pesos. |
+| `web/lib/rede.ts`, `web/lib/projetos.ts` | A montagem salva ganhou `rodou`, que vira true quando o Rodar dá certo (ou um treino termina). |
 
 **Notas do código:**
-- Montagens salvas antes disso não têm `treinada`: a aba fica fechada até o aluno treinar de novo (não dá para saber de onde vieram os pesos).
+- Montagens salvas antes disso não têm `rodou`: basta clicar em Rodar uma vez.
 - **A Aqua não usa o backward (corrigido em 2026-11-04, pedido do autor).** No "ver como ela pensou", o bloco Backward pass mostrava "Cor nova · adicionar aos Dados" para a cor perguntada, coisa da volta numa tela que é só de ida (item D.3). Agora, enquanto a cor da Aqua está na tela, o bloco só diz que ali é só a ida e esconde a resposta certa, os Dados e o Treinar.
-- O Backward pass só aparece na dica do botão bloqueado porque **treinar** depende do bloco ([ADR-0025](0025-bloco-backward-pass.md), item 12). A Aqua em si só usa o forward pass.
+- A Aqua não depende do Backward pass em nenhum momento: nem para abrir (basta o Rodar), nem para responder (só o forward pass).
 
 ## Consequências
 
@@ -152,7 +152,7 @@ Na mesma revisão, o frame do laboratório foi conferido com o código rodando e
 
 **Negativas / custos**
 - Poses novas de corpo inteiro da Aqua e seis telas novas no Figma antes do código.
-- O projeto passa a guardar se já foi treinado (mudança pequena no formato salvo).
+- O projeto passa a guardar se a rede já rodou (mudança pequena no formato salvo).
 
 **Riscos e mitigação**
 - *O aluno não perceber que a resposta é só uma conta:* o número da Saída aparece sempre, e o "ver como ela pensou" leva à conta inteira.
