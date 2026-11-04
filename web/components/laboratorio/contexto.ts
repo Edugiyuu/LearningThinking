@@ -34,6 +34,8 @@ type Laboratorio = {
   modoVolta: "mostrar" | "salvar";
   /** O Treinar: os controles ficam no bloco Backward pass; o treino passando, no painel. */
   treino: Treino;
+  /** "Ver como ela pensou" (ADR-0028): a cor perguntada à Aqua está na tela e a rodada é só a ida. */
+  consultaDaAqua: boolean;
   /** O que 0 e 1 significam, da Saída da montagem. */
   rotulos: Pick<SaidaData, "rotulo0" | "cor0" | "rotulo1" | "cor1">;
 };

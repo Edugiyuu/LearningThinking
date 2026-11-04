@@ -281,6 +281,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
       dados: exemplos,
       setDados: setExemplos,
       rotulos,
+      consultaDaAqua: consulta !== null,
       volta,
       modoVolta: ativa?.modo ?? "mostrar",
       treino,
@@ -297,7 +298,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
       informarLinha,
       posicaoDoPeso,
     }),
-    [entrada, exemplos, rotulos, volta, treino, vista, ativa, chegou, informarLinha, posicaoDoPeso],
+    [entrada, exemplos, rotulos, consulta, volta, treino, vista, ativa, chegou, informarLinha, posicaoDoPeso],
   );
 
   const fecharFoco = useCallback(() => setFoco(false), []);

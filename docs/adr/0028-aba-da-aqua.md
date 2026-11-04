@@ -140,7 +140,8 @@ Na mesma revisão, o frame do laboratório foi conferido com o código rodando e
 
 **Notas do código:**
 - Montagens salvas antes disso não têm `treinada`: a aba fica fechada até o aluno treinar de novo (não dá para saber de onde vieram os pesos).
-- No "ver como ela pensou", o bloco Backward pass enxerga a cor perguntada na Entrada e pode oferecer "adicionar aos Dados", como faz com qualquer cor nova. Só entra nos Dados se o aluno clicar.
+- **A Aqua não usa o backward (corrigido em 2026-11-04, pedido do autor).** No "ver como ela pensou", o bloco Backward pass mostrava "Cor nova · adicionar aos Dados" para a cor perguntada, coisa da volta numa tela que é só de ida (item D.3). Agora, enquanto a cor da Aqua está na tela, o bloco só diz que ali é só a ida e esconde a resposta certa, os Dados e o Treinar.
+- O Backward pass só aparece na dica do botão bloqueado porque **treinar** depende do bloco ([ADR-0025](0025-bloco-backward-pass.md), item 12). A Aqua em si só usa o forward pass.
 
 ## Consequências
 
