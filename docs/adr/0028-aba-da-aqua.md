@@ -1,6 +1,6 @@
 # ADR-0028 · Aba da Aqua: usar a rede treinada
 
-- **Status:** Aceita (autor), telas no Figma; falta o código
+- **Status:** Aceita (autor), telas no Figma e código feito (2026-11-04)
 - **Data:** 2026-11-02
 - **Decisores:** Eduardo (autor), com propostas da IA
 - **Usa:** [ADR-0024](0024-treinar-com-backpropagation.md) (os pesos treinados ficam no projeto), [ADR-0026](0026-modo-foco.md) (o passo a passo que o "ver como ela pensou" abre), [ADR-0021](0021-bolinhas-cores-e-espremer.md) (azul = 0, laranja = 1)
@@ -127,6 +127,20 @@ Telas desenhadas, à esquerda do arquivo (x < −1600):
 **Quadros da animação (2026-11-03):** frame "Aqua · quadros da animação", logo abaixo de "Mascote · versões", com 7 sequências na mesma grade: piscar (4 quadros), respirar (3), esperando → pensando (3), pensando (4), em dúvida (4), pulinho da resposta certa (4) e dormindo (2).
 
 Na mesma revisão, o frame do laboratório foi conferido com o código rodando e atualizado ("Laboratório · Desktop · v3 (igual ao código em 2026-11-02)"): o topo só tem o Rodar, a paleta ganhou o Backward pass e o painel Contas tem Anterior/Próximo, Modo Foco e Passo a passo no topo, sem a seção Treinar. Em "Tutoriais · Desktop", os minutos e a descrição do tutorial 01 foram acertados. Home e Novo projeto já batiam com o código.
+
+## Código (2026-11-04)
+
+| Arquivo | O que faz |
+|---|---|
+| `web/lib/aqua.ts` | A pergunta: `perguntarCor` roda o forward pass com `lerRede` + `rodar` (a mesma conta do Treinar e do Rodar); `lerSaida` aplica as faixas 0,30 / 0,70; `motivoParaNaoPerguntar` diz por que a aba está fechada; `comCorPerguntada` põe a cor na Entrada só para mostrar. Testes em `aqua.test.ts`. |
+| `web/components/aqua-animada.tsx` | A Aqua de corpo inteiro (grade 30 × 24, corpo 16 × 10) com os quadros do Figma. O GSAP é só o relógio: uma timeline troca o quadro inteiro; o piscar é sorteado entre 3 e 6 s. Não sabe que a entrada é cor (seção E). |
+| `web/components/laboratorio/AbaAqua.tsx` | A tela da aba: balão, roda de cores (só a matiz, como no Figma) + R G B de 0 a 1, o "pensando" de 1 s e o zoom na cabeça. |
+| `web/components/laboratorio/Lab.tsx` | O botão no topo (apagado com a dica e a Aqua dormindo), a troca de tela e o "ver como ela pensou": a cor perguntada entra só na tela (`consulta`), a rodada é só a ida, o Modo Foco desliga e o resultado do treino sai da frente. |
+| `web/lib/rede.ts`, `web/lib/projetos.ts` | A montagem salva ganhou `treinada`, que vira true quando um treino termina e grava os pesos. |
+
+**Notas do código:**
+- Montagens salvas antes disso não têm `treinada`: a aba fica fechada até o aluno treinar de novo (não dá para saber de onde vieram os pesos).
+- No "ver como ela pensou", o bloco Backward pass enxerga a cor perguntada na Entrada e pode oferecer "adicionar aos Dados", como faz com qualquer cor nova. Só entra nos Dados se o aluno clicar.
 
 ## Consequências
 

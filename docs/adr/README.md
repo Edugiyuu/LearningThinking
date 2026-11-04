@@ -40,6 +40,6 @@ Registro das decisões de arquitetura do projeto. Formato baseado em [MADR](http
 | [0025](0025-bloco-backward-pass.md) | Bloco Backward pass: a culpa voltando passo a passo (Mostrar/Salvar, termômetro, bolinha de culpa, sinais + − =, lupa) | **Aceita** (autor) |
 | [0026](0026-modo-foco.md) | Modo Foco no Rodar: zoom no passo da vez, culpa com sinal e de onde ela vem | **Aceita** (autor), falta Figma |
 | [0027](0027-testes-com-jest.md) | Testes automatizados com Jest (tipos conferidos no `npm test`, `expect` no lugar do `assert`) | **Aceita** (autor) |
-| [0028](0028-aba-da-aqua.md) | Aba da Aqua: perguntar uma cor para a rede treinada (resposta do forward pass, Aqua com poses, zoom na cabeça para ver como ela pensou) | **Aceita** (autor), telas no Figma, falta código |
+| [0028](0028-aba-da-aqua.md) | Aba da Aqua: perguntar uma cor para a rede treinada (resposta do forward pass, Aqua com poses, zoom na cabeça para ver como ela pensou) | **Aceita** (autor), telas no Figma e código feito |
 | [0029](0029-saida-com-varias-cores.md) | Saída com várias cores: o aluno escolhe as cores nos Dados, um neurônio por cor, softmax no fim | Proposta, adiada (depois da aba da Aqua) |
 | [0030](0030-entradas-alem-de-cor.md) | Entradas além de cor no tema Redes neurais: grade de pixels, ponto no plano ou ficha com características | Proposta, adiada (até o autor escolher a próxima entrada) |
