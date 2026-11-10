@@ -110,6 +110,45 @@
   height: 36px;
   padding: 0 24px;
   font-size: 14px;
+  /* "Rodar de novo" e "Perguntar à Aqua" nunca quebram em duas linhas */
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* telas mais estreitas: o topo aperta antes de quebrar texto */
+@media (max-width: 1200px) {
+  .lab-topo {
+    gap: 12px;
+    padding: 0 16px;
+  }
+
+  .lab-botao {
+    padding: 0 14px;
+  }
+
+  .lab-abas button {
+    padding: 6px 14px;
+  }
+}
+
+@media (max-width: 960px) {
+  /* o logo fica só com a Aqua; o link continua com nome para leitor de tela */
+  .lab-logo span {
+    display: none;
+  }
+
+  .lab-projeto {
+    max-width: 120px;
+  }
+
+  .lab-salvo {
+    display: none;
+  }
+
+  /* a aba "em breve" sai antes de encavalar com os botões da direita */
+  .lab-abas button:disabled {
+    display: none;
+  }
 }
 
 .lab {

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import gsap from "gsap";
 import { BaseEdge, EdgeLabelRenderer, getStraightPath, type Edge, type EdgeProps } from "@xyflow/react";
 import { formatar, limitarPeso, NEURONIO_TAMANHO, type EstadoLinha, type Vista } from "@/lib/rede";
-import { useLab } from "@/components/laboratorio/contexto";
+import { useLab, usePosicaoDoPeso } from "@/components/laboratorio/contexto";
 import { MarcaSinal } from "@/components/laboratorio/ContasDaVolta";
 
 const LUPA: Record<"+" | "-" | "=", string> = { "+": "mais forte", "-": "mais fraca", "=": "igual" };
@@ -16,7 +16,8 @@ type PesoData = { peso: number; editando: boolean; posicao: number; estado: Esta
  * Durante a rodada, a linha da conta atual fica destacada e as que ainda não vieram ficam apagadas.
  */
 export default function PesoEdge({ id, sourceX, sourceY, targetX, targetY, data }: EdgeProps<Edge<PesoData>>) {
-  const { editarPeso, salvarPeso, chegou, bolinhaChegou, informarLinha, posicaoDoPeso, volta, modoVolta } = useLab();
+  const { editarPeso, salvarPeso, chegou, bolinhaChegou, informarLinha, volta, modoVolta } = useLab();
+  const posicaoDoPeso = usePosicaoDoPeso();
   const [path] = getStraightPath({ sourceX, sourceY, targetX, targetY });
   const peso = data?.peso ?? 0;
   const estado = data?.estado ?? "normal";

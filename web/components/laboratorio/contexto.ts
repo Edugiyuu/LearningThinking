@@ -21,8 +21,6 @@ type Laboratorio = {
   bolinhaChegou: (passo: number) => void;
   /** Cada linha conta onde estão as suas pontas, para o laboratório decidir onde vai o número. */
   informarLinha: (id: string, s: { sx: number; sy: number; tx: number; ty: number }) => void;
-  /** Ponto da linha (0 a 1) onde o número do peso fica. */
-  posicaoDoPeso: Map<string, number>;
   /** O que a Entrada manda agora (o Backward pass procura a cor dela nos Dados). */
   entrada: EntradaData | null;
   /** Os Dados do Treinar: cada cor com a resposta certa. O Backward pass lê e acrescenta (ADR-0025). */
@@ -39,6 +37,16 @@ type Laboratorio = {
 };
 
 export const LabContexto = createContext<Laboratorio | null>(null);
+
+/**
+ * Ponto da linha (0 a 1) onde o número de cada peso fica. Num contexto à parte porque muda
+ * toda vez que um bloco é solto, e só as linhas usam: assim os blocos não se redesenham (ADR-0032).
+ */
+export const PosicaoDoPesoContexto = createContext<Map<string, number>>(new Map());
+
+export function usePosicaoDoPeso(): Map<string, number> {
+  return useContext(PosicaoDoPesoContexto);
+}
 
 export function useLab(): Laboratorio {
   const lab = useContext(LabContexto);

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { memo, type ReactNode } from "react";
 import { formatar, type Erro, type Passo, type Rodada } from "@/lib/rede";
 import type { PassoVolta } from "@/lib/backward";
 import ContasDaVolta from "@/components/laboratorio/ContasDaVolta";
@@ -27,8 +27,11 @@ type Props = {
   soTreinar: boolean;
 };
 
+// memorizado: não se redesenha enquanto um bloco é arrastado no canvas (ADR-0032)
+export default memo(PainelContas);
+
 /** Painel da direita: as contas, uma multiplicação de cada vez, e o Treinar. */
-export default function PainelContas({ rodada, volta, modoVolta, atual, erros, automatico, foco, setFoco, irPara, setAutomatico, textoResposta, treinar, soTreinar }: Props) {
+function PainelContas({ rodada, volta, modoVolta, atual, erros, automatico, foco, setFoco, irPara, setAutomatico, textoResposta, treinar, soTreinar }: Props) {
   const daIda = rodada?.passos.length ?? 0;
   const total = daIda + (volta?.length ?? 0);
   const naVolta = !!volta && atual >= daIda;

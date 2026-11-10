@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type DragEvent } from "react";
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type DragEvent } from "react";
 import gsap from "gsap";
 import Link from "next/link";
 import {
@@ -11,6 +11,7 @@ import {
   ReactFlow,
   ReactFlowProvider,
   useReactFlow,
+  useUpdateNodeInternals,
   type Connection,
   type Edge,
   type EdgeChange,
@@ -30,9 +31,9 @@ import LadoRecolhivel from "@/components/laboratorio/LadoRecolhivel";
 import QuadroFoco from "@/components/laboratorio/QuadroFoco";
 import AbaAqua, { type ConversaAqua } from "@/components/laboratorio/AbaAqua";
 import { ResultadoTreino, SecaoTreinar, useTreino } from "@/components/laboratorio/Treinar";
-import { LabContexto } from "@/components/laboratorio/contexto";
-import { Aqua } from "@/components/mascote";
-import { AquaAnimada } from "@/components/aqua-animada";
+import { LabContexto, PosicaoDoPesoContexto } from "@/components/laboratorio/contexto";
+import { Aqua as AquaDesenho } from "@/components/mascote";
+import { AquaAnimada as AquaAnimadaDesenho } from "@/components/aqua-animada";
 import { comCorPerguntada, motivoParaNaoPerguntar, perguntarCor } from "@/lib/aqua";
 import { lerMontagem, salvarMontagem, type Projeto } from "@/lib/projetos";
 import { EXEMPLOS_PRONTOS, corParaEntradas, lerRede, type Exemplo } from "@/lib/treino";
@@ -69,9 +70,20 @@ import {
 const nodeTypes = { camada: CamadaNode, neuronio: NeuronioNode, saida: SaidaNode, entrada: EntradaNode, backward: BackwardNode };
 const edgeTypes = { peso: PesoEdge };
 const TIPO_ARRASTE = "application/x-bloco";
+// props do <ReactFlow> que não podem virar um objeto novo a cada desenho (ADR-0032)
+const AJUSTE_INICIAL = { padding: 0.25 };
+const SEM_ERROS: never[] = [];
+// as Aquas do topo não mudam enquanto um bloco é arrastado: memorizadas, não se redesenham a cada movimento
+const Aqua = memo(AquaDesenho);
+const AquaAnimada = memo(AquaAnimadaDesenho);
 const INTERVALO_AUTOMATICO = 2300; // ms entre um passo e outro no modo automático (a bolinha leva 2 s)
-const ESPERA_SALVAR = 400; // ms sem mexer antes de salvar
+const ESPERA_SALVAR = 800; // ms sem mexer antes de salvar
 const ROTULOS_PADRAO = { rotulo0: "0", cor0: "#378ADD", rotulo1: "1", cor1: "#E8853A" };
+
+/** O desenho de um bloco na tela. Anima o filho: o React Flow é dono do transform da caixa de fora. */
+function caixaDoBloco(id: string): HTMLElement | null {
+  return document.querySelector<HTMLElement>(`.react-flow__node[data-id="${CSS.escape(id)}"] > *`);
+}
 
 /** A montagem salva do projeto ou, se não houver, a que o aluno escolheu em Novo projeto. */
 function montagemDoProjeto(projeto: Projeto | null): Montagem {
@@ -105,7 +117,7 @@ function estruturaDe(nodes: NoDaRede[], fios: Fio[], pesos: Pesos) {
     pesos,
   });
 }
-type Salvamento = "salvo" | "salvando" | "nao-salvo";
+type Salvamento = "salvo" | "nao-salvo";
 
 function Laboratorio({ projeto }: { projeto: Projeto | null }) {
   const [inicial] = useState(() => montagemDoProjeto(projeto));
@@ -129,24 +141,51 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
   const [consulta, setConsulta] = useState<string | null>(null);
   const [transicao, setTransicao] = useState<"entrando" | "voltando" | "chegou" | null>(null);
   const { screenToFlowPosition, zoomIn, zoomOut } = useReactFlow<NoDaRede>();
+  const remedir = useUpdateNodeInternals();
+
+  // Arrastar um bloco muda a lista de blocos a cada quadro, mas só a posição muda (ADR-0032).
+  // Linhas, contas e o que a Aqua confere usam a "forma" da montagem, que fica a mesma enquanto nada além da posição mudar.
+  const arrastando = nodes.some((n) => n.dragging);
+  const chaveDaForma = JSON.stringify(nodes.map((n) => [n.id, n.type, n.parentId, n.data, n.type === "neuronio" ? Math.round(n.position.y) : 0]));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const nodesDaForma = useMemo(() => nodes, [chaveDaForma]);
 
   // fios de blocos apagados somem sozinhos
-  const fios = useMemo(() => fiosValidos(nodes, fiosBrutos), [nodes, fiosBrutos]);
+  const fios = useMemo(() => fiosValidos(nodesDaForma, fiosBrutos), [nodesDaForma, fiosBrutos]);
 
-  // salva a montagem no navegador um pouco depois da última mudança
-  const primeiraVez = useRef(true);
+  // salva a montagem no navegador um pouco depois da última mudança (ADR-0032).
+  // Só conta o que muda a montagem: arrastar (a cada quadro), selecionar e medir os blocos não salvam.
+  const conteudo = useMemo(
+    () =>
+      arrastando
+        ? null
+        : JSON.stringify([
+            nodes.map((n) => [n.id, n.type, n.parentId, Math.round(n.position.x), Math.round(n.position.y), n.data]),
+            fios.map((f) => [f.id, f.source, f.sourceHandle, f.target, f.targetHandle]),
+            pesos,
+            exemplos,
+            rodou,
+          ]),
+    [arrastando, nodes, fios, pesos, exemplos, rodou],
+  );
+  const ultimoSalvo = useRef<string | null>(null);
+  const paraSalvar = useRef({ nodes, fios, pesos, exemplos, rodou });
+  useLayoutEffect(() => {
+    paraSalvar.current = { nodes, fios, pesos, exemplos, rodou };
+  });
   useEffect(() => {
-    if (!projeto) return;
-    if (primeiraVez.current) {
-      primeiraVez.current = false;
+    if (!projeto || conteudo === null) return;
+    if (ultimoSalvo.current === null) {
+      ultimoSalvo.current = conteudo; // a montagem que acabou de abrir já está salva
       return;
     }
-    setSalvamento("salvando");
+    if (conteudo === ultimoSalvo.current) return;
     const t = setTimeout(() => {
-      setSalvamento(salvarMontagem(projeto.id, { nodes, fios, pesos, exemplos, rodou }) ? "salvo" : "nao-salvo");
+      ultimoSalvo.current = conteudo;
+      setSalvamento(salvarMontagem(projeto.id, paraSalvar.current) ? "salvo" : "nao-salvo");
     }, ESPERA_SALVAR);
     return () => clearTimeout(t);
-  }, [projeto, nodes, fios, pesos, exemplos, rodou]);
+  }, [projeto, conteudo]);
 
   // Treinar (ADR-0024): a rede aprende com os exemplos; no fim, os pesos novos entram no projeto
   const aplicarPesos = useCallback((novos: Pesos) => {
@@ -167,7 +206,8 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
   });
 
   const nodesNaTela = useMemo(() => (consulta ? comCorPerguntada(nodes, consulta) : nodes), [nodes, consulta]);
-  const estrutura = useMemo(() => estruturaDe(nodesNaTela, fios, pesos), [nodesNaTela, fios, pesos]);
+  const formaNaTela = useMemo(() => (consulta ? comCorPerguntada(nodesDaForma, consulta) : nodesDaForma), [nodesDaForma, consulta]);
+  const estrutura = useMemo(() => estruturaDe(formaNaTela, fios, pesos), [formaNaTela, fios, pesos]);
   const ativa = execucao?.estrutura === estrutura ? execucao : null;
   const rodada = ativa?.rodada ?? null;
   const atual = ativa?.atual ?? 0;
@@ -184,12 +224,12 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
   // Durante o treino, elas mostram os pesos da repetição que está passando.
   const pesosNaTela = useMemo(() => (treino.pesosAoVivo ? { ...pesos, ...treino.pesosAoVivo } : pesos), [pesos, treino.pesosAoVivo]);
   const edges = useMemo<Edge[]>(
-    () => [...fios, ...linhas(nodesNaTela, fios, pesosNaTela, editando, vista)],
-    [nodesNaTela, fios, pesosNaTela, editando, vista],
+    () => [...fios, ...linhas(formaNaTela, fios, pesosNaTela, editando, vista)],
+    [formaNaTela, fios, pesosNaTela, editando, vista],
   );
 
   // mexer em blocos ou fios no meio do treino cancela o treino
-  const formato = useMemo(() => JSON.stringify([nodes.map((n) => [n.id, n.parentId]), fios.map((f) => [f.source, f.target])]), [nodes, fios]);
+  const formato = useMemo(() => JSON.stringify([nodesDaForma.map((n) => [n.id, n.parentId]), fios.map((f) => [f.source, f.target])]), [nodesDaForma, fios]);
   const formatoDoTreino = useRef(formato);
   const { emAndamento, parar } = treino;
   useEffect(() => {
@@ -257,20 +297,30 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
   const pendentes = useRef(new Map<string, Segmento>());
   const quadro = useRef(0);
   const [pontas, setPontas] = useState<Map<string, Segmento>>(() => new Map());
+  // no meio de um arraste, os números ficam onde estavam na linha; recalcula ao soltar (ADR-0032)
+  const arrastandoRef = useRef(false);
+  useLayoutEffect(() => {
+    arrastandoRef.current = arrastando;
+    if (!arrastando) setPontas(new Map(pendentes.current));
+  }, [arrastando]);
   const informarLinha = useCallback((id: string, s: Omit<Segmento, "id">) => {
     pendentes.current.set(id, { id, ...s });
+    if (arrastandoRef.current) return;
     // várias linhas mexem juntas (arrastar um bloco): junta tudo num quadro só
     cancelAnimationFrame(quadro.current);
     quadro.current = requestAnimationFrame(() => setPontas(new Map(pendentes.current)));
   }, []);
+  // os blocos como estavam na última vez que nada era arrastado (o padrão do React de guardar um valor anterior em estado)
+  const [parados, setParados] = useState(nodes);
+  if (!arrastando && parados !== nodes) setParados(nodes);
   const posicaoDoPeso = useMemo(() => {
     const ids = new Set(edges.filter((e) => e.type === "peso").map((e) => e.id));
     const segmentos = [...pontas.values()].filter((s) => ids.has(s.id));
-    const caixas = nodes
+    const caixas = parados
       .filter((n) => !n.parentId && n.measured?.width && n.measured?.height)
       .map((n) => ({ x: n.position.x, y: n.position.y, w: n.measured!.width!, h: n.measured!.height! }));
     return posicionarPesos(segmentos, caixas, vista?.linhaAgora ?? null);
-  }, [pontas, edges, nodes, vista?.linhaAgora]);
+  }, [pontas, edges, parados, vista?.linhaAgora]);
 
   const saidaDaMontagem = nodes.find((n) => n.type === "saida");
   const rotulos = saidaDaMontagem?.type === "saida" ? saidaDaMontagem.data : ROTULOS_PADRAO;
@@ -297,16 +347,15 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
       chegou,
       bolinhaChegou: setChegou,
       informarLinha,
-      posicaoDoPeso,
     }),
-    [entrada, exemplos, rotulos, volta, treino, vista, ativa, chegou, informarLinha, posicaoDoPeso],
+    [entrada, exemplos, rotulos, volta, treino, vista, ativa, chegou, informarLinha],
   );
 
   const fecharFoco = useCallback(() => setFoco(false), []);
 
   /* ---------- Perguntar à Aqua (ADR-0028) ---------- */
 
-  const motivoAquaFechada = motivoParaNaoPerguntar(nodes, fios, pesos, rodou);
+  const motivoAquaFechada = useMemo(() => motivoParaNaoPerguntar(nodesDaForma, fios, pesos, rodou), [nodesDaForma, fios, pesos, rodou]);
   const perguntar = (cor: string) => perguntarCor(nodes, fios, pesos, cor);
 
   // "ver como ela pensou": o lab abre no primeiro passo da ida, com a cor perguntada e o Modo Foco desligado.
@@ -354,16 +403,27 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
     return () => void t.kill();
   }, [transicao]);
 
-  const rodarAgora = () => {
-    treino.reiniciar();
-    rodar();
-  };
+  // funções estáveis para o painel de contas não se redesenhar a cada movimento de um bloco (ADR-0032)
+  const rodarRef = useRef(rodar);
+  useLayoutEffect(() => {
+    rodarRef.current = rodar;
+  });
+  const { reiniciar } = treino;
+  const rodarAgora = useCallback(() => {
+    reiniciar();
+    rodarRef.current();
+  }, [reiniciar]);
+  const irParaFixo = useCallback((p: number) => irParaRef.current(p), []);
 
-  const textoResposta = (saidaId: string, valor: number, resposta: 0 | 1) => {
-    const saida = nodes.find((n) => n.id === saidaId);
-    const rotulo = saida?.type === "saida" ? (resposta === 1 ? saida.data.rotulo1 : saida.data.rotulo0) : "";
-    return `${formatar(valor)} → ${rotulo} (${resposta})`;
-  };
+  const textoResposta = useCallback(
+    (saidaId: string, valor: number, resposta: 0 | 1) => {
+      const saida = nodesDaForma.find((n) => n.id === saidaId);
+      const rotulo = saida?.type === "saida" ? (resposta === 1 ? saida.data.rotulo1 : saida.data.rotulo0) : "";
+      return `${formatar(valor)} → ${rotulo} (${resposta})`;
+    },
+    [nodesDaForma],
+  );
+  const secaoTreinar = useMemo(() => <SecaoTreinar treino={treino} exemplos={exemplos} rodarAgora={rodarAgora} />, [treino, exemplos, rodarAgora]);
 
   // o fim da ida no Modo Foco pinta a Saída com a cor da resposta (ADR-0026, item 9)
   const rotuloDaResposta = (saidaId: string, resposta: 0 | 1) => {
@@ -377,19 +437,61 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
   useEffect(() => {
     consultaAtual.current = consulta;
   });
-  const onNodesChange = useCallback((todas: NodeChange<NoDaRede>[]) => {
-    const changes = consultaAtual.current ? todas.filter((c) => !(c.type === "replace" && c.item.type === "entrada")) : todas;
+  const aplicarMudancas = useCallback((changes: NodeChange<NoDaRede>[]) => {
     setNodes((ns) => {
       const atualizados = applyNodeChanges(changes, ns);
       return changes.some((c) => c.type === "remove") ? reorganizar(atualizados) : atualizados;
     });
   }, []);
 
+  // blocos apagados saem com uma timeline do GSAP; só depois saem da montagem (ADR-0032)
+  const onNodesChange = useCallback(
+    (todas: NodeChange<NoDaRede>[]) => {
+      const changes = consultaAtual.current ? todas.filter((c) => !(c.type === "replace" && c.item.type === "entrada")) : todas;
+      const saindo = changes.filter((c) => c.type === "remove");
+      const alvos = saindo.map((c) => caixaDoBloco(c.id)).filter((el): el is HTMLElement => !!el);
+      // aba escondida: o navegador para os quadros e a animação não andaria, então sai na hora
+      if (alvos.length === 0 || document.hidden) return aplicarMudancas(changes);
+      aplicarMudancas(changes.filter((c) => c.type !== "remove"));
+      gsap
+        .timeline({ onComplete: () => aplicarMudancas(saindo) })
+        .to(alvos, { scale: 0.6, duration: 0.22, ease: "back.in(1.6)", stagger: 0.03 }, 0)
+        .to(alvos, { autoAlpha: 0, duration: 0.22, ease: "power1.in", stagger: 0.03 }, 0);
+    },
+    [aplicarMudancas],
+  );
+
+  // blocos novos (soltos da paleta ou neurônios que entram numa camada) chegam crescendo (ADR-0032)
+  const jaNaTela = useRef<Set<string> | null>(null);
+  useLayoutEffect(() => {
+    const ids = new Set(nodesDaForma.map((n) => n.id));
+    const antes = jaNaTela.current;
+    jaNaTela.current = ids;
+    if (!antes) return; // a montagem que abriu não anima
+    const novos = [...ids].filter((id) => !antes.has(id));
+    if (novos.length === 0 || document.hidden) return;
+    // sem cancelar na limpeza: logo depois de entrar, o React Flow mede o bloco e muda os nodes de novo
+    requestAnimationFrame(() => {
+      const alvos = novos.map(caixaDoBloco).filter((el): el is HTMLElement => !!el);
+      if (alvos.length === 0) return;
+      // o React Flow mede onde ficam as bolinhas de conexão quando o bloco aparece, ainda encolhido pela animação;
+      // no fim ele mede de novo, senão os fios ficam presos no lugar errado (ADR-0032)
+      gsap
+        .timeline({ onComplete: () => remedir(novos) })
+        .fromTo(alvos, { scale: 0.6 }, { scale: 1, duration: 0.4, ease: "back.out(1.8)", stagger: 0.05, clearProps: "transform" }, 0)
+        .fromTo(alvos, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.25, ease: "power1.out", stagger: 0.05, clearProps: "opacity,visibility" }, 0);
+    });
+  }, [nodesDaForma, remedir]);
+
   // só os fios mudam por aqui (selecionar, apagar); as linhas de peso são derivadas
   const onEdgesChange = useCallback((changes: EdgeChange[]) => setFios((fs) => applyEdgeChanges(changes, fs)), []);
 
   const onConnect = useCallback((c: Connection) => setFios((fs) => ligarFio(fs, c)), []);
-  const isValidConnection = useCallback((c: Connection | Edge) => fioPermitido(nodes, fios, c), [nodes, fios]);
+  // só olha quais blocos existem: com `nodes`, mudaria a cada quadro do arraste e o React Flow refaria a sua memória
+  const isValidConnection = useCallback((c: Connection | Edge) => fioPermitido(nodesDaForma, fios, c), [nodesDaForma, fios]);
+  const onEdgeDoubleClick = useCallback((_: unknown, edge: Edge) => {
+    if (edge.type === "peso") setEditando(edge.id);
+  }, []);
 
   // ao soltar um neurônio arrastado dentro da camada, ele volta para a coluna
   const onNodeDragStop = useCallback(() => setNodes((ns) => reorganizar(ns)), []);
@@ -435,18 +537,10 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
     [nodes, screenToFlowPosition],
   );
 
-  const bloco = (tipo: string, rotulo: string, descricao: string) => (
-    <div className="bloco" draggable onDragStart={(e) => e.dataTransfer.setData(TIPO_ARRASTE, tipo)}>
-      <IconeBloco tipo={tipo} />
-      <span>
-        <span className="bloco-nome">{rotulo}</span>
-        <span className="bloco-descricao">{descricao}</span>
-      </span>
-    </div>
-  );
 
   return (
     <LabContexto.Provider value={lab}>
+    <PosicaoDoPesoContexto.Provider value={posicaoDoPeso}>
       <div className="lab-pagina">
         <header className="lab-topo">
           <div className="lab-topo-esquerda">
@@ -457,7 +551,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
             <span className="lab-divisor" />
             <span className="lab-projeto">{projeto?.nome ?? "Experimento"}</span>
             <span className="lab-salvo">
-              {salvamento === "salvo" ? "Salvo" : salvamento === "salvando" ? "Salvando…" : "Não salvo"}
+              {salvamento === "salvo" ? "Salvo" : "Não salvo"}
             </span>
           </div>
 
@@ -533,15 +627,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
           {/* sempre na tela (invisível): o "Perguntar à Aqua" acende ele antes de trocar de tela */}
           <div ref={brancoDoLab} className="aqua-branco" />
           <LadoRecolhivel lado="esquerda" nome="Blocos">
-          <aside className="paleta">
-            <h2>Blocos</h2>
-            {bloco("entrada", "Entrada", "Cor ou números")}
-            {bloco("camada", "Camada", "Agrupa neurônios")}
-            {bloco("neuronio", "Neurônio", "Solte numa camada")}
-            {bloco("saida", "Saída", "A resposta da rede")}
-            {bloco("backward", "Backward pass", "Liga na Saída · a culpa volta")}
-            {aviso && <p className="aviso">{aviso}</p>}
-          </aside>
+          <Paleta aviso={aviso} />
           </LadoRecolhivel>
 
           <div className="canvas" onDragOver={onDragOver} onDrop={onDrop}>
@@ -555,10 +641,10 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
               onConnect={onConnect}
               isValidConnection={isValidConnection}
               onNodeDragStop={onNodeDragStop}
-              onEdgeDoubleClick={(_, edge) => edge.type === "peso" && setEditando(edge.id)}
+              onEdgeDoubleClick={onEdgeDoubleClick}
               zoomOnDoubleClick={false}
               fitView
-              fitViewOptions={{ padding: 0.25 }}
+              fitViewOptions={AJUSTE_INICIAL}
             >
               <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
             </ReactFlow>
@@ -599,15 +685,15 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
             volta={voltaPassos}
             modoVolta={ativa?.modo ?? "mostrar"}
             atual={atual}
-            erros={ativa?.erros ?? []}
+            erros={ativa?.erros ?? SEM_ERROS}
             automatico={automatico}
             foco={foco}
             setFoco={setFoco}
-            irPara={irPara}
+            irPara={irParaFixo}
             setAutomatico={setAutomatico}
             textoResposta={textoResposta}
             soTreinar={treino.fase !== "pronto"}
-            treinar={<SecaoTreinar treino={treino} exemplos={exemplos} rodarAgora={rodarAgora} />}
+            treinar={secaoTreinar}
           />
           </LadoRecolhivel>
 
@@ -625,9 +711,34 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
         </div>
         )}
       </div>
+    </PosicaoDoPesoContexto.Provider>
     </LabContexto.Provider>
   );
 }
+
+/** A paleta de blocos. Separada (e memorizada) para não se redesenhar a cada movimento de um bloco no canvas (ADR-0032). */
+const Paleta = memo(function Paleta({ aviso }: { aviso: string | null }) {
+  const bloco = (tipo: string, rotulo: string, descricao: string) => (
+    <div className="bloco" draggable onDragStart={(e) => e.dataTransfer.setData(TIPO_ARRASTE, tipo)}>
+      <IconeBloco tipo={tipo} />
+      <span>
+        <span className="bloco-nome">{rotulo}</span>
+        <span className="bloco-descricao">{descricao}</span>
+      </span>
+    </div>
+  );
+  return (
+    <aside className="paleta">
+      <h2>Blocos</h2>
+      {bloco("entrada", "Entrada", "Cor ou números")}
+      {bloco("camada", "Camada", "Agrupa neurônios")}
+      {bloco("neuronio", "Neurônio", "Solte numa camada")}
+      {bloco("saida", "Saída", "A resposta da rede")}
+      {bloco("backward", "Backward pass", "Liga na Saída · a culpa volta")}
+      {aviso && <p className="aviso">{aviso}</p>}
+    </aside>
+  );
+});
 
 function IconeBloco({ tipo }: { tipo: string }) {
   return (

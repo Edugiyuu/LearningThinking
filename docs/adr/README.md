@@ -43,3 +43,5 @@ Registro das decisões de arquitetura do projeto. Formato baseado em [MADR](http
 | [0028](0028-aba-da-aqua.md) | Aba da Aqua: perguntar uma cor para a rede treinada (resposta do forward pass, Aqua com poses, zoom na cabeça para ver como ela pensou) | **Aceita** (autor), telas no Figma e código feito |
 | [0029](0029-saida-com-varias-cores.md) | Saída com várias cores: o aluno escolhe as cores nos Dados, um neurônio por cor, softmax no fim | Proposta, adiada (depois da aba da Aqua) |
 | [0030](0030-entradas-alem-de-cor.md) | Entradas além de cor no tema Redes neurais: grade de pixels, ponto no plano ou ficha com características | Proposta, adiada (até o autor escolher a próxima entrada) |
+| [0031](0031-paineis-recolhiveis.md) | Painéis Blocos e Contas recolhíveis: setinha fina no meio da borda, abre e fecha com timeline do GSAP | **Aceita** (autor), telas no Figma e código feito |
+| [0032](0032-salvar-sem-travar-e-blocos-animados.md) | Salvar sem travar (assinatura + debounce, nada salva no meio do arraste), arrastar sem redesenhar o que está parado, topo responsivo e blocos que entram e saem com GSAP | **Aceita** (autor), código feito |
