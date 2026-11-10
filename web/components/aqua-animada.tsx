@@ -97,6 +97,12 @@ type Animacao = { entrada: Quadro[]; ciclo: Quadro[] };
 
 export type MomentoAqua = "esperando" | "pensando" | "certa" | "duvida" | "dormindo";
 
+/** O idle: o corpo amassa e estica um pixel, como se respirasse. */
+const respirar: Quadro[] = [
+  { desenho: (o) => corpo({ olho: o }), tempo: 1.2, pisca: true },
+  { desenho: (o) => corpo({ olho: o, amassa: 1 }), tempo: 0.6, pisca: true },
+];
+
 function animacao(momento: MomentoAqua, cor: string): Animacao {
   switch (momento) {
     case "esperando": {
@@ -106,11 +112,7 @@ function animacao(momento: MomentoAqua, cor: string): Animacao {
       });
       return {
         entrada: [acena(-1, true), acena(1, false), acena(-1, true), acena(1, false), acena(-1, true)],
-        // respirar: o corpo amassa e estica um pixel
-        ciclo: [
-          { desenho: (o) => corpo({ olho: o }), tempo: 1.2, pisca: true },
-          { desenho: (o) => corpo({ olho: o, amassa: 1 }), tempo: 0.6, pisca: true },
-        ],
+        ciclo: respirar,
       };
     }
     case "pensando": {
@@ -139,7 +141,8 @@ function animacao(momento: MomentoAqua, cor: string): Animacao {
         { desenho: () => corpo({ olho: "feliz", bochecha: true, amassa: 1 }), tempo: 0.1 },
         { desenho: () => corpo({ olho: "feliz", bochecha: true }), tempo: 0.3 },
       ];
-      return { entrada: pulinho, ciclo: [apontando, ...pulinho] };
+      // aponta uma vez só e volta a respirar (o idle)
+      return { entrada: [...pulinho, apontando], ciclo: respirar };
     }
     case "duvida": {
       // o bracinho coça a cabeça, indo e voltando

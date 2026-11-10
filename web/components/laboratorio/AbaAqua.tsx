@@ -23,16 +23,14 @@ export default function AbaAqua({
   perguntar,
   rotulos,
   chegandoDoLab,
-  onVoltar,
   onVerComoPensou,
 }: {
   conversa: ConversaAqua;
   setConversa: (c: ConversaAqua) => void;
   perguntar: (cor: string) => RespostaAqua | null;
-  rotulos: Pick<SaidaData, "rotulo0" | "rotulo1">;
+  rotulos: SaidaData;
   /** Voltando do "ver como ela pensou": o zoom acontece ao contrário. */
   chegandoDoLab: boolean;
-  onVoltar: () => void;
   onVerComoPensou: () => void;
 }) {
   const { cor, resposta } = conversa;
@@ -69,7 +67,8 @@ export default function AbaAqua({
     });
   };
 
-  // aproxima até a cabeça cobrir tudo, fica branco e o laboratório aparece (o Lab tira o branco)
+  // aproxima até a cabeça cobrir tudo, fica branco e o laboratório aparece (o Lab tira o branco):
+  // é entrar nos neurônios dela. Só o "ver como ela pensou" faz isso; o "Voltar ao laboratório" é direto.
   const verComoPensou = () => {
     if (semMovimento()) return onVerComoPensou();
     gsap
@@ -81,15 +80,12 @@ export default function AbaAqua({
 
   return (
     <div ref={aba} className="aqua-aba">
-      <button className="aqua-voltar" onClick={onVoltar}>
-        ← Voltar ao laboratório
-      </button>
       <h1>Perguntar à Aqua</h1>
       <p className="aqua-sub">Ela usa a rede que você treinou neste projeto. Escolha uma cor e veja o que ela acha.</p>
 
       <div className="aqua-cena">
         <div ref={palco} className="aqua-palco">
-          <AquaAnimada key={momento} momento={momento} cor={cor} unidade={11} rotulo={rotuloDaAqua(momento)} />
+          <AquaAnimada key={momento} momento={momento} cor={cor} unidade={10} rotulo={rotuloDaAqua(momento)} />
         </div>
         <div className="aqua-balao" aria-live="polite">
           {pensando ? (
@@ -105,10 +101,7 @@ export default function AbaAqua({
                   Hmm… não tenho certeza. Acho que é <b>{nome(resposta.resposta)}</b>.
                 </p>
               )}
-              <p className="aqua-numero">
-                resposta da rede: {formatar(resposta.saida)}{" "}
-                {resposta.certeza === "duvida" ? "(bem no meio)" : `(perto de 1 = ${rotulos.rotulo1}, perto de 0 = ${rotulos.rotulo0})`}
-              </p>
+              <RespostaDaRede saida={resposta.saida} rotulos={rotulos} />
               <button className="aqua-ver" onClick={verComoPensou}>
                 ver como ela pensou →
               </button>
@@ -143,6 +136,35 @@ const origem = `${CABECA.x * 100}% ${CABECA.y * 100}%`;
 
 function rotuloDaAqua(m: MomentoAqua) {
   return { esperando: "A Aqua acenando", pensando: "A Aqua pensando, com a mão no queixo", certa: "A Aqua pulando de alegria", duvida: "A Aqua coçando a cabeça", dormindo: "A Aqua dormindo" }[m];
+}
+
+/**
+ * A resposta da rede em destaque: o número grande e uma barra de 0 a 1 com um marcador onde a
+ * Saída caiu. As pontas usam as etiquetas e as cores do bloco Saída.
+ */
+function RespostaDaRede({ saida, rotulos }: { saida: number; rotulos: SaidaData }) {
+  const pos = Math.min(1, Math.max(0, saida)) * 100;
+  return (
+    <div className="aqua-resposta">
+      <span className="aqua-resposta-rotulo">resposta da rede</span>
+      <b className="aqua-resposta-numero">{formatar(saida)}</b>
+      <div
+        className="aqua-barra"
+        role="meter"
+        aria-valuemin={0}
+        aria-valuemax={1}
+        aria-valuenow={saida}
+        aria-label={`Resposta da rede, de 0 (${rotulos.rotulo0}) a 1 (${rotulos.rotulo1})`}
+        style={{ background: `linear-gradient(to right, ${rotulos.cor0}, #d9d9de, ${rotulos.cor1})` }}
+      >
+        <span className="aqua-barra-marca" style={{ left: `${pos}%` }} />
+      </div>
+      <div className="aqua-barra-pontas">
+        <span style={{ color: rotulos.cor0 }}>0 = {rotulos.rotulo0}</span>
+        <span style={{ color: rotulos.cor1 }}>1 = {rotulos.rotulo1}</span>
+      </div>
+    </div>
+  );
 }
 
 /** "Pensando…" com os três pontinhos aparecendo um de cada vez. */

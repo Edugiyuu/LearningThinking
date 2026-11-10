@@ -55,7 +55,7 @@ Poses propostas. A primeira versão está no Figma, no frame "Mascote · versõe
 |---|---|---|
 | Esperando a cor | em pé, braços para baixo | respira devagar (sobe e desce um pouco) |
 | Pensando (~1 s) | **mãozinha no queixo**, olhos para cima, balão | balança de leve; o texto "pensando…" com os três pontos animados |
-| Resposta perto de 0 ou de 1 | olhos ^ ^, pulinho (ou apontando para a cor) | um pulinho |
+| Resposta perto de 0 ou de 1 | olhos ^ ^, pulinho e aponta para a cor uma vez; depois respira (idle) | um pulinho |
 | Resposta no meio (perto de 0,50) | coçando a cabeça, com um "?" acima | olha para os lados |
 
 - **Faixas de certeza:** abaixo de 0,30 ou acima de 0,70 = confiante; entre as duas = em dúvida.
@@ -120,7 +120,7 @@ Telas desenhadas, à esquerda do arquivo (x < −1600):
 1. **"Perguntar à Aqua · 1 botão bloqueado (rede sem treino)"**: o lab com o botão novo apagado no topo (Aqua dormindo) e a dica "Rode a rede primeiro · Clique em Rodar e a Aqua passa a responder com ela." (texto trocado em 2026-11-04)
 2. **"· 2 esperando a cor"**: a aba ocupa a tela toda abaixo do topo. Aqua grande acenando, balão "Oi! Escolha uma cor e me pergunte o que ela é.", cartão com a roda de cores, a amostra (hex) e R G B de 0 a 1 (como a Entrada do lab), e o botão Perguntar. "← Voltar ao laboratório" no canto.
 3. **"· 3 pensando"**: mão no queixo e balão de pensamento; "Pensando… rodando a rede neural"; botão apagado.
-4. **"· 4 resposta certa"**: apontando para a amostra; "É laranja!", "resposta da rede: 0,97 (perto de 1 = laranja, perto de 0 = azul)" e o botão "ver como ela pensou →" com a Aqua de lupa.
+4. **"· 4 resposta certa"**: apontando para a amostra; "É laranja!", "resposta da rede: 0,97 (perto de 1 = laranja, perto de 0 = azul)" (revisto em 2026-11-04: número grande + barra de 0 a 1, ver a revisão no fim) e o botão "ver como ela pensou →" com a Aqua de lupa.
 5. **"· 5 em dúvida"**: coçando a cabeça com o "?"; "Hmm… não tenho certeza. Acho que é laranja." e "resposta da rede: 0,58 (bem no meio)".
 6. **"· 6 ver como ela pensou (zoom na cabeça, 4 tempos)"**: aproxima da cabeça (0,4 s), a cabeça cobre tudo (0,4 s), branco (0,2 s), o lab aparece com "← Voltar para a Aqua" (0,4 s).
 
@@ -140,8 +140,22 @@ Na mesma revisão, o frame do laboratório foi conferido com o código rodando e
 
 **Notas do código:**
 - Montagens salvas antes disso não têm `rodou`: basta clicar em Rodar uma vez.
-- **A Aqua não usa o backward (corrigido em 2026-11-04, pedido do autor).** No "ver como ela pensou", o bloco Backward pass mostrava "Cor nova · adicionar aos Dados" para a cor perguntada, coisa da volta numa tela que é só de ida (item D.3). Agora, enquanto a cor da Aqua está na tela, o bloco só diz que ali é só a ida e esconde a resposta certa, os Dados e o Treinar.
+- **A Aqua não usa o backward (corrigido em 2026-11-04, pedido do autor).** No "ver como ela pensou", o bloco Backward pass mostrava "Cor nova · adicionar aos Dados" para a cor perguntada, coisa da volta numa tela que é só de ida (item D.3). Agora, enquanto a cor da Aqua está na tela, o bloco só diz que ali é só a ida e esconde a resposta certa, os Dados e o Treinar. *Desfeito no mesmo dia (item 6 da revisão abaixo):* o bloco volta a ser o normal.
 - A Aqua não depende do Backward pass em nenhum momento: nem para abrir (basta o Rodar), nem para responder (só o forward pass).
+
+## Revisão do autor (2026-11-04): a resposta em destaque, sem Rodar, apontar uma vez
+
+Feito primeiro no Figma (telas "· 2", "· 3", "· 4" e "· 5") e depois no código.
+
+1. **A resposta da rede é o destaque do balão.** Antes era uma linha pequena ("resposta da rede: 0,97 (perto de 1 = laranja, perto de 0 = azul)"). Agora o balão tem a frase da Aqua, o rótulo "resposta da rede", o **número grande** (44 px) e uma **barra de 0 a 1** com um marcador onde a Saída caiu. As pontas dizem "0 = azul" e "1 = laranja", com as etiquetas e as cores do bloco Saída; a barra vai da cor do 0, passa por um cinza no meio e chega na cor do 1. Assim o "bem no meio" e o "perto de 1" aparecem no desenho, sem precisar de texto entre parênteses. (`RespostaDaRede` em `AbaAqua.tsx`; a barra é um `role="meter"` para leitor de tela.)
+2. **Sem Rodar na aba da Aqua.** O Rodar mexe no laboratório, que não está na tela: clicar nele voltava direto para o lab, sem o zoom. Na aba da Aqua o topo só tem o botão "Perguntar à Aqua"; o Rodar volta quando o aluno sai da aba (no "ver como ela pensou" ele continua lá).
+3. **A Aqua aponta uma vez e volta ao idle.** Antes o ciclo da resposta certa era "aponta → pulinho → aponta…" para sempre. Agora a entrada é pulinho + apontar para a cor (2,4 s) e o ciclo é o mesmo respirar do "esperando" (o idle), com o piscar sorteado.
+4. **A aba cabe na tela sem barra de rolagem.** Título, cena e cartão passavam da altura de um notebook (a cena tinha 300 px de altura mínima e 40 px de sobra embaixo). Agora a Aqua usa pixel de 10 (era 11), a cena não tem altura mínima e os espaços ficaram menores: a tela inteira, com a resposta aberta, ocupa uns 570 px abaixo do topo. Em telas mais baixas que isso a rolagem volta, de propósito.
+5. *(Trocado pelo item 9.)* **"← Voltar ao laboratório" também usa o zoom na cabeça.** Os dois botões levam ao lab, e só um tinha animação. Agora os dois passam pelo mesmo zoom (`irParaOLab` em `AbaAqua.tsx`) e o lab aparece do branco. A diferença fica no que o lab mostra ao chegar: o "ver como ela pensou" abre com a cor perguntada na Entrada, a conta no passo 1 (só a ida) e o botão "← Voltar para a Aqua"; o "Voltar ao laboratório" volta para a montagem como estava, sem a cor perguntada e sem conta rodando. Anotado no frame "· 6" do Figma.
+6. **O bloco Backward pass fica sempre normal.** A troca por "Aqui é só a ida…" ficava presa enquanto a cor perguntada estivesse no lab, mesmo com a conta parada, e escondia os Dados e o Treinar: não dava para treinar sem antes voltar para a Aqua. Agora o bloco mostra o de sempre (resposta certa ou "Cor nova · adicionar aos Dados", Mostrar/Salvar, Dados e Treinar). O "ver como ela pensou" continua começando só com a ida (item D.3); o bloco só não some mais. O campo `consultaDaAqua` do contexto do lab saiu.
+7. **A Aqua longe da roda de cores, como no Figma.** A aba virou uma coluna flex e a cena da Aqua pega o espaço livre (até 440 px), com a Aqua no meio. Em 1440 × 900 ficam uns 108 px entre a Aqua e o cartão da cor; em tela baixa a cena encolhe até o tamanho do desenho e a aba continua sem rolagem.
+8. **Na aba da Aqua, o botão do topo vira "← Voltar ao laboratório".** Um "Perguntar à Aqua" na própria tela da Aqua não fazia nada. O lugar dele no topo (mesmo estilo de botão, à direita) agora é a volta para o lab, mais visível que o link cinza que ficava no canto da página, e esse link saiu. O botão do topo chama o mesmo zoom pela aba (`controle.voltar()`, um `useImperativeHandle` em `AbaAqua.tsx`). No lab, o topo continua com "Perguntar à Aqua" (ou "← Voltar para a Aqua" depois do "ver como ela pensou"). Feito primeiro no Figma, telas "· 2" a "· 5".
+9. **O zoom fica no sentido que conta a história.** Entrar na cabeça da Aqua (zoom in, branco, lab) só no "ver como ela pensou": é ir ver os neurônios dela. Sair da cabeça (flash branco, a cabeça encolhe até a Aqua aparecer inteira) agora vale também para o **"Perguntar à Aqua"** do topo do lab, e não só para o "← Voltar para a Aqua": o lab é a rede dela por dentro, então chegar na Aqua é sair dos neurônios. O **"← Voltar ao laboratório"** troca de tela direto, sem zoom. No código, `irParaAqua(limparConsulta)` em `Lab.tsx` faz o flash para os dois botões (o "Voltar para a Aqua" também tira a cor perguntada e a rodada só de ida; o "Perguntar à Aqua" deixa o lab como está), e o branco do lab fica sempre na tela, invisível, para o flash ter onde acender. O `controle` da aba saiu. Anotado no frame "· 6" do Figma.
 
 ## Consequências
 

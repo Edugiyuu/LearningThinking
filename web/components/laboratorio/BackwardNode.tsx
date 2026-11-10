@@ -13,7 +13,7 @@ import { ControlesDoTreino, DadosDoBloco } from "@/components/laboratorio/Treina
  */
 export default function BackwardNode({ id, data, selected }: NodeProps<BackwardNodeType>) {
   const { setNodes } = useReactFlow<NoDaRede>();
-  const { entrada, dados, setDados, rotulos, erros, treino, consultaDaAqua } = useLab();
+  const { entrada, dados, setDados, rotulos, erros, treino } = useLab();
   // a escolha de uma cor nova vale só para aquela cor: trocou a cor, começa sem escolha
   const [escolha, setEscolha] = useState<{ cor: string; objetivo: 0 | 1 } | null>(null);
 
@@ -47,10 +47,6 @@ export default function BackwardNode({ id, data, selected }: NodeProps<BackwardN
         Backward pass
       </div>
 
-      {consultaDaAqua ? (
-        // a Aqua só usa a ida: a cor perguntada não tem resposta certa nos Dados (ADR-0028, seção D)
-        <p className="backward-nota">Aqui é só a ida: a cor que você perguntou à Aqua não tem resposta certa nos Dados, então não há culpa para voltar.</p>
-      ) : (
       <div className="nodrag">
         {!cor ? (
           <p className="backward-nota">Por enquanto o Backward pass usa a Entrada de cor.</p>
@@ -103,7 +99,6 @@ export default function BackwardNode({ id, data, selected }: NodeProps<BackwardN
         <hr className="backward-divisor" />
         <ControlesDoTreino treino={treino} />
       </div>
-      )}
     </div>
   );
 }

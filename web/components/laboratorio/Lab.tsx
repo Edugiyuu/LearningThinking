@@ -282,7 +282,6 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
       dados: exemplos,
       setDados: setExemplos,
       rotulos,
-      consultaDaAqua: consulta !== null,
       volta,
       modoVolta: ativa?.modo ?? "mostrar",
       treino,
@@ -299,7 +298,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
       informarLinha,
       posicaoDoPeso,
     }),
-    [entrada, exemplos, rotulos, consulta, volta, treino, vista, ativa, chegou, informarLinha, posicaoDoPeso],
+    [entrada, exemplos, rotulos, volta, treino, vista, ativa, chegou, informarLinha, posicaoDoPeso],
   );
 
   const fecharFoco = useCallback(() => setFoco(false), []);
@@ -324,10 +323,17 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
     setTransicao("entrando");
   };
 
-  const voltarParaAqua = () => {
+  /**
+   * Do lab para a Aqua: um flash branco e a cabeça dela encolhe até a Aqua aparecer inteira, como
+   * quem sai de dentro dos neurônios dela. Vale para o "← Voltar para a Aqua" (que limpa a cor
+   * perguntada e a rodada só de ida) e para o "Perguntar à Aqua" do topo (que deixa o lab como está).
+   */
+  const irParaAqua = (limparConsulta: boolean) => {
     const fim = () => {
-      setConsulta(null);
-      setExecucao(null);
+      if (limparConsulta) {
+        setConsulta(null);
+        setExecucao(null);
+      }
       setTela("aqua");
       setTransicao(semMovimento ? null : "chegou");
     };
@@ -336,6 +342,8 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
     setTransicao("voltando");
     gsap.to(brancoDoLab.current, { autoAlpha: 1, duration: 0.25, onComplete: fim });
   };
+
+  const voltarParaAqua = () => irParaAqua(true);
 
   // o branco do zoom: ao entrar no lab ele some; ao voltar, a aba da Aqua faz o resto
   const brancoDoLab = useRef<HTMLDivElement>(null);
@@ -462,20 +470,30 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
           </div>
 
           <div className="lab-topo-direita">
-            {consulta ? (
+            {tela === "aqua" ? (
+              // já está na Aqua: o botão dela vira a volta para o lab, direto, sem zoom (ADR-0028)
+              <button
+                className="botao lab-botao aqua-botao-topo"
+                onClick={() => {
+                  setTransicao(null);
+                  setTela("lab");
+                }}
+              >
+                ← Voltar ao laboratório
+              </button>
+            ) : consulta ? (
               <button className="botao lab-botao aqua-botao-topo" onClick={voltarParaAqua}>
                 ← Voltar para a Aqua
               </button>
             ) : (
               <span className="aqua-botao-envolve">
                 <button
-                  className={`botao lab-botao aqua-botao-topo${tela === "aqua" ? " ativa" : ""}`}
+                  className="botao lab-botao aqua-botao-topo"
                   aria-disabled={!!motivoAquaFechada}
                   aria-describedby={motivoAquaFechada ? "aqua-dica" : undefined}
                   onClick={() => {
                     if (motivoAquaFechada || treino.emAndamento) return;
-                    setTransicao(null);
-                    setTela("aqua");
+                    irParaAqua(false);
                   }}
                 >
                   <Aqua unidade={2} pose={motivoAquaFechada ? "dormindo" : "normal"} /> Perguntar à Aqua
@@ -491,9 +509,12 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
                 )}
               </span>
             )}
-            <button className="botao principal lab-botao" onClick={rodar} disabled={treino.emAndamento}>
-              <span aria-hidden>▶</span> {rodada ? "Rodar de novo" : "Rodar"}
-            </button>
+            {/* na aba da Aqua não tem Rodar: ele mexe no lab, que não está na tela (ADR-0028) */}
+            {tela !== "aqua" && (
+              <button className="botao principal lab-botao" onClick={rodar} disabled={treino.emAndamento}>
+                <span aria-hidden>▶</span> {rodada ? "Rodar de novo" : "Rodar"}
+              </button>
+            )}
           </div>
         </header>
 
@@ -504,12 +525,12 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
             perguntar={perguntar}
             rotulos={rotulos}
             chegandoDoLab={transicao === "chegou"}
-            onVoltar={() => setTela("lab")}
             onVerComoPensou={verComoPensou}
           />
         ) : (
         <div className="lab">
-          {transicao && <div ref={brancoDoLab} className="aqua-branco" />}
+          {/* sempre na tela (invisível): o "Perguntar à Aqua" acende ele antes de trocar de tela */}
+          <div ref={brancoDoLab} className="aqua-branco" />
           <aside className="paleta">
             <h2>Blocos</h2>
             {bloco("entrada", "Entrada", "Cor ou números")}
