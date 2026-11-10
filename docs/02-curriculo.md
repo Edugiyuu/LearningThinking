@@ -78,6 +78,17 @@ Cada módulo tem uma **cor de acento** própria (ver [04-design-system.md](04-de
 
 **Laboratório "Mapa de Significados":** o aluno escreve frases, elas são transformadas em embeddings **no navegador** e aparecem num mapa 2D (projeção). Busca por similaridade ao vivo.
 
+**Nomes técnicos do módulo.** No site o tema se chama "Busca por significado"; o nome técnico é **busca semântica com embeddings**.
+
+| Nome técnico | O que é |
+|---|---|
+| **Embedding** (vetor de embedding) | A lista de números que representa uma frase (ou palavra, ou imagem). Frases com sentido parecido ganham listas parecidas. |
+| **Modelo de embeddings** | O modelo que transforma o texto no embedding. O previsto é o `all-MiniLM-L6-v2` ([arquitetura, 7.1](03-arquitetura.md)), que devolve 384 números por frase. |
+| **Espaço vetorial** (espaço de embeddings) | O "mapa": cada embedding é um ponto. Perto = sentido parecido. "Estou com fome" fica perto de "quero comer" sem nenhuma palavra em comum. |
+| **Similaridade de cosseno** | A conta que mede se dois embeddings apontam para o mesmo lado: perto de 1 = sentido parecido, perto de 0 = nada a ver. |
+| **Redução de dimensionalidade** | Levar centenas de números para 2, para desenhar o mapa na tela. Técnicas comuns: **PCA**, **t-SNE** e **UMAP**. O mapa é uma aproximação; a busca usa os números completos. |
+| **Busca semântica** | Achar pelo sentido, comparando o embedding da pergunta com os dos textos. É a parte de "recuperar" (*retrieval*) do RAG (módulo 4). |
+
 ## Módulo 4 · RAG (Retrieval-Augmented Generation)
 
 **Objetivo:** entender o pipeline completo e **por que** ele reduz alucinação — e onde ele falha.

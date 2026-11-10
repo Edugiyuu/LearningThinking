@@ -2,12 +2,12 @@
 // Cada desenho é uma lista de células [coluna, linha, largura, altura, cor] numa grade.
 // Só amplie em múltiplos inteiros da unidade, sem suavizar.
 
-type Celula = [x: number, y: number, w: number, h: number, cor: string];
+export type Celula = [x: number, y: number, w: number, h: number, cor: string];
 
-const AQUA = "#5ED3DB";
-const OLHO = "#06363A";
-const PORTA = "#0E7C86";
-const BOCHECHA = "#F4A3B5";
+export const AQUA = "#5ED3DB";
+export const OLHO = "#06363A";
+export const PORTA = "#0E7C86";
+export const BOCHECHA = "#F4A3B5";
 
 export type PoseAqua = "normal" | "contente" | "dormindo";
 
@@ -55,7 +55,7 @@ const celulasClaude: Celula[] = [
   [9, 5, 1, 2, CLAUDE],
 ];
 
-function Pixels({
+export function Pixels({
   celulas,
   colunas,
   linhas,

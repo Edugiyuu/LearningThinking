@@ -270,6 +270,8 @@ Propostas antigas da IA, ainda não desenhadas:
 
 **Cenas do tutorial 01** (2026-10-21, [ADR-0023](adr/0023-sigmoide-em-passos-e-tutorial-01-com-o-lab.md)): a Aqua original (10 × 6) mais um objeto da tarefa do laboratório (cestos de cor, lâmpada), **sem ícone de emoção na cabeça** e pequenas (unidade 3), só nos passos em que ajudam a entender. Substituem a cena da cozinha (frigideira e panqueca), que saiu junto com o exemplo da panqueca. **Regra do autor: o rosto da Aqua não muda.** Ela não ganha boca nem sobrancelha; quando há emoção, ela vem de um **ícone acima da cabeça**, como nos jogos. Versões descartadas: sobrancelhas e olhos em arco (rosto poluído) e depois uma boca (o autor achou horrível).
 
+**Poses de corpo inteiro** (2026-11-02, [ADR-0028](adr/0028-aba-da-aqua.md); revisão da regra acima, pedido do autor). Continua **sem boca e sem sobrancelha**, mas **os olhos passam a mudar com a reação**: ^ ^ (feliz), > < (comemorando), meio fechados (hmm), olhando para cima (pensando) ou para o lado, fechados (dormindo). Para caber olhos com forma, as poses usam o corpo na **grade de 16 × 10 pixels** (o dobro da original), com **um tamanho de pixel só** no desenho inteiro (nada de "mini pixel" de outro pincel). **Os bracinhos são as portas laterais (2 × 2 pixels)**: mudam de lugar, nunca esticam. Referência de estilo: o Clawd do Claude Code. Figma: frame "Mascote · versões", seção "Aqua · poses de corpo inteiro" (12 poses).
+
 **Regras de uso**
 - No máximo **uma Aqua por bloco de conteúdo** (card, seção), e nunca competindo com a visualização principal: ela ilustra, não explica.
 - Pixel art só em múltiplos inteiros da grade (unidades de 2, 4, 5, 7 ou 8px já usadas), sem suavizar nem girar.

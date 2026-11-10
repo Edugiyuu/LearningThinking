@@ -3032,3 +3032,304 @@
     font-size: 17px;
   }
 }
+
+/* ---------- Perguntar à Aqua (ADR-0028) ---------- */
+.aqua-botao-envolve {
+  position: relative;
+}
+
+.aqua-botao-topo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  border-color: var(--destaque-texto);
+  background: var(--destaque-fundo);
+  font-weight: 600;
+  color: var(--sobre-destaque);
+}
+
+.aqua-botao-topo.ativa {
+  box-shadow: 0 0 0 2px var(--destaque);
+}
+
+.aqua-botao-topo[aria-disabled="true"] {
+  border-color: var(--border);
+  background: var(--bg);
+  color: var(--text-subtle);
+  cursor: not-allowed;
+}
+
+.aqua-dica {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 30;
+  display: none;
+  align-items: center;
+  gap: 12px;
+  width: 290px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #1d1d1f;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #c7c7cc;
+}
+
+.aqua-dica b {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 13px;
+  color: #ffffff;
+}
+
+.aqua-botao-envolve:hover .aqua-dica,
+.aqua-botao-envolve:focus-within .aqua-dica {
+  display: flex;
+}
+
+.aqua-aba {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden auto;
+  padding: 16px 24px 20px;
+  text-align: center;
+}
+
+.aqua-aba h1 {
+  margin-top: 8px;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.aqua-sub {
+  margin-top: 6px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.aqua-cena {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  /* a cena pega o espaço livre (até 440 px) e a Aqua fica no meio dela, longe da roda de cores,
+     como no Figma; em tela baixa ela encolhe até o tamanho do desenho e a aba não ganha rolagem */
+  flex: 1 0 auto;
+  max-height: 440px;
+  margin-top: 8px;
+}
+
+.aqua-palco {
+  position: relative;
+  will-change: transform;
+}
+
+/* durante o zoom na cabeça: a Aqua por cima do cartão e do balão, sem barra de rolagem */
+.aqua-aba.zoom {
+  overflow: hidden;
+}
+
+.aqua-aba.zoom .aqua-palco {
+  z-index: 10;
+}
+
+.aqua-balao {
+  width: 300px;
+  min-height: 84px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg);
+  text-align: left;
+  font-size: 15px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+.aqua-frase {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.aqua-numero {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* a resposta da rede é o destaque do balão: número grande e a barra de 0 a 1 */
+.aqua-resposta {
+  margin-top: 12px;
+}
+
+.aqua-resposta-rotulo {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.aqua-resposta-numero {
+  display: block;
+  font-size: 44px;
+  font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.aqua-barra {
+  position: relative;
+  height: 12px;
+  margin-top: 10px;
+  border-radius: 6px;
+}
+
+.aqua-barra-marca {
+  position: absolute;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  border: 3px solid var(--text);
+  border-radius: 50%;
+  background: #fff;
+  transform: translate(-50%, -50%);
+}
+
+.aqua-barra-pontas {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.aqua-ver {
+  margin-top: 12px;
+  padding: 8px 14px;
+  border: 1px solid var(--destaque);
+  border-radius: 12px;
+  background: var(--destaque-fundo);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sobre-destaque);
+  cursor: pointer;
+}
+
+.aqua-cartao {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  width: fit-content;
+  max-width: 100%;
+  margin: 8px auto 0;
+  padding: 20px 24px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg-subtle);
+  text-align: left;
+}
+
+.aqua-roda {
+  position: relative;
+  flex-shrink: 0;
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: conic-gradient(#ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+  -webkit-mask: radial-gradient(circle, transparent 46%, #000 47%);
+  mask: radial-gradient(circle, transparent 46%, #000 47%);
+  cursor: pointer;
+  touch-action: none;
+}
+
+.aqua-roda:focus-visible {
+  outline: 3px solid var(--destaque);
+  outline-offset: 3px;
+}
+
+.aqua-roda-marca {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.aqua-escolha {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.aqua-amostra-linha {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.aqua-amostra {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+.aqua-rotulo {
+  display: block;
+  font-size: 11px;
+  color: var(--text-subtle);
+}
+
+.aqua-rgb {
+  display: flex;
+  gap: 16px;
+}
+
+.aqua-rgb label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.aqua-rgb input {
+  width: 56px;
+  padding: 6px 8px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  background: var(--bg);
+  font-size: 13px;
+  color: var(--text);
+}
+
+.aqua-perguntar {
+  padding: 11px 14px;
+  font-size: 14px;
+}
+
+/* o branco do zoom na cabeça (ADR-0028, seção D) */
+.aqua-branco {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: #ffffff;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+@media (max-width: 720px) {
+  .aqua-cena,
+  .aqua-cartao {
+    flex-direction: column;
+  }
+}

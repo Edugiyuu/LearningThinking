@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type DragEvent } from "react";
+import gsap from "gsap";
 import Link from "next/link";
 import {
   applyEdgeChanges,
@@ -26,9 +27,12 @@ import SaidaNode from "@/components/laboratorio/SaidaNode";
 import PesoEdge from "@/components/laboratorio/PesoEdge";
 import PainelContas from "@/components/laboratorio/PainelContas";
 import QuadroFoco from "@/components/laboratorio/QuadroFoco";
+import AbaAqua, { type ConversaAqua } from "@/components/laboratorio/AbaAqua";
 import { ResultadoTreino, SecaoTreinar, useTreino } from "@/components/laboratorio/Treinar";
 import { LabContexto } from "@/components/laboratorio/contexto";
 import { Aqua } from "@/components/mascote";
+import { AquaAnimada } from "@/components/aqua-animada";
+import { comCorPerguntada, motivoParaNaoPerguntar, perguntarCor } from "@/lib/aqua";
 import { lerMontagem, salvarMontagem, type Projeto } from "@/lib/projetos";
 import { EXEMPLOS_PRONTOS, corParaEntradas, lerRede, type Exemplo } from "@/lib/treino";
 import { vistaDaVolta, voltarCulpa, type PassoVolta } from "@/lib/backward";
@@ -116,6 +120,13 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
   const [chegou, setChegou] = useState<number | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const [salvamento, setSalvamento] = useState<Salvamento>(projeto ? "salvo" : "nao-salvo");
+  // Aba "Perguntar à Aqua" (ADR-0028): abre depois que a rede rodou sem erro uma vez (Rodar ou Treinar)
+  const [rodou, setRodou] = useState(inicial.rodou ?? false);
+  const [tela, setTela] = useState<"lab" | "aqua">("lab");
+  const [conversa, setConversa] = useState<ConversaAqua>({ cor: "#EE8C2B", resposta: null });
+  // "ver como ela pensou": a cor perguntada entra só na conta mostrada, nunca na montagem salva
+  const [consulta, setConsulta] = useState<string | null>(null);
+  const [transicao, setTransicao] = useState<"entrando" | "voltando" | "chegou" | null>(null);
   const { screenToFlowPosition, zoomIn, zoomOut } = useReactFlow<NoDaRede>();
 
   // fios de blocos apagados somem sozinhos
@@ -131,13 +142,16 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
     }
     setSalvamento("salvando");
     const t = setTimeout(() => {
-      setSalvamento(salvarMontagem(projeto.id, { nodes, fios, pesos, exemplos }) ? "salvo" : "nao-salvo");
+      setSalvamento(salvarMontagem(projeto.id, { nodes, fios, pesos, exemplos, rodou }) ? "salvo" : "nao-salvo");
     }, ESPERA_SALVAR);
     return () => clearTimeout(t);
-  }, [projeto, nodes, fios, pesos, exemplos]);
+  }, [projeto, nodes, fios, pesos, exemplos, rodou]);
 
   // Treinar (ADR-0024): a rede aprende com os exemplos; no fim, os pesos novos entram no projeto
-  const aplicarPesos = useCallback((novos: Pesos) => setPesos((atuais) => ({ ...atuais, ...novos })), []);
+  const aplicarPesos = useCallback((novos: Pesos) => {
+    setPesos((atuais) => ({ ...atuais, ...novos }));
+    setRodou(true);
+  }, []);
   const treino = useTreino({
     exemplos,
     aplicar: aplicarPesos,
@@ -151,7 +165,8 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
     },
   });
 
-  const estrutura = useMemo(() => estruturaDe(nodes, fios, pesos), [nodes, fios, pesos]);
+  const nodesNaTela = useMemo(() => (consulta ? comCorPerguntada(nodes, consulta) : nodes), [nodes, consulta]);
+  const estrutura = useMemo(() => estruturaDe(nodesNaTela, fios, pesos), [nodesNaTela, fios, pesos]);
   const ativa = execucao?.estrutura === estrutura ? execucao : null;
   const rodada = ativa?.rodada ?? null;
   const atual = ativa?.atual ?? 0;
@@ -168,8 +183,8 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
   // Durante o treino, elas mostram os pesos da repetição que está passando.
   const pesosNaTela = useMemo(() => (treino.pesosAoVivo ? { ...pesos, ...treino.pesosAoVivo } : pesos), [pesos, treino.pesosAoVivo]);
   const edges = useMemo<Edge[]>(
-    () => [...fios, ...linhas(nodes, fios, pesosNaTela, editando, vista)],
-    [nodes, fios, pesosNaTela, editando, vista],
+    () => [...fios, ...linhas(nodesNaTela, fios, pesosNaTela, editando, vista)],
+    [nodesNaTela, fios, pesosNaTela, editando, vista],
   );
 
   // mexer em blocos ou fios no meio do treino cancela o treino
@@ -184,9 +199,12 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
   const total = passosDaIda + (voltaPassos?.length ?? 0);
 
   const rodar = () => {
+    setConsulta(null);
+    setTela("lab");
     const { rodada, erros } = prepararRodada(nodes, fios, pesos);
+    if (rodada) setRodou(true);
     setChegou(null);
-    setExecucao({ estrutura, rodada, erros, atual: 0, ...(rodada ? prepararVolta() : { volta: null, modo: "mostrar" }), salvou: false });
+    setExecucao({ estrutura: estruturaDe(nodes, fios, pesos), rodada, erros, atual: 0, ...(rodada ? prepararVolta() : { volta: null, modo: "mostrar" }), salvou: false });
   };
 
   /**
@@ -196,7 +214,9 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
   const prepararVolta = (): Pick<Execucao, "volta" | "modo"> => {
     const bloco = nodes.find((n) => n.type === "backward");
     const ligado = bloco && fios.some((f) => f.target === bloco.id && nodes.find((n) => n.id === f.source)?.type === "saida");
-    const cor = entrada?.tipo === "cor" ? entrada.cor.toUpperCase() : null;
+    // a Entrada da montagem, não a da cor perguntada à Aqua
+    const daMontagem = nodes.find((n) => n.type === "entrada");
+    const cor = daMontagem?.type === "entrada" && daMontagem.data.tipo === "cor" ? daMontagem.data.cor.toUpperCase() : null;
     const certa = cor ? exemplos.find((d) => d.cor.toUpperCase() === cor) : undefined;
     const lida = lerRede(nodes, fios, pesos);
     if (!bloco || bloco.type !== "backward" || !ligado || !cor || !certa || !lida) return { volta: null, modo: "mostrar" };
@@ -253,7 +273,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
 
   const saidaDaMontagem = nodes.find((n) => n.type === "saida");
   const rotulos = saidaDaMontagem?.type === "saida" ? saidaDaMontagem.data : ROTULOS_PADRAO;
-  const entradaDaMontagem = nodes.find((n) => n.type === "entrada");
+  const entradaDaMontagem = nodesNaTela.find((n) => n.type === "entrada");
   const entrada = entradaDaMontagem?.type === "entrada" ? entradaDaMontagem.data : null;
 
   const lab = useMemo(
@@ -283,6 +303,56 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
 
   const fecharFoco = useCallback(() => setFoco(false), []);
 
+  /* ---------- Perguntar à Aqua (ADR-0028) ---------- */
+
+  const motivoAquaFechada = motivoParaNaoPerguntar(nodes, fios, pesos, rodou);
+  const perguntar = (cor: string) => perguntarCor(nodes, fios, pesos, cor);
+
+  // "ver como ela pensou": o lab abre no primeiro passo da ida, com a cor perguntada e o Modo Foco desligado.
+  // Só a ida: uma cor perguntada não tem resposta certa nos Dados, então não há culpa para voltar.
+  const verComoPensou = () => {
+    treino.reiniciar(); // como o Rodar agora: o resultado do treino sai da frente da conta
+    const comCor = comCorPerguntada(nodes, conversa.cor);
+    const { rodada, erros } = prepararRodada(comCor, fios, pesos);
+    setConsulta(conversa.cor);
+    setFoco(false);
+    setAutomatico(false);
+    setChegou(null);
+    setExecucao({ estrutura: estruturaDe(comCor, fios, pesos), rodada, erros, atual: 0, volta: null, modo: "mostrar", salvou: false });
+    setTela("lab");
+    setTransicao("entrando");
+  };
+
+  /**
+   * Do lab para a Aqua: um flash branco e a cabeça dela encolhe até a Aqua aparecer inteira, como
+   * quem sai de dentro dos neurônios dela. Vale para o "← Voltar para a Aqua" (que limpa a cor
+   * perguntada e a rodada só de ida) e para o "Perguntar à Aqua" do topo (que deixa o lab como está).
+   */
+  const irParaAqua = (limparConsulta: boolean) => {
+    const fim = () => {
+      if (limparConsulta) {
+        setConsulta(null);
+        setExecucao(null);
+      }
+      setTela("aqua");
+      setTransicao(semMovimento ? null : "chegou");
+    };
+    const semMovimento = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (semMovimento) return fim();
+    setTransicao("voltando");
+    gsap.to(brancoDoLab.current, { autoAlpha: 1, duration: 0.25, onComplete: fim });
+  };
+
+  const voltarParaAqua = () => irParaAqua(true);
+
+  // o branco do zoom: ao entrar no lab ele some; ao voltar, a aba da Aqua faz o resto
+  const brancoDoLab = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    if (transicao !== "entrando") return;
+    const t = gsap.fromTo(brancoDoLab.current, { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.4, delay: 0.05 });
+    return () => void t.kill();
+  }, [transicao]);
+
   const rodarAgora = () => {
     treino.reiniciar();
     rodar();
@@ -301,7 +371,13 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
     return resposta === 1 ? { rotulo: saida.data.rotulo1, cor: saida.data.cor1 } : { rotulo: saida.data.rotulo0, cor: saida.data.cor0 };
   };
 
-  const onNodesChange = useCallback((changes: NodeChange<NoDaRede>[]) => {
+  // com a cor perguntada à Aqua na tela, mexer na Entrada não pode gravar essa cor na montagem
+  const consultaAtual = useRef(consulta);
+  useEffect(() => {
+    consultaAtual.current = consulta;
+  });
+  const onNodesChange = useCallback((todas: NodeChange<NoDaRede>[]) => {
+    const changes = consultaAtual.current ? todas.filter((c) => !(c.type === "replace" && c.item.type === "entrada")) : todas;
     setNodes((ns) => {
       const atualizados = applyNodeChanges(changes, ns);
       return changes.some((c) => c.type === "remove") ? reorganizar(atualizados) : atualizados;
@@ -394,13 +470,67 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
           </div>
 
           <div className="lab-topo-direita">
-            <button className="botao principal lab-botao" onClick={rodar} disabled={treino.emAndamento}>
-              <span aria-hidden>▶</span> {rodada ? "Rodar de novo" : "Rodar"}
-            </button>
+            {tela === "aqua" ? (
+              // já está na Aqua: o botão dela vira a volta para o lab, direto, sem zoom (ADR-0028)
+              <button
+                className="botao lab-botao aqua-botao-topo"
+                onClick={() => {
+                  setTransicao(null);
+                  setTela("lab");
+                }}
+              >
+                ← Voltar ao laboratório
+              </button>
+            ) : consulta ? (
+              <button className="botao lab-botao aqua-botao-topo" onClick={voltarParaAqua}>
+                ← Voltar para a Aqua
+              </button>
+            ) : (
+              <span className="aqua-botao-envolve">
+                <button
+                  className="botao lab-botao aqua-botao-topo"
+                  aria-disabled={!!motivoAquaFechada}
+                  aria-describedby={motivoAquaFechada ? "aqua-dica" : undefined}
+                  onClick={() => {
+                    if (motivoAquaFechada || treino.emAndamento) return;
+                    irParaAqua(false);
+                  }}
+                >
+                  <Aqua unidade={2} pose={motivoAquaFechada ? "dormindo" : "normal"} /> Perguntar à Aqua
+                </button>
+                {motivoAquaFechada && (
+                  <span id="aqua-dica" role="tooltip" className="aqua-dica">
+                    <AquaAnimada momento="dormindo" unidade={2} />
+                    <span>
+                      <b>{rodou ? "A Aqua não pode responder agora" : "Rode a rede primeiro"}</b>
+                      {rodou ? motivoAquaFechada : "Clique em Rodar e a Aqua passa a responder com ela."}
+                    </span>
+                  </span>
+                )}
+              </span>
+            )}
+            {/* na aba da Aqua não tem Rodar: ele mexe no lab, que não está na tela (ADR-0028) */}
+            {tela !== "aqua" && (
+              <button className="botao principal lab-botao" onClick={rodar} disabled={treino.emAndamento}>
+                <span aria-hidden>▶</span> {rodada ? "Rodar de novo" : "Rodar"}
+              </button>
+            )}
           </div>
         </header>
 
+        {tela === "aqua" ? (
+          <AbaAqua
+            conversa={conversa}
+            setConversa={setConversa}
+            perguntar={perguntar}
+            rotulos={rotulos}
+            chegandoDoLab={transicao === "chegou"}
+            onVerComoPensou={verComoPensou}
+          />
+        ) : (
         <div className="lab">
+          {/* sempre na tela (invisível): o "Perguntar à Aqua" acende ele antes de trocar de tela */}
+          <div ref={brancoDoLab} className="aqua-branco" />
           <aside className="paleta">
             <h2>Blocos</h2>
             {bloco("entrada", "Entrada", "Cor ou números")}
@@ -413,7 +543,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
 
           <div className="canvas" onDragOver={onDragOver} onDrop={onDrop}>
             <ReactFlow
-              nodes={nodes}
+              nodes={nodesNaTela}
               edges={edges}
               nodeTypes={nodeTypes}
               edgeTypes={edgeTypes}
@@ -488,6 +618,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
             />
           )}
         </div>
+        )}
       </div>
     </LabContexto.Provider>
   );

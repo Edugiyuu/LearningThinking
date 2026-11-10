@@ -1,0 +1,180 @@
+# ADR-0028 · Aba da Aqua: usar a rede treinada
+
+- **Status:** Aceita (autor), telas no Figma e código feito (2026-11-04)
+- **Data:** 2026-11-02
+- **Decisores:** Eduardo (autor), com propostas da IA
+- **Usa:** [ADR-0024](0024-treinar-com-backpropagation.md) (os pesos treinados ficam no projeto), [ADR-0026](0026-modo-foco.md) (o passo a passo que o "ver como ela pensou" abre), [ADR-0021](0021-bolinhas-cores-e-espremer.md) (azul = 0, laranja = 1)
+
+## Contexto
+
+Hoje o aluno monta a rede, roda passo a passo e treina, mas nunca **usa** a rede que treinou. O autor quer algo para interagir com ela, como um bichinho virtual: a Aqua no lugar da rede, o aluno escolhe uma cor, a Aqua "pensa" com o que aprendeu e responde.
+
+Há um problema de fundo. A rede do lab só sabe responder "azul ou laranja": a saída é um número entre 0 e 1. Ela não tem como dizer "não sei". Para verde ou roxo, ela responde mesmo assim, às vezes com toda a certeza. Isso ensina uma coisa importante (**a IA só conhece aquilo para que foi treinada**), mas a tela precisa mostrar isso de um jeito que não incomode quem está usando.
+
+**Só duas cores (azul e laranja), como o lab de hoje.** Várias cores ficam para a [ADR-0029](0029-saida-com-varias-cores.md), adiada até o lab ter isso.
+
+**Foco desta ADR: só a ida (forward pass).** O que a aba da Aqua muda no backward pass (a culpa, o erro de uma cor que não está nos Dados) fica para depois.
+
+## Decisões do autor (2026-11-02)
+
+1. **Uma aba nova, só da Aqua.** Ela fica no laboratório e usa o projeto aberto, mas, quando abre, a tela é toda da Aqua: sem canvas, sem paleta, sem painel Contas.
+2. **Só abre depois que a rede rodou.** Projeto que nunca rodou não entra na aba (não basta um aviso dentro dela). *Revisto em 2026-11-04 pelo autor:* basta clicar em **Rodar** (sem erro); não precisa treinar nem do bloco Backward pass. Pela [ADR-0015](0015-aba-redes-neurais-montagem.md), "rede já treinada" é a rede **com os pesos salvos**, e o Básico pronto já vem com pesos que funcionam.
+3. **Enquanto pensa, não mostra a rede.** Só um texto curto, como "pensando…" ou "rodando a rede neural…", e a Aqua com o ícone de pensando.
+4. **A Aqua não fica parada.** A imagem muda conforme o momento (esperando, pensando, respondendo) e conforme a certeza da resposta, com **poses do corpo inteiro** (ex.: mãozinha no queixo ao pensar), e não só o ícone acima da cabeça.
+5. **"Ver como ela pensou"** abre o canvas do projeto no passo a passo, igual ao Rodar de hoje, com a cor que o aluno escolheu.
+6. **Zoom na cabeça da Aqua** ao clicar em "ver como ela pensou": a tela entra na cabeça dela, fica branca e o laboratório aparece, como se a rede estivesse dentro da cabeça da Aqua.
+7. **A resposta é só a do forward pass, igual ao lab** (alinhado em 2026-11-02). Não existe nenhuma regra à parte para decidir se a Aqua "conhece" a cor. Um laranja diferente dos Dados é reconhecido ou não dependendo de como a rede foi treinada, exatamente como no Rodar. O aluno nunca diz se a cor é laranja ou azul.
+8. **Nome da aba: "Perguntar à Aqua"**, um terceiro botão no topo do laboratório, ao lado de Treinar e Rodar.
+9. **Seletor de cor: roda de cores + R G B.** A roda serve para brincar; o R G B embaixo usa os mesmos números da Entrada do lab.
+10. **Peso mudado à mão depois do treino:** a aba continua aberta, e a Aqua responde com os pesos atuais.
+11. **"Ver como ela pensou" abre com o Modo Foco desligado:** depois do zoom aparece o canvas inteiro (o "cérebro" dela), e o aluno liga o Foco se quiser.
+
+## Detalhes (propostos pela IA e alinhados com o autor)
+
+### A. A tela da aba
+
+- **Nome da aba:** "Perguntar à Aqua", ao lado de Treinar e Rodar no topo do laboratório.
+- **Tela:** a Aqua grande no centro. Embaixo dela, o seletor de cor (uma roda de cores e, embaixo, os controles R G B, os mesmos números que a Entrada do lab usa) e um botão **"Perguntar"**.
+- **Resposta:** um balão ao lado da Aqua com a frase e o número da Saída, por exemplo "Acho que é **laranja**" e, menor, "resposta da rede: 0,87". O número continua aparecendo para não esconder que é uma conta.
+- **Aba bloqueada:** enquanto a rede nunca rodou, o botão da aba fica apagado, com a dica "Rode a rede primeiro · Clique em Rodar e a Aqua passa a responder com ela."
+- **O que destrava:** o projeto guarda `rodou` quando o Rodar monta a rodada sem erro (ou quando um treino termina). *Erro corrigido em 2026-11-04:* a primeira versão exigia um treino terminado, o que obrigava o aluno a ligar o Backward pass só para conversar com a Aqua, contra a ADR-0015 e contra o foco desta ADR (só a ida).
+- **Só com a Entrada de cor.** Com a Entrada de números livres, a aba não abre (a dica explica o motivo).
+
+### B. A Aqua se mexendo (quadros + GSAP)
+
+**Decidido pelo autor (2026-11-02): não basta trocar o ícone.** A Aqua ganha **poses de corpo inteiro**, no estilo do Clawd (o mascote do Claude Code). Exemplo dado pelo autor: **pensando = a mãozinha no queixo**. Movimento só com GSAP. Regras de desenho, revistas pelo autor no mesmo dia:
+
+- **Sem boca nem sobrancelhas**, mas **os olhos mudam com a reação**: ^ ^ (feliz), > < (comemorando), meio fechados (hmm), olhando para cima (pensando), para o lado (apontando), fechados (dormindo).
+- **Um tamanho de pixel só.** Para caber olhos com forma, o corpo passou para a grade de **16 × 10 pixels** (o dobro da antiga), e todo o desenho usa esse mesmo pixel.
+- **Os bracinhos são as portas laterais (2 × 2 pixels):** só mudam de lugar (de lado, em cima, embaixo do rosto), nunca viram braço comprido.
+- Poses diferentes precisam ser claramente diferentes.
+
+Poses propostas. A primeira versão está no Figma, no frame "Mascote · versões", seção "Aqua · poses de corpo inteiro". Lá há 12 poses: as 5 da tabela e outras que podem servir depois (comemorando, mostrando a cor no alto, acenando ao abrir a aba, dormindo na aba bloqueada, olhando a roda de cores, lupa para o "ver como ela pensou"). 
+
+| Momento | Pose do corpo | Movimento |
+|---|---|---|
+| Esperando a cor | em pé, braços para baixo | respira devagar (sobe e desce um pouco) |
+| Pensando (~1 s) | **mãozinha no queixo**, olhos para cima, balão | balança de leve; o texto "pensando…" com os três pontos animados |
+| Resposta perto de 0 ou de 1 | olhos ^ ^, pulinho e aponta para a cor uma vez; depois respira (idle) | um pulinho |
+| Resposta no meio (perto de 0,50) | coçando a cabeça, com um "?" acima | olha para os lados |
+
+- **Faixas de certeza:** abaixo de 0,30 ou acima de 0,70 = confiante; entre as duas = em dúvida.
+- O tempo de "pensando" é encenação: a conta leva milissegundos. Ele existe para o aluno ver que a Aqua está fazendo alguma coisa.
+- Com "reduzir movimento" ligado, a Aqua troca de reação sem se mexer ([ADR-0011](0011-acessibilidade-e-movimento.md)).
+
+**Animada por quadros, não só deslocada (autor, 2026-11-03).** Mexer a pose inteira com o GSAP (subir, descer, girar) não basta: o **desenho** também muda, quadro a quadro, como um sprite de pixel art. Cada pose ganha uma sequência curta de quadros na mesma grade de 16 × 10:
+
+- **Piscar:** de tempos em tempos (intervalo sorteado, ~3 a 6 s), olhos abertos → meio fechados → fechados → abertos.
+- **Respirar:** o corpo amassa e estica um pixel (quadro mais baixo e largo, quadro normal), em vez de só subir e descer a imagem.
+- **Entre uma pose e outra:** um ou dois quadros do meio (o bracinho passa por uma posição intermediária antes de chegar ao queixo, os olhos passam por meio fechados antes de virar ^ ^).
+- **Pensando:** a ponta do bracinho no queixo bate de leve (2 quadros), e os olhos olham para um lado e para o outro.
+- **Em dúvida:** o bracinho coça a cabeça (2 a 3 quadros indo e voltando).
+- **Dormindo (aba bloqueada):** os olhos fechados e o corpo amassando devagar, com os "z" saindo.
+
+O GSAP continua sendo o relógio: uma timeline troca o quadro visível (passos inteiros, sem misturar quadros) e, junto, faz o pulinho e o balanço. Nada de keyframes de CSS. Os quadros são desenhados no Figma antes do código, ao lado das 12 poses.
+
+### C. A resposta vem só do forward pass
+
+Decidido pelo autor: **funciona igual ao Rodar do lab.** A Aqua roda o forward pass com a cor escolhida e os pesos do projeto, e a resposta é o número da Saída. Não há checagem à parte de "cor conhecida": se um laranja mais claro sai como laranja ou não depende só de como a rede foi treinada.
+
+- **Confiante** (abaixo de 0,30 ou acima de 0,70): "É **laranja**!" (ou azul), com o número embaixo.
+- **Em dúvida** (entre 0,30 e 0,70): a Aqua coça a cabeça com o "?" e diz "Hmm… não tenho certeza. Acho que é **laranja** (0,58)." A resposta da rede aparece sempre. (Revisto em 2026-11-02: "nunca vi uma cor assim" era mentira para um laranja dos Dados. Um 0,58 diz que a rede está **insegura sobre aquela cor**: pode ser um treino fraco, ou uma cor no meio do caminho entre os exemplos.)
+- A lição de que "a IA só conhece o que foi treinada para conhecer" aparece sozinha: o aluno vê a rede responder até verde ou roxo, às vezes com toda a certeza, e o "ver como ela pensou" mostra por quê.
+- **Preto** (0, 0, 0): como o lab ainda não tem *bias*, toda soma dá 0 e a rede responde exatamente 0,50. A Aqua fica em dúvida no preto seja qual for o treino. É a rede de verdade, e liga com a [ADR-0024](0024-treinar-com-backpropagation.md) (quando entrar o bias).
+
+**Descartado:** uma checagem separada pelo tom da cor (detecção de fora da distribuição). Ela mudaria a resposta da Aqua por uma regra que não está na rede, e não seria mais "igual ao lab". Fazer a **própria rede** dizer "não sei" (uma terceira resposta "outra cor" nos Dados) muda o backward pass e fica para outra ADR.
+
+### D. "Ver como ela pensou" e o zoom na cabeça
+
+1. **Zoom (GSAP, ~1,2 s):** a tela aproxima até a cabeça da Aqua, que cresce até cobrir tudo e fica branca. Depois o laboratório aparece aos poucos, vindo do branco.
+2. **Onde cai:** o canvas do projeto, com a Entrada já na cor escolhida, e o Rodar já começado no primeiro passo (manual, com Anterior / Próximo e o Modo Foco disponível, como hoje).
+3. **Só a ida, com o Modo Foco desligado.** Mesmo com o bloco Backward pass na Saída, esse passo a passo para no fim da ida: uma cor perguntada não tem "resposta certa" nos Dados, então não há culpa para voltar (fica para a ADR do backward).
+4. **Voltar para a Aqua:** um botão "← Voltar para a Aqua" no topo faz o zoom ao contrário (o lab some no branco, a cabeça encolhe e a Aqua volta, com a mesma resposta na tela).
+5. A cor escolhida **não** entra nos Dados nem muda a Entrada salva do projeto. É só uma consulta.
+6. Com "reduzir movimento", troca direto de tela, sem zoom.
+
+### E. Hoje a entrada é cor, amanhã pode não ser (autor, 2026-11-03)
+
+O lab ainda está na parte de **redes neurais com cores**: a única Entrada com significado é a cor (R G B). O autor avisou que **virão outras entradas além de cores**, sem saber ainda quais. Por isso a aba é montada em três partes que não dependem uma da outra:
+
+1. **A Aqua** (poses, quadros, balão): não sabe nada de cor. Recebe só o momento (esperando, pensando, certa, em dúvida) e a frase.
+2. **O seletor da entrada:** hoje é a roda de cores + R G B. É a única peça que sabe que a entrada é uma cor. Ela entrega para a rede os mesmos números que a Entrada do lab usaria.
+3. **A leitura da Saída:** transforma o número da Saída na frase ("É laranja!", "Acho que é azul"). Hoje, perto de 0 = azul e perto de 1 = laranja.
+
+Quando o lab ganhar uma entrada nova (com ADR própria antes), ela traz o seu seletor e a sua leitura da Saída, e a Aqua e o zoom continuam iguais. **Nada disso é construído agora:** não existe um "tipo de entrada" genérico no código antes de existir uma segunda entrada no lab. É só não misturar a cor dentro da Aqua.
+
+## Pontos alinhados (2026-11-02)
+
+1. Nome da aba: **"Perguntar à Aqua"**.
+2. Seletor: **roda de cores + R G B**.
+3. Faixas de certeza: **0,30 / 0,70** para começar (ajustáveis depois de testar).
+4. Cores sem tom (branco, preto, cinza): **sem regra especial**, vale o forward pass.
+5. Peso mudado à mão depois do treino: **a aba continua aberta**.
+6. "Ver como ela pensou": **Modo Foco desligado** ao abrir.
+7. Frase em dúvida: **"não tenho certeza" + a resposta da rede** (revisto: "nunca vi" não vale para uma cor que está nos Dados).
+
+## Figma (2026-11-02)
+
+Telas desenhadas, à esquerda do arquivo (x < −1600):
+
+1. **"Perguntar à Aqua · 1 botão bloqueado (rede sem treino)"**: o lab com o botão novo apagado no topo (Aqua dormindo) e a dica "Rode a rede primeiro · Clique em Rodar e a Aqua passa a responder com ela." (texto trocado em 2026-11-04)
+2. **"· 2 esperando a cor"**: a aba ocupa a tela toda abaixo do topo. Aqua grande acenando, balão "Oi! Escolha uma cor e me pergunte o que ela é.", cartão com a roda de cores, a amostra (hex) e R G B de 0 a 1 (como a Entrada do lab), e o botão Perguntar. "← Voltar ao laboratório" no canto.
+3. **"· 3 pensando"**: mão no queixo e balão de pensamento; "Pensando… rodando a rede neural"; botão apagado.
+4. **"· 4 resposta certa"**: apontando para a amostra; "É laranja!", "resposta da rede: 0,97 (perto de 1 = laranja, perto de 0 = azul)" (revisto em 2026-11-04: número grande + barra de 0 a 1, ver a revisão no fim) e o botão "ver como ela pensou →" com a Aqua de lupa.
+5. **"· 5 em dúvida"**: coçando a cabeça com o "?"; "Hmm… não tenho certeza. Acho que é laranja." e "resposta da rede: 0,58 (bem no meio)".
+6. **"· 6 ver como ela pensou (zoom na cabeça, 4 tempos)"**: aproxima da cabeça (0,4 s), a cabeça cobre tudo (0,4 s), branco (0,2 s), o lab aparece com "← Voltar para a Aqua" (0,4 s).
+
+**Quadros da animação (2026-11-03):** frame "Aqua · quadros da animação", logo abaixo de "Mascote · versões", com 7 sequências na mesma grade: piscar (4 quadros), respirar (3), esperando → pensando (3), pensando (4), em dúvida (4), pulinho da resposta certa (4) e dormindo (2).
+
+Na mesma revisão, o frame do laboratório foi conferido com o código rodando e atualizado ("Laboratório · Desktop · v3 (igual ao código em 2026-11-02)"): o topo só tem o Rodar, a paleta ganhou o Backward pass e o painel Contas tem Anterior/Próximo, Modo Foco e Passo a passo no topo, sem a seção Treinar. Em "Tutoriais · Desktop", os minutos e a descrição do tutorial 01 foram acertados. Home e Novo projeto já batiam com o código.
+
+## Código (2026-11-04)
+
+| Arquivo | O que faz |
+|---|---|
+| `web/lib/aqua.ts` | A pergunta: `perguntarCor` roda o forward pass com `lerRede` + `rodar` (a mesma conta do Treinar e do Rodar); `lerSaida` aplica as faixas 0,30 / 0,70; `motivoParaNaoPerguntar` diz por que a aba está fechada; `comCorPerguntada` põe a cor na Entrada só para mostrar. Testes em `aqua.test.ts`. |
+| `web/components/aqua-animada.tsx` | A Aqua de corpo inteiro (grade 30 × 24, corpo 16 × 10) com os quadros do Figma. O GSAP é só o relógio: uma timeline troca o quadro inteiro; o piscar é sorteado entre 3 e 6 s. Não sabe que a entrada é cor (seção E). |
+| `web/components/laboratorio/AbaAqua.tsx` | A tela da aba: balão, roda de cores (só a matiz, como no Figma) + R G B de 0 a 1, o "pensando" de 1 s e o zoom na cabeça. |
+| `web/components/laboratorio/Lab.tsx` | O botão no topo (apagado com a dica e a Aqua dormindo), a troca de tela e o "ver como ela pensou": a cor perguntada entra só na tela (`consulta`), a rodada é só a ida, o Modo Foco desliga e o resultado do treino sai da frente. |
+| `web/lib/rede.ts`, `web/lib/projetos.ts` | A montagem salva ganhou `rodou`, que vira true quando o Rodar dá certo (ou um treino termina). |
+
+**Notas do código:**
+- Montagens salvas antes disso não têm `rodou`: basta clicar em Rodar uma vez.
+- **A Aqua não usa o backward (corrigido em 2026-11-04, pedido do autor).** No "ver como ela pensou", o bloco Backward pass mostrava "Cor nova · adicionar aos Dados" para a cor perguntada, coisa da volta numa tela que é só de ida (item D.3). Agora, enquanto a cor da Aqua está na tela, o bloco só diz que ali é só a ida e esconde a resposta certa, os Dados e o Treinar. *Desfeito no mesmo dia (item 6 da revisão abaixo):* o bloco volta a ser o normal.
+- A Aqua não depende do Backward pass em nenhum momento: nem para abrir (basta o Rodar), nem para responder (só o forward pass).
+
+## Revisão do autor (2026-11-04): a resposta em destaque, sem Rodar, apontar uma vez
+
+Feito primeiro no Figma (telas "· 2", "· 3", "· 4" e "· 5") e depois no código.
+
+1. **A resposta da rede é o destaque do balão.** Antes era uma linha pequena ("resposta da rede: 0,97 (perto de 1 = laranja, perto de 0 = azul)"). Agora o balão tem a frase da Aqua, o rótulo "resposta da rede", o **número grande** (44 px) e uma **barra de 0 a 1** com um marcador onde a Saída caiu. As pontas dizem "0 = azul" e "1 = laranja", com as etiquetas e as cores do bloco Saída; a barra vai da cor do 0, passa por um cinza no meio e chega na cor do 1. Assim o "bem no meio" e o "perto de 1" aparecem no desenho, sem precisar de texto entre parênteses. (`RespostaDaRede` em `AbaAqua.tsx`; a barra é um `role="meter"` para leitor de tela.)
+2. **Sem Rodar na aba da Aqua.** O Rodar mexe no laboratório, que não está na tela: clicar nele voltava direto para o lab, sem o zoom. Na aba da Aqua o topo só tem o botão "Perguntar à Aqua"; o Rodar volta quando o aluno sai da aba (no "ver como ela pensou" ele continua lá).
+3. **A Aqua aponta uma vez e volta ao idle.** Antes o ciclo da resposta certa era "aponta → pulinho → aponta…" para sempre. Agora a entrada é pulinho + apontar para a cor (2,4 s) e o ciclo é o mesmo respirar do "esperando" (o idle), com o piscar sorteado.
+4. **A aba cabe na tela sem barra de rolagem.** Título, cena e cartão passavam da altura de um notebook (a cena tinha 300 px de altura mínima e 40 px de sobra embaixo). Agora a Aqua usa pixel de 10 (era 11), a cena não tem altura mínima e os espaços ficaram menores: a tela inteira, com a resposta aberta, ocupa uns 570 px abaixo do topo. Em telas mais baixas que isso a rolagem volta, de propósito.
+5. *(Trocado pelo item 9.)* **"← Voltar ao laboratório" também usa o zoom na cabeça.** Os dois botões levam ao lab, e só um tinha animação. Agora os dois passam pelo mesmo zoom (`irParaOLab` em `AbaAqua.tsx`) e o lab aparece do branco. A diferença fica no que o lab mostra ao chegar: o "ver como ela pensou" abre com a cor perguntada na Entrada, a conta no passo 1 (só a ida) e o botão "← Voltar para a Aqua"; o "Voltar ao laboratório" volta para a montagem como estava, sem a cor perguntada e sem conta rodando. Anotado no frame "· 6" do Figma.
+6. **O bloco Backward pass fica sempre normal.** A troca por "Aqui é só a ida…" ficava presa enquanto a cor perguntada estivesse no lab, mesmo com a conta parada, e escondia os Dados e o Treinar: não dava para treinar sem antes voltar para a Aqua. Agora o bloco mostra o de sempre (resposta certa ou "Cor nova · adicionar aos Dados", Mostrar/Salvar, Dados e Treinar). O "ver como ela pensou" continua começando só com a ida (item D.3); o bloco só não some mais. O campo `consultaDaAqua` do contexto do lab saiu.
+7. **A Aqua longe da roda de cores, como no Figma.** A aba virou uma coluna flex e a cena da Aqua pega o espaço livre (até 440 px), com a Aqua no meio. Em 1440 × 900 ficam uns 108 px entre a Aqua e o cartão da cor; em tela baixa a cena encolhe até o tamanho do desenho e a aba continua sem rolagem.
+8. **Na aba da Aqua, o botão do topo vira "← Voltar ao laboratório".** Um "Perguntar à Aqua" na própria tela da Aqua não fazia nada. O lugar dele no topo (mesmo estilo de botão, à direita) agora é a volta para o lab, mais visível que o link cinza que ficava no canto da página, e esse link saiu. O botão do topo chama o mesmo zoom pela aba (`controle.voltar()`, um `useImperativeHandle` em `AbaAqua.tsx`). No lab, o topo continua com "Perguntar à Aqua" (ou "← Voltar para a Aqua" depois do "ver como ela pensou"). Feito primeiro no Figma, telas "· 2" a "· 5".
+9. **O zoom fica no sentido que conta a história.** Entrar na cabeça da Aqua (zoom in, branco, lab) só no "ver como ela pensou": é ir ver os neurônios dela. Sair da cabeça (flash branco, a cabeça encolhe até a Aqua aparecer inteira) agora vale também para o **"Perguntar à Aqua"** do topo do lab, e não só para o "← Voltar para a Aqua": o lab é a rede dela por dentro, então chegar na Aqua é sair dos neurônios. O **"← Voltar ao laboratório"** troca de tela direto, sem zoom. No código, `irParaAqua(limparConsulta)` em `Lab.tsx` faz o flash para os dois botões (o "Voltar para a Aqua" também tira a cor perguntada e a rodada só de ida; o "Perguntar à Aqua" deixa o lab como está), e o branco do lab fica sempre na tela, invisível, para o flash ter onde acender. O `controle` da aba saiu. Anotado no frame "· 6" do Figma.
+
+## Consequências
+
+**Positivas**
+- Fecha o ciclo do laboratório: montar → treinar → usar.
+- Ensina sem texto longo que a rede sempre responde, mesmo sobre o que nunca viu.
+- O zoom na cabeça liga a Aqua à rede: a rede é o "cérebro" dela.
+
+**Negativas / custos**
+- Poses novas de corpo inteiro da Aqua e seis telas novas no Figma antes do código.
+- O projeto passa a guardar se a rede já rodou (mudança pequena no formato salvo).
+
+**Riscos e mitigação**
+- *O aluno não perceber que a resposta é só uma conta:* o número da Saída aparece sempre, e o "ver como ela pensou" leva à conta inteira.
+- *Animação demorar demais e virar espera:* "pensando" curto (~1 s), e um clique pula o zoom.
+
+## Quando revisitar
+
+- Quando a Saída tiver mais de duas cores ([ADR-0029](0029-saida-com-varias-cores.md)): a resposta vira "a cor com a maior porcentagem", e as faixas de certeza mudam.
+- Quando o backward pass precisar funcionar com uma cor perguntada na aba (culpa sem resposta certa).
+- Se a Entrada de números livres ganhar Dados próprios: aí a aba pode valer para ela também.
+- Se entrar uma terceira cor nos Dados (a Saída passa a ter mais de duas respostas).
