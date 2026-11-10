@@ -129,6 +129,77 @@
   background: var(--bg);
 }
 
+/* ---------- Painéis recolhíveis (ADR-0031) ---------- */
+.lado {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.lado-esquerda {
+  justify-content: flex-end;
+  border-right: 1px solid var(--border);
+}
+
+.lado-direita {
+  border-left: 1px solid var(--border);
+}
+
+.lado-conteudo {
+  display: flex;
+  flex-shrink: 0;
+  min-height: 0;
+}
+
+/* a borda fica no .lado, que continua visível quando o painel recolhe */
+.lado .paleta,
+.lado .painel {
+  border: none;
+}
+
+/* setinha fina e alta, no meio da borda de dentro do painel */
+.seta-painel {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 14px;
+  height: 64px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--bg);
+  color: var(--text-muted, #6b6b6b);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.lado-esquerda .seta-painel {
+  right: 4px;
+}
+
+.lado-direita .seta-painel {
+  left: 4px;
+}
+
+.seta-painel span {
+  display: inline-block;
+}
+
+.seta-painel:hover {
+  background: var(--bg-subtle);
+}
+
+.seta-painel:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
 .paleta h2 {
   margin: 0 0 12px;
   font-size: 13px;

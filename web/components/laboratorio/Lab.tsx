@@ -26,6 +26,7 @@ import NeuronioNode from "@/components/laboratorio/NeuronioNode";
 import SaidaNode from "@/components/laboratorio/SaidaNode";
 import PesoEdge from "@/components/laboratorio/PesoEdge";
 import PainelContas from "@/components/laboratorio/PainelContas";
+import LadoRecolhivel from "@/components/laboratorio/LadoRecolhivel";
 import QuadroFoco from "@/components/laboratorio/QuadroFoco";
 import AbaAqua, { type ConversaAqua } from "@/components/laboratorio/AbaAqua";
 import { ResultadoTreino, SecaoTreinar, useTreino } from "@/components/laboratorio/Treinar";
@@ -531,6 +532,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
         <div className="lab">
           {/* sempre na tela (invisível): o "Perguntar à Aqua" acende ele antes de trocar de tela */}
           <div ref={brancoDoLab} className="aqua-branco" />
+          <LadoRecolhivel lado="esquerda" nome="Blocos">
           <aside className="paleta">
             <h2>Blocos</h2>
             {bloco("entrada", "Entrada", "Cor ou números")}
@@ -540,6 +542,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
             {bloco("backward", "Backward pass", "Liga na Saída · a culpa volta")}
             {aviso && <p className="aviso">{aviso}</p>}
           </aside>
+          </LadoRecolhivel>
 
           <div className="canvas" onDragOver={onDragOver} onDrop={onDrop}>
             <ReactFlow
@@ -590,6 +593,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
             <ResultadoTreino treino={treino} rotulos={rotulos} rodarAgora={rodarAgora} />
           </div>
 
+          <LadoRecolhivel lado="direita" nome="Contas">
           <PainelContas
             rodada={rodada}
             volta={voltaPassos}
@@ -605,6 +609,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
             soTreinar={treino.fase !== "pronto"}
             treinar={<SecaoTreinar treino={treino} exemplos={exemplos} rodarAgora={rodarAgora} />}
           />
+          </LadoRecolhivel>
 
           {/* cobre a paleta e o canvas; o painel com Anterior / Próximo continua à vista */}
           {foco && rodada && treino.fase === "pronto" && (
