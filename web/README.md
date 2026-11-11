@@ -9,6 +9,18 @@ npm run dev
 
 No preview do Claude Code, use o servidor **"web"** (porta 3100).
 
+## Publicar
+
+O site é **estático** e vai para o GitHub Pages sozinho a cada push na `main` (workflow `.github/workflows/deploy-pages.yml`, [ADR-0033](../docs/adr/0033-publicar-no-github-pages.md)). Antes de publicar, o workflow roda `npm test` e `npm run lint`.
+
+Para testar o build como no Pages:
+
+```bash
+BASE_PATH=/LearningThinking npm run build   # gera out/
+```
+
+Regras do site estático: nada que precise de servidor (cookies, route handlers com `Request`, `"use cache"`), e arquivo de `public/` com caminho fixo leva o prefixo `process.env.NEXT_PUBLIC_BASE_PATH`.
+
 ## Onde está cada coisa
 
 - `app/page.tsx`: Home

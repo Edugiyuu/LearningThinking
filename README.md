@@ -14,7 +14,9 @@ Decisões do autor: [ADR-0013](docs/adr/0013-formato-tutoriais-e-laboratorio.md)
 
 ## Stack
 
-Next.js · TypeScript · Tailwind CSS · GSAP · React Flow · cálculo da rede em TypeScript próprio · projetos salvos no navegador (localStorage) · Vercel. Sem backend na v1; PostgreSQL e contas depois ([ADR-0017](docs/adr/0017-stack.md)).
+Next.js · TypeScript · Tailwind CSS · GSAP · React Flow · cálculo da rede em TypeScript próprio · projetos salvos no navegador (localStorage) · GitHub Pages. Sem backend na v1; PostgreSQL e contas depois ([ADR-0017](docs/adr/0017-stack.md), [ADR-0033](docs/adr/0033-publicar-no-github-pages.md)).
+
+**No ar:** https://edugiyuu.github.io/LearningThinking/ (publica sozinho a cada merge na `main`).
 
 ## Visual
 

@@ -38,7 +38,7 @@ O treino **calcula de verdade**, **grava** o que aconteceu em cada repetição e
 | Cálculo da rede | **Código próprio em TypeScript** (sem biblioteca de IA), para deixar cada peso e cada conta visíveis |
 | Onde o cálculo roda | Na própria página; **Web Worker só se houver travamento** |
 | Armazenamento | **`localStorage` com número de versão** do formato do projeto |
-| Hospedagem | **Vercel** |
+| Hospedagem | ~~Vercel~~ → **GitHub Pages** (trocado em 2026-11-10, [ADR-0033](0033-publicar-no-github-pages.md)) |
 
 ### Validação do React Flow *(2026-10-19)*
 O teste técnico em [`spikes/camada-react-flow/`](../../spikes/camada-react-flow/README.md) (Next.js 16, React 19, `@xyflow/react` 12) confirmou que o React Flow aguenta o editor:

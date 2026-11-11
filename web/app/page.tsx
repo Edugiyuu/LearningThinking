@@ -123,7 +123,7 @@ export default function Home() {
                 key={p.numero}
                 className="overflow-hidden rounded-[var(--radius-card)] border border-black/[.06] bg-bg-subtle pb-10"
               >
-                <Image src={p.ilustracao} alt={p.alt} width={400} height={200} unoptimized className="h-auto w-full" />
+                <Image src={`${process.env.NEXT_PUBLIC_BASE_PATH}${p.ilustracao}`} alt={p.alt} width={400} height={200} unoptimized className="h-auto w-full" />
                 <div className="px-8 pt-4">
                   <p className="text-sm font-semibold text-aqua-ink">{p.numero}</p>
                   <h3 className="mt-4 text-2xl font-semibold">{p.titulo}</h3>
