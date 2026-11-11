@@ -1,6 +1,6 @@
 # ADR-0012 · Hospedagem na Vercel e CI no GitHub Actions
 
-- **Status:** Proposta (escrita pela IA, aguardando revisão do autor)
+- **Status:** Proposta (escrita pela IA); a hospedagem foi **substituída pela [ADR-0033](0033-publicar-no-github-pages.md)** (GitHub Pages)
 - **Data:** 2026-10-18
 
 ## Contexto

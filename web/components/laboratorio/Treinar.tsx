@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { formatar, type Pesos } from "@/lib/rede";
 import { sortearPesos, treinar, type Exemplo, type Gravacao, type Passinho, type RedeLida } from "@/lib/treino";
 
@@ -33,7 +33,14 @@ export function useTreino({ ler, aplicar, exemplos }: { ler: () => RedeLida | st
   const [usada, setUsada] = useState<Config>(config); // a configuração do treino que está passando
   const [exemplosUsados, setExemplosUsados] = useState<Exemplo[]>([]); // a tabela do fim não muda se a lista mudar depois
 
-  const comecar = () => {
+  // o `ler` e os exemplos mais novos, sem que o treino vire um objeto novo a cada desenho do lab (ADR-0032)
+  const atuais = useRef({ ler, exemplos, config });
+  useLayoutEffect(() => {
+    atuais.current = { ler, exemplos, config };
+  });
+
+  const comecar = useCallback(() => {
+    const { ler, exemplos, config } = atuais.current;
     const lida = ler();
     if (typeof lida === "string") {
       setAviso(lida);
@@ -52,7 +59,7 @@ export function useTreino({ ler, aplicar, exemplos }: { ler: () => RedeLida | st
     setQuadro(0);
     setResultadoAberto(false);
     setFase("treinando");
-  };
+  }, []);
 
   // reprodução: avança as repetições na velocidade escolhida (dá para trocar no meio).
   // Na última, os pesos novos ficam no projeto e o resultado abre.
@@ -79,10 +86,21 @@ export function useTreino({ ler, aplicar, exemplos }: { ler: () => RedeLida | st
   }, [fase, gravacao, config.velocidade, aplicar]);
 
   const emAndamento = fase === "treinando" || fase === "pausado";
-  return {
+  const mudarConfig = useCallback((c: Partial<Config>) => setConfig((atual) => ({ ...atual, ...c })), []);
+  const pausar = useCallback(() => setFase((f) => (f === "treinando" ? "pausado" : f === "pausado" ? "treinando" : f)), []);
+  const parar = useCallback(() => {
+    setFase("pronto");
+    setGravacao(null);
+  }, []);
+  const reiniciar = useCallback(() => {
+    setFase("pronto");
+    setResultadoAberto(false);
+  }, []);
+  // o mesmo objeto enquanto nada do treino mudar: ele vai no contexto do lab, e um objeto novo redesenharia todos os blocos
+  return useMemo(() => ({
     fase,
     config,
-    setConfig: (c: Partial<Config>) => setConfig((atual) => ({ ...atual, ...c })),
+    setConfig: mudarConfig,
     usada,
     gravacao,
     exemplosUsados,
@@ -91,21 +109,15 @@ export function useTreino({ ler, aplicar, exemplos }: { ler: () => RedeLida | st
     resultadoAberto,
     setResultadoAberto,
     comecar,
-    pausar: () => setFase((f) => (f === "treinando" ? "pausado" : f === "pausado" ? "treinando" : f)),
+    pausar,
     /** Parar no meio desfaz o treino: os pesos voltam a ser os de antes. */
-    parar: () => {
-      setFase("pronto");
-      setGravacao(null);
-    },
+    parar,
     /** Voltar à tela de antes (Treinar de novo). */
-    reiniciar: () => {
-      setFase("pronto");
-      setResultadoAberto(false);
-    },
+    reiniciar,
     /** Os pesos da repetição que está na tela, enquanto o treino passa. */
     pesosAoVivo: emAndamento && gravacao ? gravacao.quadros[quadro]?.pesos : null,
     emAndamento,
-  };
+  }), [fase, config, mudarConfig, usada, gravacao, exemplosUsados, quadro, aviso, resultadoAberto, comecar, pausar, parar, reiniciar, emAndamento]);
 }
 
 /* ---------- O painel ---------- */

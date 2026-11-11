@@ -24,7 +24,7 @@ Registro das decisões de arquitetura do projeto. Formato baseado em [MADR](http
 | [0009](0009-sem-backend-no-mvp.md) | Sem contas nem banco de dados no MVP | Proposta (IA) |
 | [0010](0010-i18n-pt-br-primeiro.md) | Português (pt-BR) primeiro, preparado para i18n | Proposta (IA) |
 | [0011](0011-acessibilidade-e-movimento.md) | Acessibilidade e *reduced motion* como requisitos | Proposta (IA) |
-| [0012](0012-hospedagem-e-ci.md) | Hospedagem na Vercel e CI no GitHub Actions | Proposta (IA) |
+| [0012](0012-hospedagem-e-ci.md) | Hospedagem na Vercel e CI no GitHub Actions | Hospedagem substituída por 0033 |
 | [0013](0013-formato-tutoriais-e-laboratorio.md) | Laboratório estilo Tinkercad + tutoriais em páginas separadas | **Aceita** (autor) |
 | [0014](0014-laboratorio-abas-projetos-e-erros.md) | Laboratório: abas por tema, projetos e erros visíveis | **Aceita** (autor) |
 | [0015](0015-aba-redes-neurais-montagem.md) | Aba Redes neurais: camadas, neurônios, exemplos e treino | **Aceita** (autor) |
@@ -43,3 +43,6 @@ Registro das decisões de arquitetura do projeto. Formato baseado em [MADR](http
 | [0028](0028-aba-da-aqua.md) | Aba da Aqua: perguntar uma cor para a rede treinada (resposta do forward pass, Aqua com poses, zoom na cabeça para ver como ela pensou) | **Aceita** (autor), telas no Figma e código feito |
 | [0029](0029-saida-com-varias-cores.md) | Saída com várias cores: o aluno escolhe as cores nos Dados, um neurônio por cor, softmax no fim | Proposta, adiada (depois da aba da Aqua) |
 | [0030](0030-entradas-alem-de-cor.md) | Entradas além de cor no tema Redes neurais: grade de pixels, ponto no plano ou ficha com características | Proposta, adiada (até o autor escolher a próxima entrada) |
+| [0031](0031-paineis-recolhiveis.md) | Painéis Blocos e Contas recolhíveis: setinha fina no meio da borda, abre e fecha com timeline do GSAP | **Aceita** (autor), telas no Figma e código feito |
+| [0032](0032-salvar-sem-travar-e-blocos-animados.md) | Salvar sem travar (assinatura + debounce, nada salva no meio do arraste), arrastar sem redesenhar o que está parado, topo responsivo e blocos que entram e saem com GSAP | **Aceita** (autor), código feito |
+| [0033](0033-publicar-no-github-pages.md) | Publicar no GitHub Pages: export estático do Next.js, deploy pelo GitHub Actions a cada push na `main` (testes e lint antes) | **Aceita** (autor), código feito |

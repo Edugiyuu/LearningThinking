@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import Aula from "@/components/tutoriais/Aula";
-import { buscarTutorial, totalDePassos, tutoriais } from "@/lib/tutoriais";
+import AulaDaUrl from "@/components/tutoriais/AulaDaUrl";
+import { buscarTutorial, tutoriais } from "@/lib/tutoriais";
 
+// Só as aulas daqui viram páginas (o site é estático, sem servidor para criar outras).
 export function generateStaticParams() {
   return tutoriais.map((t) => ({ slug: t.slug }));
 }
@@ -13,21 +14,16 @@ export async function generateMetadata({ params }: PageProps<"/tutoriais/[slug]"
   return { title: t ? `${t.titulo} · Tutoriais · LearningThinking` : "Tutoriais · LearningThinking" };
 }
 
-export default function Page({ params, searchParams }: PageProps<"/tutoriais/[slug]">) {
-  // O passo vem da URL (?passo=3); a leitura fica atrás do Suspense, como pede o Cache Components
-  return (
-    <Suspense fallback={<Carregando />}>
-      <AulaDaUrl params={params} searchParams={searchParams} />
-    </Suspense>
-  );
-}
-
-async function AulaDaUrl({ params, searchParams }: Pick<PageProps<"/tutoriais/[slug]">, "params" | "searchParams">) {
+export default async function Page({ params }: PageProps<"/tutoriais/[slug]">) {
   const tutorial = buscarTutorial((await params).slug);
   if (!tutorial) notFound();
-  const bruto = Number((await searchParams).passo);
-  const passo = Number.isInteger(bruto) ? Math.min(Math.max(1, bruto), totalDePassos(tutorial)) : 1;
-  return <Aula tutorial={tutorial} passoInicial={passo} />;
+  // O passo vem da URL (?passo=3). O site é estático (GitHub Pages, ADR-0033), então quem lê
+  // a URL é o navegador (AulaDaUrl); até lá aparece a moldura da aula.
+  return (
+    <Suspense fallback={<Carregando />}>
+      <AulaDaUrl tutorial={tutorial} />
+    </Suspense>
+  );
 }
 
 /** Enquanto o passo da URL chega: a moldura da aula, sem nada que salve progresso. */
