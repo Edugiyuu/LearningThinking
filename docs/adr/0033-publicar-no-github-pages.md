@@ -35,6 +35,8 @@ Endereço: **https://edugiyuu.github.io/LearningThinking/**
 
 ### O que mudou no código
 
+- **`npm test` começa com `next typegen`.** Os tipos `PageProps` e `LayoutProps` são gerados pelo Next (em `.next/types`). Na máquina do autor eles já existiam por causa do `npm run dev`; no GitHub Actions, que começa do zero, o `tsc` não os achava e o primeiro deploy falhou. O `next typegen` gera só esses tipos, sem fazer o build inteiro.
+
 - **`next.config.ts`**
   - `output: "export"`: gera o site estático em `out/`.
   - `basePath` vem da variável `BASE_PATH`. No Pages o site não mora na raiz do domínio, e sim em `/LearningThinking`; o `basePath` põe esse prefixo em todos os links e arquivos. No `npm run dev` ela fica vazia e o site abre em `/`, como antes.

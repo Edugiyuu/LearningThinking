@@ -15,7 +15,7 @@ npx jest -t "arredondado"      # só os testes cujo nome contém esse texto
 npx tsc --noEmit               # só a conferência de tipos, sem rodar teste
 ```
 
-O `npm test` é `tsc --noEmit && jest`: se os tipos estiverem errados, ele **nem chega** a rodar os testes.
+O `npm test` é `next typegen && tsc --noEmit && jest` (o `next typegen` gera os tipos das páginas, `PageProps` e `LayoutProps`, que o `tsc` precisa; [ADR-0033](adr/0033-publicar-no-github-pages.md)): se os tipos estiverem errados, ele **nem chega** a rodar os testes.
 
 ## O molde de um teste
 

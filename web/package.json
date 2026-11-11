@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsc --noEmit && jest"
+    "test": "next typegen && tsc --noEmit && jest"
   },
   "dependencies": {
     "@xyflow/react": "^12.12.0",
