@@ -26,6 +26,11 @@ Próximos passos (a decidir com o autor):
 - [x] Salvar projetos no navegador (o último projeto criado; falta a lista de projetos)
 - [ ] Aba Busca por significado
 
+Quiz ao vivo em sala ([ADR-0034](adr/0034-quiz-ao-vivo.md)):
+- [x] Telas no Figma (professor: aba, criar sala, espera, pergunta, resultado, pódio, turma · aluno no celular e no computador: entrar, esperando, 3 jeitos de responder, enviada, certo/errado, fim)
+- [ ] Núcleo das perguntas com sorteio por semente e testes
+- [ ] A sala com WebRTC (PeerJS) e as telas em código
+
 ---
 
 > Proposta original (fases por entrega de valor, não por data; cada fase termina com algo usável em sala):
