@@ -28,8 +28,10 @@ Próximos passos (a decidir com o autor):
 
 Quiz ao vivo em sala ([ADR-0034](adr/0034-quiz-ao-vivo.md)):
 - [x] Telas no Figma (professor: aba, criar sala, espera, pergunta, resultado, pódio, turma · aluno no celular e no computador: entrar, esperando, 3 jeitos de responder, enviada, certo/errado, fim)
-- [ ] Núcleo das perguntas com sorteio por semente e testes
-- [ ] A sala com WebRTC (PeerJS) e as telas em código
+- [x] Núcleo das perguntas com sorteio por semente e testes (18 modelos nos 10 assuntos)
+- [x] A sala com WebRTC (PeerJS) e as telas em código (aba, Home, professor e aluno no celular e no computador)
+- [ ] Testar numa aula de verdade, na rede da escola
+- [ ] Cenário: perguntas seguidas com a mesma rede
 
 ---
 

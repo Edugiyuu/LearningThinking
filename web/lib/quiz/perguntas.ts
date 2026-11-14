@@ -97,6 +97,10 @@ export type Pergunta = {
   /** a mesma pergunta sem os números: tela projetada no sorteio por aluno, pódio e cards */
   geral: string;
   amostra?: { cor: string; nome?: string };
+  /** o que a Aqua disse, no balão ao lado dela */
+  fala?: string;
+  /** a barra de 0 (azul) a 1 (laranja) com a resposta marcada, e o certo quando a pergunta fala dele */
+  termometro?: { saida: number; objetivo?: 0 | 1 };
   desenho?: Desenho;
   forma: Forma;
   /** a conta certa explicada, só na tela projetada (decisão 10) */
@@ -252,6 +256,7 @@ const MODELOS: Modelo[] = [
       return {
         enunciado: `A Saída deu ${fmt(saida)}. O que a Aqua diz?`,
         geral: "A Saída deu um número. O que a Aqua diz?",
+        termometro: { saida },
         forma: alternativas(r, { texto: certa }, FALAS.filter((f) => f !== certa).map((f) => ({ texto: f, erro: erroDe[f] }))),
         conta: [
           { rotulo: "0 = azul, 1 = laranja", conta: "abaixo de 0,30: azul · acima de 0,70: laranja" },
@@ -294,6 +299,8 @@ const MODELOS: Modelo[] = [
         enunciado: `O ${cor.nome} (${rgbTexto(cor.rgb)}) deu ${fmt(saida)} e a Aqua disse “${disse}” Ela acertou?`,
         geral: "A Aqua respondeu uma cor. Ela acertou?",
         amostra: { cor: corDasEntradas(cor.rgb), nome: cor.nome },
+        fala: disse,
+        termometro: { saida },
         forma: {
           tipo: "alternativas",
           opcoes: ordem.map((i) => (i === certa ? opcoes[i] : { ...opcoes[i], erro: erros[i] })),
@@ -570,6 +577,7 @@ const MODELOS: Modelo[] = [
       return {
         enunciado: `Era ${certoTexto(objetivo)} e a rede deu ${fmt(saida)}. A resposta devia ter sido MAIOR ou MENOR?`,
         geral: "A rede errou. A resposta devia ter sido MAIOR ou MENOR?",
+        termometro: { saida, objetivo },
         forma: {
           tipo: "alternativas",
           opcoes: ordem.map((i) => (i === certa ? opcoes[i] : { ...opcoes[i], erro: `O certo era ${objetivo}: a resposta tem que ir na direção dele.` })),
@@ -592,6 +600,7 @@ const MODELOS: Modelo[] = [
       return {
         enunciado: `Era ${certoTexto(objetivo)} e a rede deu ${fmt(saida)}. Qual é o erro?`,
         geral: "A rede deu uma resposta. Qual é o erro?",
+        termometro: { saida, objetivo },
         forma: numero(erro, null, "O erro", [
           { valor: saida, erro: "Usaram a resposta. O erro é a distância até o certo." },
           { valor: 1 - erro, erro: objetivo === 1 ? "O certo era 1 (laranja)." : "O certo era 0 (azul)." },

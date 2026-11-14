@@ -1,6 +1,6 @@
 # ADR-0034 · Quiz ao vivo: o professor abre uma sala, a turma entra com um código
 
-- **Status:** Aceita (autor, 2026-11-13); detalhes técnicos propostos pela IA. Telas no Figma revisadas pelo autor; falta código.
+- **Status:** Aceita (autor, 2026-11-13); detalhes técnicos propostos pela IA. Telas no Figma revisadas pelo autor; código feito (seção "Em código").
 - **Data:** 2026-11-13
 - **Decisores:** Eduardo (autor), com propostas da IA
 - **Usa:** [ADR-0024](0024-treinar-com-backpropagation.md) (a conta do forward e do backward em `web/lib/treino.ts`), [ADR-0025](0025-bloco-backward-pass.md) (sinais + − =, culpa), [ADR-0028](0028-aba-da-aqua.md) (faixas 0,30 / 0,70 e as poses da Aqua), [ADR-0033](0033-publicar-no-github-pages.md) (site estático, sem servidor)
@@ -182,6 +182,57 @@ Seção "Quiz ao vivo (ADR-0034)", abaixo dos tutoriais (y ≥ 4380), em três f
 O exemplo usa a pergunta do verde do autor. Na tela projetada, a turma tem os pesos 0,50 e ±1,50; no aparelho da Mari (sorteio por aluno), 1,00 e ±2,00. A soma dá 0 nos dois casos.
 
 **Notado ao desenhar:** sem bônus de rapidez, o empate é comum no começo (depois da 3ª pergunta, 6 alunos tinham 3000). O placar mostra quem empatou ("+ Gabi: 6 empatados em 1º"), e o pódio junta os empatados no mesmo degrau. Por isso o "Quem se mexeu" ajuda: com o topo empatado, a novidade da pergunta está em quem subiu ou caiu. Os números batem com a aba Turma: na pergunta 3, Theo acertou (1000 → 2000, 9º → 7º), Ana C. e Enzo erraram (ficaram em 2000, 1º → 7º).
+
+## Em código (2026-11-13)
+
+Branch `feat/quiz-ao-vivo`. A aba "Quiz ao vivo" (`/quiz`), a tela do aluno (`/quiz/entrar`), o item no menu do topo e o botão "Entrar numa sala" na Home.
+
+**Onde está cada coisa**
+- `web/lib/quiz/`: o núcleo, sem tela.
+  - `numeros.ts`: os números que dá para fazer de cabeça e o jeito de escrever cada um (0,75, −1,20, +1,50).
+  - `rede-quiz.ts`: a rede das perguntas, sempre no formato da montagem básica (R G B → 2 neurônios com ReLU → Saída com sigmoide), calculada com `rodar` e `retropropagar` do lab.
+  - `perguntas.ts`: os modelos e a correção.
+  - `quiz.ts`: o plano do quiz, o código da sala e o placar.
+  - `professor.ts` e `aluno.ts`: os dois lados da sala, sem PeerJS. A tela só conversa com eles.
+  - `conexao.ts`: o PeerJS, carregado só no navegador.
+- `web/components/quiz/`: as telas. A rede é desenhada em SVG (`RedeDesenho.tsx`), sem React Flow e sem nada de `components/laboratorio/`.
+- Testes com Jest, 105 novos: a mesma semente gera a mesma pergunta; a certa vale e cada errada não vale; o número certo dá exato em 2 casas; a dica do verde dá 0,50; o backward bate com o `retropropagar`. Também uma sala inteira com conexões de mentira: entrar, apelido repetido, responder, encerrar, +15 s, quem cai volta, quem chega atrasado, sorteio por aluno e o fim.
+- Testado no navegador com uma sala de verdade (PeerJS público) e dois alunos, em abas: sorteio por aluno e por turma, digitar no neurônio, escolher na linha, o placar e "Quem se mexeu", o pódio e a aba Turma, e o aluno na largura de celular.
+
+**Os 18 modelos de pergunta**
+
+| Assunto | Modelos |
+|---|---|
+| Entrada | cor → R G B · R G B → qual cor |
+| Saída | o que a Aqua diz (com o termômetro) · "Ela acertou?" (acertou, errou ou não conhece a cor) |
+| Pesos | quanto chega pela linha (digita em cima da linha) · a linha empurra a soma para cima, para baixo ou nada |
+| Soma ponderada | a soma de um neurônio (digita no neurônio) · a soma da Saída (às vezes é a dica do verde) |
+| ReLU | o que o neurônio passa adiante |
+| Sigmoide | a soma vira perto de quanto |
+| Forward pass | o que o neurônio passa (soma + ReLU, digita no neurônio) · o que a Aqua responde |
+| Erro | MAIOR ou MENOR (com o termômetro) · qual é o erro |
+| Backward pass | a linha até a Saída sobe, desce ou não muda (clicar na linha) · a linha da Entrada muda? Por quê? · fica mais forte, mais fraca ou igual |
+| Treino | o peso novo (peso − passinho × culpa) |
+
+**Decidido pela IA no código (a revisar pelo autor)**
+- **O texto do projetor no sorteio por aluno é o mesmo para todos:** cada modelo tem uma versão sem números ("Cada um tem a sua cor. Qual é a soma do neurônio da Camada 1?"). No projetor, a rede aparece só com o formato, sem destacar linha nenhuma, porque cada aluno tem a sua. A conta certa do resultado usa a rede do primeiro aluno que acertou, com o nome dele ("NA REDE DE MARI").
+- **No sorteio por aluno, o "O que a turma respondeu" junta pelo erro**, não pelo número, já que cada um tem números diferentes: "acertaram", "Usaram 0 a 255…", "sem resposta".
+- **A pergunta encerra sozinha quando todos que estão na sala respondem**, sem esperar o tempo acabar (como no Kahoot).
+- **No celular, a rede fica em pé** (Entrada em cima, Saída embaixo). Deitada como no lab, ela encolhia tanto que os números ficavam com uns 5 pixels. No computador e no projetor continua deitada.
+- **Digitar no desenho, sem campo repetido embaixo** (era a pergunta 3 da revisão do Figma). Quando a pergunta não tem desenho (o erro, o peso novo), o campo fica solto.
+- **O termômetro só mostra; não se arrasta.** As perguntas de MAIOR/MENOR são alternativas com o termômetro ao lado.
+- **O menu da linha** abre embaixo da etiqueta do peso se a linha está na metade de cima, e em cima se está na de baixo, para não tapar a resposta na Saída. No celular ele fica embaixo da rede.
+- **Mensagens a mais na sala:**
+  - `turma`: a lista de apelidos, para a tela de espera;
+  - `recebida`: o professor confirma a resposta;
+  - `progresso`: "18 de 24 já responderam";
+  - `tempo`: o +15 s.
+- **Apelido** de até 16 letras, sem repetir na sala (sem diferença de maiúscula). A sala aceita até 60 alunos.
+- **"Entrar numa sala" na Home** leva à tela do aluno com o código em branco.
+
+**Ficou para depois**
+- **Cenário:** duas a quatro perguntas seguidas com a mesma rede (seção B). Cada modelo tem as suas regras de sorteio (a dica do verde, os três casos da linha B), e juntar regras numa rede só pede mais trabalho. Hoje cada pergunta sorteia a sua rede.
+- **Digitar R G B na Entrada** (assunto 1): por enquanto as duas perguntas de Entrada são de alternativas.
 
 ## Consequências
 
