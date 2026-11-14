@@ -72,3 +72,16 @@ body {
   85% { opacity: 1; }
   100% { transform: translateX(240px); opacity: 0; }
 }
+
+/* Quiz ao vivo (ADR-0034): no computador e no projetor a interface fica 90% do tamanho
+   (o mesmo que o zoom do navegador em 90%). O `zoom` encolhe tudo junto: texto, espaços e a rede.
+   No celular fica como está, para os números continuarem fáceis de ler. A altura mínima da tela
+   (min-h-dvh) é dividida pelo zoom para a página ainda ocupar a tela inteira. */
+@media (min-width: 640px) {
+  .quiz-menor {
+    zoom: 0.9;
+  }
+  .quiz-menor .min-h-dvh {
+    min-height: calc(100dvh / 0.9);
+  }
+}

@@ -90,7 +90,7 @@ export default function Home() {
               Arraste neurônios, ligue camadas e acompanhe, passo a passo, cada número atravessando uma rede neural de
               verdade até virar uma resposta.
             </p>
-            <div className="mt-10 flex flex-wrap justify-center gap-4">
+            <div className="mt-10 flex flex-wrap items-start justify-center gap-4">
               <Link
                 href="/novo-projeto"
                 className="rounded-full bg-text px-10 py-4 text-base font-semibold text-white transition-opacity hover:opacity-90"
@@ -103,6 +103,17 @@ export default function Home() {
               >
                 Ver tutoriais
               </Link>
+              {/* Quiz ao vivo (ADR-0034): o aluno com o código do professor entra direto por aqui */}
+              <div className="flex flex-col items-center gap-1.5">
+                <Link
+                  href="/quiz/entrar"
+                  className="flex items-center gap-2.5 rounded-full border border-aqua-ink bg-aqua-50 px-8 py-4 text-base font-semibold text-aqua-on transition-colors hover:bg-aqua/25"
+                >
+                  <Aqua unidade={2} />
+                  Entrar numa sala
+                </Link>
+                <span className="text-xs text-aqua-ink">tem um código do professor? →</span>
+              </div>
             </div>
           </div>
           <div className="relative mt-14">
