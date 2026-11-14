@@ -40,10 +40,9 @@ describe("plano do quiz", () => {
     expect(montarPlano(TEMAS.geral, 12, 99)).toEqual(montarPlano(TEMAS.geral, 12, 99));
   });
 
-  test("por turma, todos têm a mesma semente; por aluno, cada um a sua", () => {
-    expect(sementeDaPergunta(5, 2, "por-turma", "a")).toBe(sementeDaPergunta(5, 2, "por-turma", "b"));
-    expect(sementeDaPergunta(5, 2, "por-aluno", "a")).not.toBe(sementeDaPergunta(5, 2, "por-aluno", "b"));
-    expect(sementeDaPergunta(5, 2, "por-aluno", "a")).toBe(sementeDaPergunta(5, 2, "por-aluno", "a"));
+  test("cada pergunta tem a sua semente, a mesma para a turma toda", () => {
+    expect(sementeDaPergunta(5, 2)).toBe(sementeDaPergunta(5, 2));
+    expect(sementeDaPergunta(5, 2)).not.toBe(sementeDaPergunta(5, 3));
   });
 });
 

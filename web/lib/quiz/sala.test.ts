@@ -10,7 +10,6 @@ const CONFIG: Config = {
   tema: "geral",
   assuntos: ["soma", "relu", "erro"],
   quantidade: 3,
-  sorteio: "por-turma",
   tempoAlternativas: 20,
   tempoContas: 60,
 };
@@ -80,7 +79,7 @@ test("uma pergunta inteira: responde, corrige, soma 1000 por acerto e mostra que
   prof.comecar();
   expect(mari.estado().fase).toBe("pergunta");
   const p = mari.estado().pergunta!.pergunta;
-  expect(lu.estado().pergunta!.pergunta).toEqual(p); // sorteio por turma: a mesma pergunta
+  expect(lu.estado().pergunta!.pergunta).toEqual(p); // a turma toda responde a mesma pergunta
 
   mari.responder(certa(p));
   expect(mari.estado().fase).toBe("enviada");
@@ -161,20 +160,21 @@ test("quem chega atrasado entra na próxima pergunta com zero nas que perdeu", (
   expect(gabi.estado().pergunta!.indice).toBe(1);
 });
 
-test("sorteio por aluno: cada um com os seus números, a tela projetada usa um como exemplo", () => {
-  const { prof, entrar } = montar({ ...CONFIG, sorteio: "por-aluno" });
+test("o pódio: cada um com os pontos de antes e de depois, e se acertou, errou ou não respondeu", () => {
+  const { prof, entrar } = montar();
   const mari = entrar("m", "Mari");
   const lu = entrar("l", "Lu");
+  entrar("g", "Gabi");
   prof.comecar();
-  const pm = mari.estado().pergunta!.pergunta;
-  const pl = lu.estado().pergunta!.pergunta;
-  expect(pm.modelo).toBe(pl.modelo);
-  expect(pm).not.toEqual(pl);
-  expect(pm.geral).toBe(pl.geral);
-  mari.responder(certa(pm));
-  lu.responder(errada(pl));
-  expect(prof.exemplo(0).deQuem).toBe("Mari");
-  expect(prof.estado().resultado!.grupos[0]).toMatchObject({ texto: "certa", quantos: 1 });
+  mari.responder(certa(mari.estado().pergunta!.pergunta));
+  lu.responder(errada(lu.estado().pergunta!.pergunta));
+  prof.encerrar(); // Gabi não respondeu
+  const podio = prof.estado().resultado!.podio;
+  expect(podio.map((x) => [x.apelido, x.antes, x.pontos, x.como])).toEqual([
+    ["Mari", 0, 1000, "acertou"],
+    ["Lu", 0, 0, "errou"],
+    ["Gabi", 0, 0, "sem-resposta"],
+  ]);
 });
 
 test("no fim, cada um recebe a posição, os acertos e com quem empatou", () => {

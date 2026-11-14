@@ -4,7 +4,7 @@
 
 import { retropropagar, rodar, type Rede } from "../treino";
 import type { Pesos } from "../rede";
-import { ENTRADAS, PESOS, escolher, type Aleatorio } from "./numeros";
+import { sortearEntrada, sortearPeso, type Aleatorio } from "./numeros";
 
 export const CANAIS = ["R", "G", "B"] as const;
 export type NeuronioId = "n1" | "n2" | "s";
@@ -71,19 +71,23 @@ export type RedeQuiz = {
   pesos: Pesos;
 };
 
-/** Sorteia uma rede: uma cor com nome e todos os pesos em passos de 0,5. */
-export function sortearRede(r: Aleatorio, cor: CorNomeada = escolher(r, CORES)): RedeQuiz {
+/**
+ * Sorteia uma rede: entradas e pesos com 2 casas (0,36 · −0,61), para os números não serem
+ * sempre redondos. Com `cor`, usa essa cor com nome (a dica do verde).
+ */
+export function sortearRede(r: Aleatorio, cor?: CorNomeada): RedeQuiz {
+  const entradas = cor ? ([...cor.rgb] as [number, number, number]) : sortearEntradas(r);
   return {
-    entradas: [...cor.rgb],
-    cor: corDasEntradas(cor.rgb),
-    nome: cor.nome,
-    pesos: Object.fromEntries(LINHAS.map((id) => [id, escolher(r, PESOS)])),
+    entradas,
+    cor: corDasEntradas(entradas),
+    nome: cor?.nome,
+    pesos: Object.fromEntries(LINHAS.map((id) => [id, sortearPeso(r)])),
   };
 }
 
-/** Uma cor qualquer, sem nome, só com as entradas permitidas. */
+/** Uma cor qualquer, sem nome: R, G e B com 2 casas. */
 export function sortearEntradas(r: Aleatorio): [number, number, number] {
-  return [escolher(r, ENTRADAS), escolher(r, ENTRADAS), escolher(r, ENTRADAS)];
+  return [sortearEntrada(r), sortearEntrada(r), sortearEntrada(r)];
 }
 
 export type Passada = {

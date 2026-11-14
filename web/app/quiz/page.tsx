@@ -26,7 +26,7 @@ export default function Quiz() {
         <p className="text-sm font-semibold text-aqua-ink">Quiz em sala</p>
         <h1 className="mt-2 text-[clamp(40px,5vw,56px)] leading-tight font-semibold tracking-[-0.02em]">Quiz ao vivo</h1>
         <p className="mt-3 max-w-[760px] text-lg text-text-muted">
-          O professor abre uma sala e a turma responde pelo celular, todos ao mesmo tempo. Os números e as cores mudam a cada quiz: não dá para decorar.
+          O professor abre uma sala e a turma responde no computador, todos ao mesmo tempo. Os números e as cores mudam a cada quiz: não dá para decorar.
         </p>
 
         <div className="mt-10 grid gap-6 md:grid-cols-2">
@@ -34,7 +34,7 @@ export default function Quiz() {
             <p className="text-xs font-semibold tracking-[0.1em] text-text-muted">PROFESSOR</p>
             <h2 className="mt-3 text-3xl font-semibold">Criar sala</h2>
             <p className="mt-3 text-text-muted">
-              Escolha o tema, quantas perguntas e como os números são sorteados. A sala abre nesta aba, com o código para projetar.
+              Escolha o tema, quantas perguntas e o tempo. A sala abre nesta aba, com o código para projetar.
             </p>
             <div className="mt-6 flex items-center gap-4 rounded-2xl bg-white p-4">
               <Aqua unidade={5} />
@@ -49,7 +49,7 @@ export default function Quiz() {
           <section className="flex flex-col rounded-[24px] border border-aqua bg-aqua-50 p-8">
             <p className="text-xs font-semibold tracking-[0.1em] text-aqua-ink">ALUNO</p>
             <h2 className="mt-3 text-3xl font-semibold">Entrar numa sala</h2>
-            <p className="mt-3 text-text-muted">Digite o código que está na tela do professor, ou aponte a câmera do celular para o QR code.</p>
+            <p className="mt-3 text-text-muted">Digite o código da sala que aparece no projetor.</p>
             <form
               className="mt-6 flex flex-col gap-3 sm:flex-row"
               onSubmit={(e) => {

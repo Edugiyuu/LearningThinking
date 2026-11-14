@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ASSUNTOS, TEMAS, type Assunto } from "@/lib/quiz/perguntas";
 import { QUANTIDADE, TEMPOS_ALTERNATIVAS, TEMPOS_CONTAS, minutosEstimados, montarPlano, type Config } from "@/lib/quiz/quiz";
 
-// P1 · Criar sala: tema, quantas perguntas, como os números são sorteados e o tempo.
+// P1 · Criar sala: tema, quantas perguntas e o tempo. A turma toda responde os mesmos números.
 
 const TEMAS_UI = [
   { id: "geral", titulo: "Geral", texto: "Tudo o que o laboratório tem: forward, erro, backward e treino." },
@@ -12,16 +12,10 @@ const TEMAS_UI = [
   { id: "escolher", titulo: "Escolher assuntos", texto: "Marque os assuntos um por um." },
 ] as const;
 
-const SORTEIOS = [
-  { id: "por-aluno", titulo: "Cada aluno com os seus", texto: "Mesma pergunta, com cor e pesos diferentes. Ninguém copia do vizinho." },
-  { id: "por-turma", titulo: "Os mesmos para a turma", texto: "Todos veem a mesma rede. Fácil de corrigir junto no quadro." },
-] as const;
-
 export const CONFIG_INICIAL: Config = {
   tema: "geral",
   assuntos: TEMAS.geral,
   quantidade: 10,
-  sorteio: "por-aluno",
   tempoAlternativas: 20,
   tempoContas: 60,
 };
@@ -97,15 +91,7 @@ export function CriarSala({ onAbrir, abrindo, erro, onVoltar }: { onAbrir: (c: C
           </div>
         </Secao>
 
-        <Secao numero={3} titulo="Números sorteados">
-          <div className="grid gap-3 sm:grid-cols-2">
-            {SORTEIOS.map((s) => (
-              <Cartao key={s.id} ativo={c.sorteio === s.id} titulo={s.titulo} texto={s.texto} onClick={() => mudar({ sorteio: s.id })} />
-            ))}
-          </div>
-        </Secao>
-
-        <Secao numero={4} titulo="Tempo por pergunta">
+        <Secao numero={3} titulo="Tempo por pergunta">
           <div className="flex flex-wrap gap-6">
             <Escolha rotulo="Alternativas" valor={c.tempoAlternativas} opcoes={TEMPOS_ALTERNATIVAS} onChange={(v) => mudar({ tempoAlternativas: v })} />
             <Escolha rotulo="Contas" valor={c.tempoContas} opcoes={TEMPOS_CONTAS} onChange={(v) => mudar({ tempoContas: v })} />
@@ -119,15 +105,14 @@ export function CriarSala({ onAbrir, abrindo, erro, onVoltar }: { onAbrir: (c: C
         <p className="mt-4 text-xl font-semibold">
           {c.quantidade} perguntas · {TEMAS_UI.find((t) => t.id === c.tema)!.titulo}
         </p>
-        <p className="mt-2 text-[15px] text-text-muted">{c.sorteio === "por-aluno" ? "Cada aluno com os seus números" : "Os mesmos números para a turma"}</p>
-        <p className="mt-1 text-[15px] text-text-muted">Cerca de {minutos} minutos</p>
+        <p className="mt-2 text-[15px] text-text-muted">Cerca de {minutos} minutos</p>
         <p className="mt-6 text-sm text-text-subtle">A sala abre nesta aba. Se ela fechar, o quiz acaba para todos.</p>
         {erro && <p className="mt-4 rounded-xl bg-[#FDECEC] px-4 py-3 text-sm font-semibold text-[#B84040]">{erro}</p>}
         <button
           type="button"
           disabled={!pronto || abrindo}
           onClick={() => onAbrir(c)}
-          className="mt-6 h-14 w-full rounded-full bg-text text-[17px] font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-30"
+          className="mt-6 h-14 w-full rounded-full bg-text text-[17px] font-bold text-white hover:opacity-90 disabled:opacity-30"
         >
           {abrindo ? "Abrindo…" : "Abrir sala"}
         </button>
@@ -154,7 +139,7 @@ function Cartao({ ativo, titulo, texto, onClick }: { ativo: boolean; titulo: str
       type="button"
       onClick={onClick}
       aria-pressed={ativo}
-      className={`rounded-2xl border p-4 text-left transition-colors ${ativo ? "border-aqua-ink bg-aqua-50 ring-1 ring-aqua-ink" : "border-black/10 hover:bg-black/[.02]"}`}
+      className={`rounded-2xl border p-4 text-left ${ativo ? "border-aqua-ink bg-aqua-50 ring-1 ring-aqua-ink" : "border-black/10 hover:bg-black/[.02]"}`}
     >
       <span className="block text-[17px] font-semibold">{titulo}</span>
       <span className="mt-1 block text-sm text-text-muted">{texto}</span>

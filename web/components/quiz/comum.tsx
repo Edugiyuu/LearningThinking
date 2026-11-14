@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import qrcode from "qrcode-generator";
+import { useEffect, useState } from "react";
+import { BOCHECHA, OLHO, PORTA, Pixels, type Celula } from "@/components/mascote";
 import { nomeAssunto, type Assunto } from "@/lib/quiz/perguntas";
 
 /** O relógio da tela: muda a cada `ms` para o cronômetro andar. */
@@ -58,32 +58,47 @@ export function BarraDeTempo({ restante, total }: { restante: number; total: num
 
 export const LETRAS = ["A", "B", "C", "D", "E"];
 
-/** O QR code que leva direto à tela de apelido, com o código preenchido (decisão 7). */
-export function QrCode({ texto, tamanho = 260, className = "" }: { texto: string; tamanho?: number; className?: string }) {
-  const { n, escuros } = useMemo(() => {
-    const qr = qrcode(0, "M");
-    qr.addData(texto);
-    qr.make();
-    const n = qr.getModuleCount();
-    const escuros: [number, number][] = [];
-    for (let l = 0; l < n; l++) for (let c = 0; c < n; c++) if (qr.isDark(l, c)) escuros.push([c, l]);
-    return { n, escuros };
-  }, [texto]);
-  const margem = 2;
-  return (
-    <svg
-      viewBox={`${-margem} ${-margem} ${n + margem * 2} ${n + margem * 2}`}
-      width={tamanho}
-      height={tamanho}
-      shapeRendering="crispEdges"
-      role="img"
-      aria-label={`QR code para ${texto}`}
-      className={className}
-    >
-      <rect x={-margem} y={-margem} width={n + margem * 2} height={n + margem * 2} fill="#FFFFFF" />
-      <path d={escuros.map(([x, y]) => `M${x} ${y}h1v1h-1z`).join("")} fill="#1D1D1F" />
-    </svg>
-  );
+/** As cores das Aquas do pódio: cada apelido tem sempre a mesma. */
+const CORES_DAS_AQUAS = ["#5ED3DB", "#E8853A", "#8E7CF0", "#F2C94C", "#6FCF97", "#F28CB1", "#4F8EF7"];
+
+export function corDoApelido(apelido: string): string {
+  let h = 0;
+  for (const c of apelido) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return CORES_DAS_AQUAS[h % CORES_DAS_AQUAS.length];
+}
+
+/**
+ * A Aqua de um aluno no pódio (grade 10 × 6, como a do mascote), na cor do apelido.
+ * Os olhos mudam com o que aconteceu: contente (acertou), olhando para baixo (errou) ou dormindo.
+ */
+export function AquaDaCor({ apelido, como, unidade = 4 }: { apelido: string; como: "acertou" | "errou" | "sem-resposta"; unidade?: number }) {
+  const cor = corDoApelido(apelido);
+  const olhos: Celula[] =
+    como === "acertou"
+      ? [
+          [3, 1, 1, 2, OLHO],
+          [6, 1, 1, 2, OLHO],
+          [2, 3, 1, 1, BOCHECHA],
+          [7, 3, 1, 1, BOCHECHA],
+        ]
+      : como === "errou"
+        ? [
+            [3, 3, 1, 1, OLHO],
+            [6, 3, 1, 1, OLHO],
+          ]
+        : [
+            [2, 2, 2, 1, OLHO],
+            [6, 2, 2, 1, OLHO],
+          ];
+  const celulas: Celula[] = [
+    [1, 0, 8, 5, cor],
+    ...olhos,
+    [0, 2, 1, 1, PORTA],
+    [9, 2, 1, 1, PORTA],
+    [2, 5, 1, 1, cor],
+    [7, 5, 1, 1, cor],
+  ];
+  return <Pixels celulas={celulas} colunas={10} linhas={6} unidade={unidade} style={como === "acertou" ? undefined : { opacity: 0.5 }} />;
 }
 
 /** O endereço da tela do aluno, com o código. */

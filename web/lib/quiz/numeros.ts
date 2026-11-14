@@ -1,13 +1,22 @@
-// Quiz ao vivo (ADR-0034): os números que dá para fazer de cabeça e o jeito de escrever cada um.
+// Quiz ao vivo (ADR-0034): os números sorteados e o jeito de escrever cada um.
 
-/** Entradas que dá para multiplicar de cabeça (seção B do ADR). */
-export const ENTRADAS = [0, 0.2, 0.5, 0.8, 1] as const;
-/** Pesos em passos de 0,5, entre −2 e 2, sem o 0. */
-export const PESOS = [-2, -1.5, -1, -0.5, 0.5, 1, 1.5, 2] as const;
-/** A resposta digitada vale se estiver a até 0,01 da certa. */
-export const TOLERANCIA = 0.01;
+/**
+ * A resposta digitada vale se estiver a até 0,02 da certa. Os números têm 2 casas (0,36 × −0,61),
+ * então a conta dá mais casas e o aluno arredonda: arredondar cada parte de uma soma de três
+ * já pode dar 0,015 de diferença.
+ */
+export const TOLERANCIA = 0.02;
 
 export type Aleatorio = () => number;
+
+/** Um número com 2 casas entre `de` e `ate` (0,36 · 1,47). */
+export const sortear2 = (r: Aleatorio, de: number, ate: number) => r2(de + r() * (ate - de));
+
+/** Uma entrada (R, G ou B) com 2 casas, de 0 a 1. Às vezes o canal vem apagado (0). */
+export const sortearEntrada = (r: Aleatorio) => (r() < 0.15 ? 0 : sortear2(r, 0.05, 1));
+
+/** Um peso com 2 casas, entre −2 e 2, longe do 0 (pelo menos 0,10 de tamanho). */
+export const sortearPeso = (r: Aleatorio) => sortear2(r, 0.1, 2) * (r() < 0.5 ? -1 : 1);
 
 export const escolher = <T,>(r: Aleatorio, xs: readonly T[]): T => xs[Math.floor(r() * xs.length)];
 

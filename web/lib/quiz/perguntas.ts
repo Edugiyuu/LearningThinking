@@ -1,20 +1,20 @@
 // Quiz ao vivo (ADR-0034, seções B e C): cada pergunta é um modelo (template) com partes sorteadas.
-// A mesma semente gera sempre a mesma pergunta: o celular do aluno e a aba do professor geram a
+// A mesma semente gera sempre a mesma pergunta: o computador do aluno e a aba do professor geram a
 // pergunta cada um do seu lado, e os dois concordam. As respostas certas saem da conta do lab.
 
 import { FAIXA_DUVIDA } from "../aqua";
 import { sorteador } from "../treino";
 import {
-  PESOS,
   TOLERANCIA,
   embaralhar,
   escolher,
-  exato2,
   fmt,
   fmtCurto,
   fmtPeso,
   r2,
   sigmoide,
+  sortear2,
+  sortearPeso,
   type Aleatorio,
 } from "./numeros";
 import {
@@ -65,8 +65,8 @@ export const NOME_DIRECAO: Record<Direcao, string> = { sobe: "Subir", desce: "De
 /** Uma alternativa. As erradas dizem qual erro comum elas representam (aparece no projetor). */
 export type Opcao = { texto: string; erro?: string };
 
-/** Onde o aluno digita o número: dentro de um neurônio, em cima de uma linha ou num campo solto. */
-export type Alvo = { tipo: "neuronio"; id: NeuronioId } | { tipo: "linha"; id: string };
+/** Onde o aluno digita o número: dentro de um neurônio (ou num campo solto, quando não tem desenho). */
+export type Alvo = { tipo: "neuronio"; id: NeuronioId };
 
 export type Forma =
   | { tipo: "alternativas"; opcoes: Opcao[]; certa: number }
@@ -94,8 +94,6 @@ export type Pergunta = {
   modelo: string;
   assunto: Assunto;
   enunciado: string;
-  /** a mesma pergunta sem os números: tela projetada no sorteio por aluno, pódio e cards */
-  geral: string;
   amostra?: { cor: string; nome?: string };
   /** o que a Aqua disse, no balão ao lado dela */
   fala?: string;
@@ -118,9 +116,10 @@ type Modelo = { id: string; assunto: Assunto; gerar: (r: Aleatorio) => Gerada };
 
 /* ---------- Ajudantes ---------- */
 
+// Regra (autor): o enunciado não repete o que o desenho, a amostra ou o termômetro já mostram
+// (as entradas, os pesos, a resposta da Saída, o certo). Só entra no texto o que não aparece na tela.
+
 const rgbTexto = (e: readonly number[]) => `R ${fmtCurto(e[0])} · G ${fmtCurto(e[1])} · B ${fmtCurto(e[2])}`;
-const aCor = (rede: RedeQuiz) => (rede.nome ? `o ${rede.nome} (${rgbTexto(rede.entradas)})` : `a cor (${rgbTexto(rede.entradas)})`);
-const ACor = (rede: RedeQuiz) => aCor(rede).replace(/^./, (c) => c.toUpperCase());
 const certoTexto = (objetivo: 0 | 1) => (objetivo === 1 ? "laranja (1)" : "azul (0)");
 
 /** Dois números contam como o mesmo se ficam a até 0,01 (a conta com vírgula erra no último dígito). */
@@ -135,11 +134,13 @@ function alternativas(r: Aleatorio, certa: Opcao, erradas: Opcao[], n = 4): Extr
 }
 
 function numero(certa: number, alvo: Alvo | null, rotulo: string, erros: { valor: number; erro: string }[]): Forma {
-  const vistos: number[] = [certa];
+  // a certa guardada tem 2 casas; as erradas que caem perto dela (ou uma da outra) saem
+  const c = r2(certa);
+  const vistos: number[] = [c];
   const unicos = erros
     .map((e) => ({ ...e, valor: r2(e.valor) }))
     .filter((e) => !vistos.some((v) => perto(v, e.valor)) && vistos.push(e.valor));
-  return { tipo: "numero", alvo, rotulo, certa: r2(certa), erros: unicos };
+  return { tipo: "numero", alvo, rotulo, certa: c, erros: unicos };
 }
 
 /** Tenta de novo até a regra do modelo valer. As regras são fáceis, então sempre acha logo. */
@@ -179,7 +180,7 @@ function contaDoNeuronio(rede: RedeQuiz, n: "n1" | "n2"): PassoDaConta[] {
 }
 
 function contaDaSaida(rede: RedeQuiz, valores: Record<NeuronioId, number>): PassoDaConta[] {
-  const partes = MEIO.map((n) => valores[n] * rede.pesos[linhaSaida(n)]);
+  const partes = MEIO.map((n) => r2(valores[n]) * rede.pesos[linhaSaida(n)]);
   return [
     ...MEIO.map((n, i) => ({ rotulo: `${nomeNeuronio(n)} passa`, conta: `${fmt(valores[n])} × ${fmtPeso(rede.pesos[linhaSaida(n)])} = ${fmtPeso(partes[i])}` })),
     { rotulo: "a soma da Saída", conta: `${fmtPeso(partes[0])} ${partes[1] < 0 ? "−" : "+"} ${fmt(Math.abs(partes[1]))} = ${fmt(partes[0] + partes[1])}` },
@@ -205,8 +206,7 @@ const MODELOS: Modelo[] = [
       const [R, G, B] = cor.rgb;
       const t = (e: number[]) => rgbTexto(e);
       return {
-        enunciado: `Esta cor (o ${cor.nome}) vira quais números na Entrada?`,
-        geral: "Esta cor vira quais números na Entrada?",
+        enunciado: "Esta cor vira quais números na Entrada?",
         amostra: { cor: corDasEntradas(cor.rgb), nome: cor.nome },
         forma: alternativas(r, { texto: t(cor.rgb) }, [
           { texto: `R ${Math.round(R * 255)} · G ${Math.round(G * 255)} · B ${Math.round(B * 255)}`, erro: "Usaram 0 a 255. No lab, cada canal vai de 0 a 1." },
@@ -231,7 +231,6 @@ const MODELOS: Modelo[] = [
       const outras = embaralhar(r, CORES.filter((c) => c.nome !== cor.nome));
       return {
         enunciado: `${rgbTexto(cor.rgb)} é qual cor?`,
-        geral: "Estes números da Entrada são qual cor?",
         forma: alternativas(r, { texto: `${cor.nome}` }, outras.map((c) => ({ texto: c.nome, erro: `O ${c.nome} é ${rgbTexto(c.rgb)}.` }))),
         conta: [
           { rotulo: "R, G e B", conta: "quanto de vermelho, de verde e de azul a cor tem" },
@@ -246,7 +245,8 @@ const MODELOS: Modelo[] = [
     id: "saida-diz",
     assunto: "saida",
     gerar: (r) => {
-      const saida = escolher(r, [0.03, 0.08, 0.12, 0.18, 0.25, 0.4, 0.5, 0.6, 0.75, 0.82, 0.88, 0.97]);
+      // longe das bordas da dúvida (0,30 e 0,70), para a certa não depender de um centésimo
+      const saida = ate(r, (rr) => sortear2(rr, 0.01, 0.99), (x) => Math.abs(x - FAIXA_DUVIDA.de) >= 0.04 && Math.abs(x - FAIXA_DUVIDA.ate) >= 0.04);
       const certa = falaDaAqua(saida);
       const erroDe: Record<string, string> = {
         "É azul!": saida >= 0.5 ? "Trocaram: perto de 1 é laranja, perto de 0 é azul." : "Entre 0,30 e 0,70 ela não tem certeza.",
@@ -254,8 +254,7 @@ const MODELOS: Modelo[] = [
         "Fico em dúvida": "Abaixo de 0,30 ou acima de 0,70 ela responde com certeza.",
       };
       return {
-        enunciado: `A Saída deu ${fmt(saida)}. O que a Aqua diz?`,
-        geral: "A Saída deu um número. O que a Aqua diz?",
+        enunciado: "A Saída deu este número. O que a Aqua diz?",
         termometro: { saida },
         forma: alternativas(r, { texto: certa }, FALAS.filter((f) => f !== certa).map((f) => ({ texto: f, erro: erroDe[f] }))),
         conta: [
@@ -281,7 +280,7 @@ const MODELOS: Modelo[] = [
       const cor = caso === "nao-conhece" ? escolher(r, estranhas) : escolher(r, conhecidas);
       const ehLaranja = cor.nome.startsWith("laranja");
       const disseLaranja = caso === "nao-conhece" ? r() < 0.5 : caso === "acertou" ? ehLaranja : !ehLaranja;
-      const saida = disseLaranja ? escolher(r, [0.82, 0.88, 0.94, 0.97]) : escolher(r, [0.03, 0.06, 0.12, 0.18]);
+      const saida = disseLaranja ? sortear2(r, 0.8, 0.99) : sortear2(r, 0.01, 0.2);
       const disse = disseLaranja ? "É laranja!" : "É azul!";
       const opcoes: Opcao[] = [
         { texto: "Sim" },
@@ -296,8 +295,7 @@ const MODELOS: Modelo[] = [
       ];
       const ordem = embaralhar(r, [0, 1, 2]);
       return {
-        enunciado: `O ${cor.nome} (${rgbTexto(cor.rgb)}) deu ${fmt(saida)} e a Aqua disse “${disse}” Ela acertou?`,
-        geral: "A Aqua respondeu uma cor. Ela acertou?",
+        enunciado: "A Aqua viu esta cor e respondeu. Ela acertou?",
         amostra: { cor: corDasEntradas(cor.rgb), nome: cor.nome },
         fala: disse,
         termometro: { saida },
@@ -323,16 +321,16 @@ const MODELOS: Modelo[] = [
       const c = Math.floor(r() * 3);
       const n = escolher(r, MEIO);
       const entradas = sortearEntradas(r);
-      entradas[c] = escolher(r, [0.2, 0.5, 0.8, 1]);
+      entradas[c] = sortear2(r, 0.05, 1);
       const rede: RedeQuiz = { ...sortearRede(r), entradas, cor: corDasEntradas(entradas), nome: undefined };
       const linha = linhaEntrada(c, n);
       const x = entradas[c];
       const w = rede.pesos[linha];
       return {
-        enunciado: `O ${CANAIS[c]} vale ${fmtCurto(x)} e o peso da linha ${CANAIS[c]} → ${nomeNeuronio(n)} é ${fmtPeso(w)}. Quanto chega no ${nomeNeuronio(n)} por essa linha?`,
-        geral: "Cada um tem a sua linha. Quanto chega no neurônio por ela?",
+        enunciado: `Quanto chega no ${nomeNeuronio(n)} pela linha ${CANAIS[c]} → ${nomeNeuronio(n)}?`,
         desenho: desenhoBase(rede, { destaque: [linha] }),
-        forma: numero(x * w, { tipo: "linha", id: linha }, "O que chega pela linha", [
+        // o aluno digita dentro do neurônio: é nele que chega o que vem pela linha
+        forma: numero(x * w, { tipo: "neuronio", id: n }, `O que chega no ${nomeNeuronio(n)}`, [
           { valor: x + w, erro: "Somaram o valor e o peso: é vezes." },
           { valor: w, erro: "Usaram só o peso, sem multiplicar pelo valor." },
           { valor: -x * w, erro: "Trocaram o sinal do peso." },
@@ -355,9 +353,9 @@ const MODELOS: Modelo[] = [
       const x = rede.entradas[c];
       const w = rede.pesos[linha];
       const opcoes: Opcao[] = [
-        { texto: "Para cima: reforça" },
-        { texto: "Para baixo: atrapalha" },
-        { texto: `Não empurra: o ${CANAIS[c]} é 0` },
+        { texto: "Sobe" },
+        { texto: "Desce" },
+        { texto: `Fica igual: o ${CANAIS[c]} é 0` },
       ];
       const certa = x === 0 ? 2 : w > 0 ? 0 : 1;
       const erros = [
@@ -367,13 +365,12 @@ const MODELOS: Modelo[] = [
       ];
       const ordem = embaralhar(r, [0, 1, 2]);
       return {
-        enunciado: `A linha ${CANAIS[c]} → ${nomeNeuronio(n)} tem peso ${fmtPeso(w)} e o ${CANAIS[c]} vale ${fmtCurto(x)}. Ela empurra a soma do ${nomeNeuronio(n)} para onde?`,
-        geral: "Cada um tem a sua linha. Ela empurra a soma do neurônio para onde?",
+        enunciado: `Por causa da linha ${CANAIS[c]} → ${nomeNeuronio(n)}, a soma do ${nomeNeuronio(n)} sobe, desce ou fica igual?`,
         desenho: desenhoBase(rede, { destaque: [linha] }),
         forma: { tipo: "alternativas", opcoes: ordem.map((i) => (i === certa ? opcoes[i] : { ...opcoes[i], erro: erros[i] })), certa: ordem.indexOf(certa) },
         conta: [
           { rotulo: "valor × peso", conta: `${fmt(x)} × ${fmtPeso(w)} = ${fmt(x * w)}` },
-          { rotulo: "então", conta: x === 0 ? "não muda nada na soma" : w > 0 ? "a soma sobe" : "a soma desce" },
+          { rotulo: "então", conta: x === 0 ? "a soma fica igual" : w > 0 ? "a soma sobe" : "a soma desce" },
         ],
       };
     },
@@ -390,8 +387,7 @@ const MODELOS: Modelo[] = [
       const soma = somas[n];
       const linhas = [0, 1, 2].map((c) => linhaEntrada(c, n));
       return {
-        enunciado: `${ACor(rede)} entra na rede. Qual é a soma do ${nomeNeuronio(n)}?`,
-        geral: "Cada um tem a sua cor. Qual é a soma do neurônio da Camada 1?",
+        enunciado: `Qual é a soma do ${nomeNeuronio(n)}?`,
         desenho: desenhoBase(rede, { destaque: linhas }),
         forma: numero(soma, { tipo: "neuronio", id: n }, `Soma do ${nomeNeuronio(n)}`, [
           { valor: rede.entradas.reduce((a, b) => a + b, 0), erro: "Somaram as entradas sem multiplicar pelos pesos." },
@@ -409,19 +405,18 @@ const MODELOS: Modelo[] = [
       if (r() < 0.4) {
         // a dica do verde (exemplo do autor): os dois neurônios ouvem o G com o mesmo peso e os
         // pesos até a Saída são opostos, então eles se anulam e a resposta dá 0,50 cravado
-        const g = escolher(r, [0.5, 0.8, 1]);
+        const g = sortear2(r, 0.4, 1);
         const rede = sortearRede(r, { nome: "verde", rgb: [0, g, 0] });
-        const wG = escolher(r, [0.5, 1, 1.5, 2]);
+        const wG = sortear2(r, 0.3, 2);
         rede.pesos[linhaEntrada(1, "n1")] = wG;
         rede.pesos[linhaEntrada(1, "n2")] = wG;
-        const a = escolher(r, [0.5, 1, 1.5, 2]);
+        const a = sortear2(r, 0.3, 2);
         const positivo = escolher(r, MEIO);
         for (const n of MEIO) rede.pesos[linhaSaida(n)] = n === positivo ? a : -a;
         const { p, textos, apagados } = meioPreenchido(rede);
-        const h = p.valores.n1;
+        const h = r2(p.valores.n1);
         return {
-          enunciado: `O verde (${rgbTexto(rede.entradas)}) deu 0,50 cravado. Os dois neurônios da Camada 1 ouvem o G com o mesmo peso. Quanto dá a soma da Saída?`,
-          geral: "Cada um tem a sua cor. Quanto dá a soma da Saída?",
+          enunciado: `O verde deu 0,50 cravado. Os dois neurônios da Camada 1 ouvem o G com o mesmo peso. Quanto dá a soma da Saída?`,
           desenho: desenhoBase(rede, { textos, apagados, destaque: [linhaEntrada(1, "n1"), linhaEntrada(1, "n2")] }),
           forma: numero(0, { tipo: "neuronio", id: "s" }, "Soma da Saída", [
             { valor: h * a, erro: "Contaram só um dos neurônios." },
@@ -434,18 +429,19 @@ const MODELOS: Modelo[] = [
       }
       const rede = ate(r, sortearRede, (x) => {
         const p = passar(x);
-        return (p.valores.n1 > 0 || p.valores.n2 > 0) && exato2(p.somas.s);
+        return p.valores.n1 > 0 || p.valores.n2 > 0;
       });
       const { p, textos, apagados } = meioPreenchido(rede);
-      const semRelu = MEIO.reduce((s, n) => s + p.somas[n] * rede.pesos[linhaSaida(n)], 0);
+      // a conta certa usa os números escritos nos neurônios (2 casas), os mesmos que o aluno vê
+      const somaS = MEIO.reduce((s, n) => s + r2(p.valores[n]) * rede.pesos[linhaSaida(n)], 0);
+      const semRelu = MEIO.reduce((s, n) => s + r2(p.somas[n]) * rede.pesos[linhaSaida(n)], 0);
       return {
-        enunciado: `${ACor(rede)} entra na rede. O que cada neurônio da Camada 1 passou já está escrito. Quanto dá a soma da Saída?`,
-        geral: "Cada um tem a sua cor. Quanto dá a soma da Saída?",
+        enunciado: "Quanto dá a soma da Saída?",
         desenho: desenhoBase(rede, { textos, apagados, destaque: MEIO.map(linhaSaida) }),
-        forma: numero(p.somas.s, { tipo: "neuronio", id: "s" }, "Soma da Saída", [
+        forma: numero(somaS, { tipo: "neuronio", id: "s" }, "Soma da Saída", [
           { valor: semRelu, erro: "Esqueceram a ReLU: o neurônio com soma negativa passa 0." },
-          { valor: sigmoide(p.somas.s), erro: "Já passaram a sigmoide: a pergunta é a soma, que vem antes." },
-          { valor: p.valores.n1 + p.valores.n2, erro: "Somaram sem multiplicar pelos pesos." },
+          { valor: sigmoide(somaS), erro: "Já passaram a sigmoide: a pergunta é a soma, que vem antes." },
+          { valor: r2(p.valores.n1) + r2(p.valores.n2), erro: "Somaram sem multiplicar pelos pesos." },
         ]),
         conta: contaDaSaida(rede, p.valores),
       };
@@ -457,12 +453,11 @@ const MODELOS: Modelo[] = [
     id: "relu-passa",
     assunto: "relu",
     gerar: (r) => {
-      const soma = escolher(r, [0.3, 0.5, 0.75, 1.2, 1.5, 2.5]) * (r() < 0.6 ? -1 : 1);
+      const soma = sortear2(r, 0.1, 2.9) * (r() < 0.6 ? -1 : 1);
       const n = escolher(r, MEIO);
       const certa = Math.max(0, soma);
       return {
         enunciado: `A soma do ${nomeNeuronio(n)} deu ${fmt(soma)}. O que ele passa adiante?`,
-        geral: "A soma de um neurônio da Camada 1 deu um número. O que ele passa adiante?",
         forma: alternativas(r, { texto: fmt(certa) }, [
           soma < 0 ? { texto: fmt(soma), erro: "Esqueceram a ReLU: negativo vira 0." } : { texto: fmt(0), erro: "A ReLU só zera o negativo; o positivo passa igual." },
           { texto: fmt(-soma), erro: soma < 0 ? "A ReLU não troca o sinal: negativo vira 0." : "A ReLU não troca o sinal." },
@@ -482,11 +477,10 @@ const MODELOS: Modelo[] = [
     id: "sigmoide-valor",
     assunto: "sigmoide",
     gerar: (r) => {
-      const soma = escolher(r, [-3.5, -3, -2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2, 3, 3.5]);
+      const soma = r() < 0.1 ? 0 : sortear2(r, -3.5, 3.5);
       const certa = sigmoide(soma);
       return {
         enunciado: `A soma da Saída deu ${fmt(soma)}. Depois da sigmoide, a resposta fica perto de quanto?`,
-        geral: "A soma da Saída deu um número. Depois da sigmoide, a resposta fica perto de quanto?",
         forma: alternativas(r, { texto: fmt(certa) }, [
           { texto: fmt(sigmoide(-soma)), erro: "Trocaram o lado: soma positiva fica acima de 0,50." },
           { texto: fmt(0.5), erro: "0,50 é só quando a soma é 0." },
@@ -516,8 +510,7 @@ const MODELOS: Modelo[] = [
       });
       const { somas, valores } = passar(rede);
       return {
-        enunciado: `${ACor(rede)} entra na rede. O que o ${nomeNeuronio(n)} passa adiante?`,
-        geral: "Cada um tem a sua cor. O que o neurônio da Camada 1 passa adiante?",
+        enunciado: `O que o ${nomeNeuronio(n)} passa adiante?`,
         desenho: desenhoBase(rede, { destaque: [0, 1, 2].map((c) => linhaEntrada(c, n)) }),
         forma: numero(valores[n], { tipo: "neuronio", id: n }, `O que o ${nomeNeuronio(n)} passa`, [
           ...(somas[n] < 0 ? [{ valor: somas[n], erro: "Esqueceram a ReLU: soma negativa passa 0." }] : []),
@@ -550,8 +543,7 @@ const MODELOS: Modelo[] = [
               ? "A resposta ficou perto de 0,50: ela fica em dúvida."
               : "Trocaram: perto de 1 é laranja, perto de 0 é azul.";
       return {
-        enunciado: `${ACor(rede)} atravessa a rede inteira (forward pass). O que a Aqua responde?`,
-        geral: "Cada um tem a sua cor. Depois do forward pass, o que a Aqua responde?",
+        enunciado: "A cor atravessa a rede inteira (forward pass). O que a Aqua responde?",
         desenho: desenhoBase(rede),
         forma: alternativas(r, { texto: certa }, FALAS.filter((f) => f !== certa).map((f) => ({ texto: f, erro: erroDe(f) }))),
         conta: [
@@ -570,13 +562,12 @@ const MODELOS: Modelo[] = [
     assunto: "erro",
     gerar: (r) => {
       const objetivo = escolher(r, [0, 1] as const);
-      const saida = escolher(r, [0.05, 0.1, 0.2, 0.3, 0.4, 0.6, 0.7, 0.8, 0.9, 0.95]);
+      const saida = sortear2(r, 0.03, 0.97);
       const certa = objetivo === 1 ? 0 : 1;
       const opcoes: Opcao[] = [{ texto: "MAIOR" }, { texto: "MENOR" }];
       const ordem = embaralhar(r, [0, 1]);
       return {
-        enunciado: `Era ${certoTexto(objetivo)} e a rede deu ${fmt(saida)}. A resposta devia ter sido MAIOR ou MENOR?`,
-        geral: "A rede errou. A resposta devia ter sido MAIOR ou MENOR?",
+        enunciado: "A resposta devia ter sido MAIOR ou MENOR?",
         termometro: { saida, objetivo },
         forma: {
           tipo: "alternativas",
@@ -595,11 +586,10 @@ const MODELOS: Modelo[] = [
     assunto: "erro",
     gerar: (r) => {
       const objetivo = escolher(r, [0, 1] as const);
-      const saida = escolher(r, [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.6, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95]);
+      const saida = sortear2(r, 0.03, 0.97);
       const erro = Math.abs(objetivo - saida);
       return {
-        enunciado: `Era ${certoTexto(objetivo)} e a rede deu ${fmt(saida)}. Qual é o erro?`,
-        geral: "A rede deu uma resposta. Qual é o erro?",
+        enunciado: "Qual é o erro da rede?",
         termometro: { saida, objetivo },
         forma: numero(erro, null, "O erro", [
           { valor: saida, erro: "Usaram a resposta. O erro é a distância até o certo." },
@@ -632,8 +622,7 @@ const MODELOS: Modelo[] = [
       const { p, textos, apagados } = meioPreenchido(rede);
       const devia = objetivo === 1 ? "maior" : "menor";
       return {
-        enunciado: `Era ${certoTexto(objetivo)} e a rede deu ${fmt(p.saida)}. A linha ${nomeLinha(linha)} (peso ${fmtPeso(rede.pesos[linha])}) deve…`,
-        geral: "A rede errou. A linha do neurônio até a Saída deve SUBIR, DESCER ou NÃO MUDAR?",
+        enunciado: `Olhe a Saída e o certo. A linha ${nomeLinha(linha)} deve…`,
         desenho: desenhoBase(rede, { textos: { ...textos, s: fmt(p.saida) }, apagados, destaque: [linha], objetivo }),
         forma: { tipo: "linha", linha, certa },
         conta: [
@@ -666,7 +655,7 @@ const MODELOS: Modelo[] = [
           const x = sortearRede(rr);
           c = Math.floor(rr() * 3);
           if (caso === "canal-zero") x.entradas[c] = 0;
-          else if (x.entradas[c] === 0) x.entradas[c] = escolher(rr, [0.5, 0.8, 1]);
+          else if (x.entradas[c] === 0) x.entradas[c] = sortear2(rr, 0.2, 1);
           x.cor = corDasEntradas(x.entradas);
           x.nome = CORES.find((k) => k.rgb.every((v, i) => v === x.entradas[i]))?.nome;
           return x;
@@ -695,8 +684,7 @@ const MODELOS: Modelo[] = [
       const ordem = embaralhar(r, [0, 1, 2, 3]);
       const { p, textos, apagados } = meioPreenchido(rede);
       return {
-        enunciado: `Era ${certoTexto(objetivo)} e a rede deu ${fmt(p.saida)}. A linha ${nomeLinha(linha)} muda? Por quê?`,
-        geral: "A rede errou. A linha da Entrada até o neurônio muda? Por quê?",
+        enunciado: `Olhe a Saída e o certo. A linha ${nomeLinha(linha)} muda? Por quê?`,
         desenho: desenhoBase(rede, { textos: { ...textos, s: fmt(p.saida) }, apagados, destaque: [linha], objetivo }),
         forma: { tipo: "alternativas", opcoes: ordem.map((i) => (i === certa ? opcoes[i] : { ...opcoes[i], erro: erros[i] })), certa: ordem.indexOf(certa) },
         conta: [
@@ -732,8 +720,7 @@ const MODELOS: Modelo[] = [
       ];
       const ordem = embaralhar(r, [0, 1, 2]);
       return {
-        enunciado: `A linha ${nomeLinha(linha)} tem peso ${fmtPeso(v)} e vai ${sobe ? "SUBIR" : "DESCER"} um passinho (${fmtPeso(v)} → ${fmtPeso(novo)}). Ela fica mais forte, mais fraca ou igual?`,
-        geral: "Uma linha até a Saída vai mudar um passinho. Ela fica mais forte, mais fraca ou igual?",
+        enunciado: `A linha ${nomeLinha(linha)} vai ${sobe ? "SUBIR" : "DESCER"} um passinho, até ${fmtPeso(novo)}. Ela fica mais forte, mais fraca ou igual?`,
         desenho: desenhoBase(rede, { destaque: [linha] }),
         forma: { tipo: "alternativas", opcoes: ordem.map((i) => (i === certa ? opcoes[i] : { ...opcoes[i], erro: erros[i] })), certa: ordem.indexOf(certa) },
         conta: [
@@ -754,12 +741,11 @@ const MODELOS: Modelo[] = [
     assunto: "treino",
     gerar: (r) => {
       const passinho = escolher(r, [0.1, 0.5]);
-      const culpa = escolher(r, [0.2, 0.4, 0.6, 0.8, 1]) * (r() < 0.5 ? -1 : 1);
-      const peso = escolher(r, PESOS);
+      const culpa = sortear2(r, 0.05, 1) * (r() < 0.5 ? -1 : 1);
+      const peso = sortearPeso(r);
       const novo = peso - passinho * culpa;
       return {
         enunciado: `A taxa de aprendizado (o passinho) é ${fmtCurto(passinho)}, a culpa da linha é ${fmt(culpa)} e o peso é ${fmtPeso(peso)}. Qual é o peso novo?`,
-        geral: "Com o passinho, a culpa e o peso de uma linha: qual é o peso novo?",
         forma: numero(novo, null, "O peso novo", [
           { valor: peso + passinho * culpa, erro: "Somaram: o peso anda contra a culpa (peso − passinho × culpa)." },
           { valor: peso - culpa, erro: "Esqueceram o passinho: a culpa é multiplicada por ele." },

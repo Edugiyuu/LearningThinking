@@ -5,12 +5,14 @@ import gsap from "gsap";
 import { Aqua } from "@/components/mascote";
 import { abrirSala } from "@/lib/quiz/conexao";
 import { nomeAssunto, textoDaCerta, textoDaResposta, type Pergunta } from "@/lib/quiz/perguntas";
-import { SalaDoProfessor, type AlunoNaSala, type EstadoDoProfessor } from "@/lib/quiz/professor";
-import { classificar, gerarCodigo, juntarNomes, montarPlano, type Config } from "@/lib/quiz/quiz";
-import { ChipAssunto, CronometroRedondo, LETRAS, QrCode, linkDoAluno, ordinal, segundosAte, useAgora } from "./comum";
+import { nomeNeuronio } from "@/lib/quiz/rede-quiz";
+import { SalaDoProfessor, type AlunoNaSala, type EstadoDoProfessor, type NoPodio } from "@/lib/quiz/professor";
+import { PONTOS_POR_ACERTO, classificar, gerarCodigo, juntarNomes, montarPlano, type Config } from "@/lib/quiz/quiz";
+import { AquaDaCor, ChipAssunto, CronometroRedondo, LETRAS, linkDoAluno, ordinal, segundosAte, useAgora } from "./comum";
 import { CriarSala } from "./CriarSala";
 import { VisualDaPergunta } from "./Responder";
 import { RedeDesenho } from "./RedeDesenho";
+import { useTrilhaDoQuiz } from "./trilha";
 
 // Quiz ao vivo (ADR-0034): a aba do professor, ligada ao projetor (telas P1–P6 do Figma).
 // A sala vive na memória desta aba: fechou a aba, acabou a sala, e nada fica guardado.
@@ -62,6 +64,8 @@ export default function QuizProfessor({ onVoltar }: { onVoltar: () => void }) {
 
 function SalaAberta({ prof, instavel, onFechar }: { prof: SalaDoProfessor; instavel: boolean; onFechar: () => void }) {
   const e = useSyncExternalStore(prof.assinar, prof.estado, prof.estado);
+  const [mudo, setMudo] = useState(false);
+  useTrilhaDoQuiz(e.fase, mudo); // música de fundo nas perguntas, results.mp3 no fim
 
   // o relógio da sala: acabou o tempo, encerra a pergunta
   useEffect(() => {
@@ -93,6 +97,16 @@ function SalaAberta({ prof, instavel, onFechar }: { prof: SalaDoProfessor; insta
       {e.fase === "pergunta" && <PerguntaAoVivo e={e} prof={prof} />}
       {e.fase === "resultado" && <ResultadoDaPergunta e={e} prof={prof} />}
       {e.fase === "fim" && <Fim e={e} prof={prof} onFechar={fechar} />}
+      {e.fase !== "espera" && (
+        <button
+          type="button"
+          onClick={() => setMudo((m) => !m)}
+          aria-pressed={mudo}
+          className="fixed bottom-4 right-4 rounded-full border border-black/15 bg-white px-4 py-2 text-sm font-medium shadow-sm hover:bg-black/[.03]"
+        >
+          {mudo ? "Som: desligado" : "Som: ligado"}
+        </button>
+      )}
     </>
   );
 }
@@ -144,19 +158,13 @@ function Espera({ e, onComecar, onFechar }: { e: EstadoDoProfessor; onComecar: (
         </span>
       </Topo>
       <main className="mx-auto w-full max-w-[1280px] flex-1 px-4 py-10 sm:px-6">
-        <div className="flex flex-col justify-between gap-10 md:flex-row md:items-start">
-          <div>
-            <p className="text-xl text-text-muted">Entre em</p>
-            <p className="mt-1 text-2xl font-semibold break-all sm:text-[26px]">{enderecoCurto}</p>
-            <p className="mt-3 text-xl text-text-muted">e digite o código da sala:</p>
-            <p className="mt-4 font-mono text-[clamp(64px,11vw,128px)] leading-none font-bold tracking-[0.12em]">{e.codigo}</p>
-          </div>
-          <div className="flex flex-col items-center gap-3">
-            <div className="rounded-[20px] border border-black/10 bg-white p-3">
-              <QrCode texto={link} tamanho={250} />
-            </div>
-            <p className="text-[15px] text-text-muted">ou aponte a câmera do celular</p>
-          </div>
+        <div className="flex flex-col items-center text-center">
+          <p className="text-2xl text-text-muted">
+            No computador, entre em <b className="text-text">{enderecoCurto}</b> e digite o código da sala:
+          </p>
+          <p className="mt-6 rounded-[32px] bg-aqua-50 px-12 py-6 font-mono text-[clamp(72px,11vw,156px)] leading-none font-bold tracking-[0.14em] text-aqua-on ring-2 ring-aqua">
+            {e.codigo}
+          </p>
         </div>
         <div className="mt-10 border-t border-black/[.08] pt-8">
           <p className="flex flex-wrap items-baseline gap-x-4">
@@ -179,7 +187,7 @@ function Espera({ e, onComecar, onFechar }: { e: EstadoDoProfessor; onComecar: (
               {e.config.tema === "forward" ? "Só forward" : e.config.tema === "geral" ? "Geral" : "Assuntos escolhidos"} · {e.plano.length} perguntas
             </p>
             <p className="text-sm text-text-muted">
-              {e.config.sorteio === "por-aluno" ? "Cada aluno com os seus números" : "Os mesmos números para a turma"} · alternativas {e.config.tempoAlternativas} s · contas {e.config.tempoContas} s
+              Alternativas {e.config.tempoAlternativas} s · contas {e.config.tempoContas} s
             </p>
           </div>
           <button type="button" onClick={onFechar} className="h-13 rounded-full border border-black/15 bg-white px-8 py-3 font-medium hover:bg-black/[.03]">
@@ -189,7 +197,7 @@ function Espera({ e, onComecar, onFechar }: { e: EstadoDoProfessor; onComecar: (
             type="button"
             onClick={onComecar}
             disabled={presentes.length === 0}
-            className="rounded-full bg-text px-10 py-3.5 font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-30"
+            className="rounded-full bg-text px-10 py-3.5 font-semibold text-white hover:opacity-90 disabled:opacity-30"
           >
             Começar →
           </button>
@@ -209,11 +217,19 @@ function desenhoProjetado(p: Pergunta) {
   return p.desenho;
 }
 
+/** O que o aluno faz no computador dele, no rodapé do projetor. */
+function oQueFazer(p: Pergunta): string {
+  const f = p.forma;
+  if (f.tipo === "alternativas") return `${LETRAS.slice(0, f.opcoes.length - 1).join(", ")} ou ${LETRAS[f.opcoes.length - 1]}`;
+  if (f.tipo === "linha") return "subir, descer ou não mudar";
+  if (f.alvo) return `digite o número do ${nomeNeuronio(f.alvo.id)}`;
+  return `digite ${f.rotulo.toLowerCase()}`;
+}
+
 function PerguntaAoVivo({ e, prof }: { e: EstadoDoProfessor; prof: SalaDoProfessor }) {
   const agora = useAgora();
   const item = e.plano[e.indice];
-  const porAluno = e.config.sorteio === "por-aluno";
-  const p = prof.perguntaDe(e.indice); // por turma: a de todos; por aluno: só o formato (sem números)
+  const p = prof.perguntaDe(e.indice); // a mesma de todos os alunos
   const restante = segundosAte(e.prazo, agora);
   const total = p.forma.tipo === "numero" ? e.config.tempoContas : e.config.tempoAlternativas;
   const desenho = desenhoProjetado(p);
@@ -225,10 +241,10 @@ function PerguntaAoVivo({ e, prof }: { e: EstadoDoProfessor; prof: SalaDoProfess
         direita={
           <>
             <span className="hidden items-center gap-3 sm:flex">
-              <span className="h-2 w-36 overflow-hidden rounded-full bg-black/[.08]">
+              <span className="h-3 w-40 overflow-hidden rounded-full bg-black/[.08]">
                 <span className="block h-full bg-aqua" style={{ width: `${e.participando ? (e.responderam / e.participando) * 100 : 0}%` }} />
               </span>
-              <span className="text-[15px] text-text-muted tabular-nums">
+              <span className="text-lg font-bold tabular-nums">
                 {e.responderam} de {e.participando} responderam
               </span>
             </span>
@@ -242,23 +258,22 @@ function PerguntaAoVivo({ e, prof }: { e: EstadoDoProfessor; prof: SalaDoProfess
         <ChipAssunto assunto={item.assunto} />
       </Topo>
       <main className="mx-auto flex w-full max-w-[1280px] flex-1 flex-col gap-6 px-4 py-8 sm:px-6">
-        <h1 className="text-[clamp(22px,2.6vw,32px)] leading-snug font-semibold">{porAluno ? p.geral : p.enunciado}</h1>
-        {porAluno && <p className="-mt-3 text-text-muted">Cada aluno tem os seus números: a pergunta completa está no aparelho de cada um.</p>}
-        <div className={`grid gap-6 ${f.tipo === "alternativas" && !porAluno ? "lg:grid-cols-[1.5fr_1fr]" : ""}`}>
+        <h1 className="text-[clamp(26px,3vw,40px)] leading-snug font-semibold">{p.enunciado}</h1>
+        <div className={`grid gap-6 ${f.tipo === "alternativas" ? "lg:grid-cols-[1.4fr_1fr]" : ""}`}>
           <div className="flex flex-col gap-4">
-            <VisualDaPergunta p={p} semNumeros={porAluno} />
+            <VisualDaPergunta p={p} />
             {desenho && (
               <div className="rounded-[24px] border border-black/[.08] bg-[#FAFAFA] p-4">
-                <RedeDesenho desenho={desenho} semNumeros={porAluno} linhaDaPergunta={f.tipo === "linha" ? f.linha : undefined} desligado />
+                <RedeDesenho desenho={desenho} linhaDaPergunta={f.tipo === "linha" ? f.linha : undefined} />
                 <p className="mt-2 text-center text-[13px] text-text-subtle">Linha verde: peso positivo · vermelha: negativo · mais grossa: peso maior.</p>
               </div>
             )}
           </div>
-          {f.tipo === "alternativas" && !porAluno && (
+          {f.tipo === "alternativas" && (
             <ol className="flex flex-col gap-3">
               {f.opcoes.map((o, i) => (
-                <li key={i} className="flex items-center gap-4 rounded-2xl border border-black/10 bg-white px-5 py-4 text-xl font-semibold">
-                  <span className="grid size-9 shrink-0 place-items-center rounded-full bg-bg-subtle text-base font-bold text-text-muted">{LETRAS[i]}</span>
+                <li key={i} className="flex items-center gap-5 rounded-2xl border border-black/10 bg-white px-5 py-4 text-2xl font-semibold">
+                  <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-text text-2xl font-bold text-white">{LETRAS[i]}</span>
                   {o.texto}
                 </li>
               ))}
@@ -267,7 +282,9 @@ function PerguntaAoVivo({ e, prof }: { e: EstadoDoProfessor; prof: SalaDoProfess
         </div>
       </main>
       <footer className="mx-auto flex w-full max-w-[1280px] flex-wrap items-center gap-3 px-4 pb-8 sm:px-6">
-        <span className="rounded-full bg-aqua-50 px-6 py-3 text-lg font-semibold text-aqua-on">Responda no celular ou no computador</span>
+        <span className="rounded-full bg-aqua-50 px-6 py-3 text-xl font-semibold text-aqua-on">
+          Responda no seu computador: <b>{oQueFazer(p)}</b>
+        </span>
         <span className="ml-auto flex gap-3">
           <button type="button" onClick={() => prof.maisTempo(15)} className="rounded-full border border-black/15 bg-white px-6 py-3 font-semibold hover:bg-black/[.03]">
             +15 s
@@ -286,21 +303,8 @@ function PerguntaAoVivo({ e, prof }: { e: EstadoDoProfessor; prof: SalaDoProfess
 function ResultadoDaPergunta({ e, prof }: { e: EstadoDoProfessor; prof: SalaDoProfessor }) {
   const r = e.resultado!;
   const item = e.plano[e.indice];
-  const { pergunta: p, deQuem } = prof.exemplo(e.indice);
+  const p = prof.perguntaDe(e.indice);
   const ultima = e.indice + 1 >= e.plano.length;
-  const maior = Math.max(1, ...r.grupos.map((g) => g.quantos));
-  const top = r.placar.slice(0, 5);
-  const empatadosNoPrimeiro = r.placar.filter((x) => x.posicao === 1);
-  const placar = useRef<HTMLDivElement>(null);
-
-  // as linhas do placar entram uma de cada vez (GSAP)
-  useLayoutEffect(() => {
-    if (!placar.current || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const ctx = gsap.context(() => {
-      gsap.timeline().from("[data-linha]", { x: 24, opacity: 0, duration: 0.3, stagger: 0.07, ease: "power2.out" });
-    }, placar);
-    return () => ctx.revert();
-  }, [e.indice]);
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -311,42 +315,17 @@ function ResultadoDaPergunta({ e, prof }: { e: EstadoDoProfessor; prof: SalaDoPr
         <ChipAssunto assunto={item.assunto} />
       </Topo>
       <main className="mx-auto w-full max-w-[1280px] flex-1 px-4 py-8 sm:px-6">
-        <p className="text-text-muted">{e.config.sorteio === "por-aluno" ? p.geral : p.enunciado}</p>
-        <h1 className="mt-1 text-[clamp(36px,4vw,52px)] font-bold tracking-[-0.02em]">
+        <p className="text-xl text-text-muted">{p.enunciado}</p>
+        <h1 className="mt-1 text-[clamp(40px,4.5vw,60px)] font-bold tracking-[-0.02em]">
           {r.acertaram} de {r.participaram} acertaram
         </h1>
 
-        <div className="mt-6 grid gap-5 lg:grid-cols-[1fr_1.15fr_0.9fr]">
-          {/* o que a turma respondeu */}
-          <section className="rounded-[24px] border border-black/[.08] bg-[#FAFAFA] p-6">
-            <h2 className="text-xs font-semibold tracking-[0.1em] text-text-muted">O QUE A TURMA RESPONDEU</h2>
-            <ul className="mt-5 flex flex-col gap-4">
-              {r.grupos.slice(0, 5).map((g) => (
-                <li key={g.texto}>
-                  <p className="flex items-baseline gap-2">
-                    <span className={`min-w-0 flex-1 truncate ${g.texto === "sem resposta" || (e.config.sorteio === "por-aluno" && !g.certa) ? "text-[15px] text-text-muted" : "text-lg font-bold"}`}>
-                      {g.texto === "certa" ? "acertaram" : g.texto}
-                      {g.certa && <span className="ml-2 text-sm font-semibold text-[#1E9E5A]">✓ certa</span>}
-                    </span>
-                    <span className="text-lg font-bold tabular-nums">{g.quantos}</span>
-                  </p>
-                  <span className="mt-1.5 block h-3 rounded-full bg-black/[.08]">
-                    <span className={`block h-full rounded-full ${g.certa ? "bg-[#1E9E5A]" : g.texto === "sem resposta" ? "bg-[#D2D2D7]" : "bg-[#AEAEB2]"}`} style={{ width: `${(g.quantos / maior) * 100}%` }} />
-                  </span>
-                </li>
-              ))}
-            </ul>
-            {r.erroMaisComum && e.config.sorteio === "por-turma" && (
-              <div className="mt-6 rounded-2xl bg-[#FFF4E8] p-4">
-                <p className="text-sm font-semibold text-[#CE6A1F]">Erro mais comum: {r.erroMaisComum.texto}</p>
-                {r.erroMaisComum.erro && <p className="mt-1 text-[13px] text-text-muted">{r.erroMaisComum.erro}</p>}
-              </div>
-            )}
-          </section>
+        <div className="mt-6 grid gap-5 lg:grid-cols-[1.7fr_1fr]">
+          <PodioDaPergunta podio={r.podio} indice={e.indice} />
 
-          {/* a conta certa explicada (só aqui, decisão 10) */}
+          {/* a conta certa explicada (só aqui, decisão 10): a mesma para a turma toda */}
           <section className="rounded-[24px] border border-aqua bg-aqua-50 p-6">
-            <h2 className="text-xs font-semibold tracking-[0.1em] text-aqua-ink">A CONTA CERTA{deQuem ? ` · NA REDE DE ${deQuem.toUpperCase()}` : ""}</h2>
+            <h2 className="text-xs font-semibold tracking-[0.1em] text-aqua-ink">A CONTA CERTA</h2>
             <ol className="mt-5 flex flex-col gap-4">
               {p.conta.map((passo, i) => (
                 <li key={i} className="flex gap-3">
@@ -354,68 +333,25 @@ function ResultadoDaPergunta({ e, prof }: { e: EstadoDoProfessor; prof: SalaDoPr
                   <span className="text-[17px] leading-snug">
                     {passo.rotulo}
                     <br />
-                    <b>{passo.conta}</b>
+                    <b className="text-lg">{passo.conta}</b>
                   </span>
                 </li>
               ))}
             </ol>
-            <p className="mt-4 text-[15px]">
+            <p className="mt-4 text-[17px]">
               A certa: <b>{textoDaCerta(p)}</b>
             </p>
             {p.porque && (
-              <div className="mt-5 border-t border-aqua pt-4 text-sm text-aqua-on">
+              <div className="mt-5 border-t border-aqua pt-4 text-[15px] text-aqua-on">
                 <p className="font-semibold">Por quê?</p>
                 <p className="mt-1">{p.porque}</p>
               </div>
             )}
           </section>
-
-          {/* o placar, com +1000 e quem subiu ou desceu (decisão 13) */}
-          <section ref={placar} className="rounded-[24px] border border-black/[.08] bg-[#FAFAFA] p-6">
-            <h2 className="flex justify-between text-xs font-semibold tracking-[0.1em] text-text-muted">
-              PLACAR <span className="font-normal tracking-normal text-text-subtle">nesta pergunta · total</span>
-            </h2>
-            <ul className="mt-4 flex flex-col gap-2.5">
-              {top.map((x) => (
-                <li key={x.id} data-linha className="flex items-center gap-3 text-base">
-                  <span className={`w-8 font-bold ${x.posicao === 1 ? "text-aqua-ink" : ""}`}>{ordinal(x.posicao)}</span>
-                  <span className="min-w-0 flex-1 truncate font-semibold">{x.apelido}</span>
-                  <Ganho valor={x.ganhou} />
-                  <span className="w-12 text-right font-bold tabular-nums">{x.pontos}</span>
-                </li>
-              ))}
-            </ul>
-            {empatadosNoPrimeiro.length > top.length && (
-              <p className="mt-3 text-xs text-text-subtle">
-                + {juntarNomes(empatadosNoPrimeiro.slice(top.length, top.length + 2).map((x) => x.apelido))}
-                {empatadosNoPrimeiro.length > top.length + 2 ? ` e mais ${empatadosNoPrimeiro.length - top.length - 2}` : ""}: {empatadosNoPrimeiro.length} empatados em 1º. Empate divide a posição.
-              </p>
-            )}
-            {r.mexeu.length > 0 && (
-              <>
-                <h3 className="mt-5 border-t border-black/[.08] pt-4 text-xs font-semibold tracking-[0.1em] text-text-muted">QUEM SE MEXEU</h3>
-                <ul className="mt-3 flex flex-col gap-2.5">
-                  {r.mexeu.map((m) => (
-                    <li key={m.id} data-linha className="flex items-center gap-2 text-base">
-                      <span className={`w-5 font-bold ${m.depois < m.antes ? "text-[#1E9E5A]" : "text-[#E5736F]"}`} aria-label={m.depois < m.antes ? "subiu" : "desceu"}>
-                        {m.depois < m.antes ? "▲" : "▼"}
-                      </span>
-                      <span className="min-w-0 flex-1 truncate font-semibold">{m.apelido}</span>
-                      <span className="text-sm whitespace-nowrap text-text-muted">
-                        {ordinal(m.antes)} → {ordinal(m.depois)}
-                      </span>
-                      <Ganho valor={m.ganhou} />
-                      <span className="w-12 text-right font-bold tabular-nums">{m.pontos}</span>
-                    </li>
-                  ))}
-                </ul>
-              </>
-            )}
-          </section>
         </div>
       </main>
       <footer className="mx-auto flex w-full max-w-[1280px] flex-col gap-4 px-4 pb-8 sm:flex-row sm:items-center sm:px-6">
-        <p className="flex-1 text-sm text-text-subtle">No celular ou no computador, cada aluno vê só se acertou e os pontos. A explicação fica aqui.</p>
+        <p className="flex-1 text-sm text-text-subtle">No computador, cada aluno vê só se acertou e os pontos. A explicação fica aqui, igual para a turma toda.</p>
         <button type="button" onClick={() => prof.proxima()} className="rounded-full bg-text px-8 py-3.5 font-semibold text-white hover:opacity-90">
           {ultima ? "Ver o resultado final →" : "Próxima pergunta →"}
         </button>
@@ -424,11 +360,81 @@ function ResultadoDaPergunta({ e, prof }: { e: EstadoDoProfessor; prof: SalaDoPr
   );
 }
 
-function Ganho({ valor }: { valor: number }) {
+/**
+ * O pódio de Aquas (P4): um degrau por quantidade de pontos, e cada aluno é uma Aqua de uma cor.
+ * Quem acertou sobe para o degrau novo; quem errou fica, apagada e de olhos para baixo.
+ */
+function PodioDaPergunta({ podio, indice }: { podio: NoPodio[]; indice: number }) {
+  const raiz = useRef<HTMLElement>(null);
+  const niveis = [...new Set(podio.map((x) => x.pontos))].sort((a, b) => b - a);
+  const maior = niveis[0] ?? 0;
+  const semResposta = podio.filter((x) => x.como === "sem-resposta");
+
+  // quem acertou sobe até o degrau; quem errou afunda um pouco (GSAP)
+  useLayoutEffect(() => {
+    if (!raiz.current || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline();
+      tl.from("[data-degrau-linha]", { scaleX: 0, transformOrigin: "left", duration: 0.35, stagger: 0.08, ease: "power2.out" });
+      tl.from('[data-como="acertou"]', { y: 56, opacity: 0, duration: 0.5, stagger: 0.03, ease: "back.out(1.6)" }, "-=0.1");
+      tl.from('[data-como="errou"], [data-como="sem-resposta"]', { y: -20, opacity: 0, duration: 0.4, stagger: 0.03, ease: "power2.out" }, "<0.15");
+    }, raiz);
+    return () => ctx.revert();
+  }, [indice]);
+
   return (
-    <span className={`w-16 rounded-full py-0.5 text-center text-[13px] font-bold tabular-nums ${valor > 0 ? "bg-[#E3F5EA] text-[#1E7A47]" : "bg-bg-subtle text-text-subtle"}`}>
-      +{valor}
-    </span>
+    <section ref={raiz} className="rounded-[24px] border border-black/[.08] bg-[#FAFAFA] p-6">
+      <h2 className="flex flex-wrap items-start justify-between gap-2 text-xs font-semibold tracking-[0.1em] text-text-muted">
+        PÓDIO
+        <span className="flex flex-col items-end gap-0.5 text-[13px] tracking-normal">
+          <span className="text-[#1E9E5A]">▲ acertou e subiu um degrau</span>
+          <span className="text-[#D64545]">▼ errou e ficou para trás</span>
+        </span>
+      </h2>
+      <ul className="mt-4 flex flex-col gap-3">
+        {niveis.map((pontos) => {
+          const aqui = podio
+            .filter((x) => x.pontos === pontos)
+            .sort((a, b) => Number(b.como === "acertou") - Number(a.como === "acertou") || a.apelido.localeCompare(b.apelido, "pt-BR"));
+          // o degrau mais alto é o mais curto, como num pódio
+          const recuo = maior > 0 ? Math.round((pontos / maior) * 12) : 0;
+          return (
+            <li key={pontos} className="grid grid-cols-[56px_1fr] items-end gap-3">
+              <span className="text-right text-[15px] font-bold text-aqua-ink tabular-nums">{pontos}</span>
+              <div style={{ marginInline: `${recuo}%` }}>
+                <ul className="flex flex-wrap justify-center gap-x-3 gap-y-2">
+                  {aqui.map((x) => (
+                    <AquaNoPodio key={x.id} x={x} />
+                  ))}
+                </ul>
+                <span data-degrau-linha className={`mt-1 block h-3 rounded ${pontos === maior && pontos > 0 ? "bg-[#FCE7A8]" : pontos > 0 ? "bg-aqua-50" : "bg-black/[.06]"}`} />
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+      <p className="mt-4 text-[13px] text-text-subtle">
+        Cada acerto vale {PONTOS_POR_ACERTO} pontos. Quem tem os mesmos pontos fica no mesmo degrau.
+        {semResposta.length > 0 && ` Não responderam (dormindo): ${semResposta.map((x) => x.apelido).join(", ")}.`}
+      </p>
+    </section>
+  );
+}
+
+function AquaNoPodio({ x }: { x: NoPodio }) {
+  const ok = x.como === "acertou";
+  return (
+    <li data-como={x.como} className="flex w-[80px] flex-col items-center">
+      <span className={`max-w-full truncate text-[15px] ${ok ? "font-bold" : "text-text-muted"}`}>{x.apelido}</span>
+      <span className="relative">
+        <AquaDaCor apelido={x.apelido} como={x.como} unidade={5} />
+        {x.como !== "sem-resposta" && (
+          <span className={`absolute -right-4 text-[13px] font-bold ${ok ? "top-0 text-[#1E9E5A]" : "bottom-0 text-[#D64545]"}`} aria-label={ok ? "acertou" : "errou"}>
+            {ok ? "▲" : "▼"}
+          </span>
+        )}
+      </span>
+    </li>
   );
 }
 
@@ -524,7 +530,7 @@ function Podio({ e, prof }: { e: EstadoDoProfessor; prof: SalaDoProfessor }) {
               <p className="text-sm font-semibold text-aqua-ink">
                 {i + 1} · {nomeAssunto(item.assunto)}
               </p>
-              <p className="mt-1 text-[15px]">{prof.perguntaDe(i).geral}</p>
+              <p className="mt-1 text-[15px]">{prof.perguntaDe(i).enunciado}</p>
               <p className="mt-2 text-sm text-text-muted">
                 {acertos} de {de} acertaram
               </p>
@@ -613,7 +619,7 @@ function DetalheDoAluno({ aluno, e, prof, onFechar }: { aluno: AlunoNaSala; e: E
       <ul className="mt-4 flex flex-col border-t border-black/[.08] pt-3">
         {e.plano.map((item, i) => {
           const r = aluno.respostas[i];
-          const p = r ? prof.perguntaDe(i, aluno.id) : null;
+          const p = r ? prof.perguntaDe(i) : null;
           return (
             <li key={i}>
               <button type="button" disabled={!r} onClick={() => setAberta(aberta === i ? null : i)} className="flex w-full items-center gap-2 py-2 text-left text-sm disabled:text-text-subtle">

@@ -7,13 +7,10 @@ import { ASSUNTOS, ehConta, gerarPergunta, modelosDoAssunto, type Assunto } from
 
 /* ---------- Configuração da sala ---------- */
 
-export type Sorteio = "por-aluno" | "por-turma";
-
 export type Config = {
   tema: "geral" | "forward" | "escolher";
   assuntos: Assunto[];
   quantidade: number; // de 3 a 20 (decisão 9)
-  sorteio: Sorteio;
   tempoAlternativas: number; // segundos
   tempoContas: number;
 };
@@ -54,9 +51,9 @@ export function montarPlano(assuntos: Assunto[], quantidade: number, semente: nu
   return plano;
 }
 
-/** A semente de uma pergunta: a mesma para a turma toda, ou uma para cada aluno. */
-export function sementeDaPergunta(sementeDaSala: number, indice: number, sorteio: Sorteio, alunoId?: string): number {
-  return semearTexto(sorteio === "por-aluno" && alunoId ? `${sementeDaSala}:${indice}:${alunoId}` : `${sementeDaSala}:${indice}`);
+/** A semente de uma pergunta: a mesma para a turma toda (todos respondem os mesmos números). */
+export function sementeDaPergunta(sementeDaSala: number, indice: number): number {
+  return semearTexto(`${sementeDaSala}:${indice}`);
 }
 
 /** Cerca de quanto tempo o quiz leva, para o resumo do Criar sala. */

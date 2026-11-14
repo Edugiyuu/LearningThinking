@@ -43,6 +43,11 @@ export type Fase = "espera" | "pergunta" | "resultado" | "fim";
 
 export type GrupoDeResposta = { texto: string; quantos: number; certa: boolean; erro?: string };
 
+/** Como cada Aqua aparece no pódio (P4): acertou e subiu, errou e ficou, ou não respondeu. */
+export type ComoFoi = "acertou" | "errou" | "sem-resposta";
+
+export type NoPodio = Pontuado & { antes: number; como: ComoFoi };
+
 export type ResultadoDaPergunta = {
   indice: number;
   participaram: number;
@@ -51,6 +56,8 @@ export type ResultadoDaPergunta = {
   erroMaisComum: GrupoDeResposta | null;
   placar: (Pontuado & { posicao: number; ganhou: number })[];
   mexeu: Movimento[];
+  /** todos que estavam na pergunta, com os pontos de antes e de depois */
+  podio: NoPodio[];
 };
 
 export type EstadoDoProfessor = {
@@ -126,9 +133,9 @@ export class SalaDoProfessor {
 
   /* ---------- As perguntas ---------- */
 
-  /** A pergunta que um aluno recebe (a da turma, ou a dele no sorteio por aluno). */
-  perguntaDe(indice: number, alunoId?: string): Pergunta {
-    const semente = sementeDaPergunta(this.semente, indice, this.config.sorteio, alunoId);
+  /** A pergunta de número `indice`: a mesma para a turma toda. */
+  perguntaDe(indice: number): Pergunta {
+    const semente = sementeDaPergunta(this.semente, indice);
     const chave = `${this.plano[indice].modelo}:${semente}`;
     let p = this.perguntas.get(chave);
     if (!p) {
@@ -136,17 +143,6 @@ export class SalaDoProfessor {
       this.perguntas.set(chave, p);
     }
     return p;
-  }
-
-  /**
-   * A pergunta da tela projetada. No sorteio por turma é a de todos; no sorteio por aluno, a de um
-   * aluno como exemplo (decisão 10): o primeiro que acertou, ou o primeiro da lista.
-   */
-  exemplo(indice: number): { pergunta: Pergunta; deQuem: string | null } {
-    if (this.config.sorteio === "por-turma") return { pergunta: this.perguntaDe(indice), deQuem: null };
-    const lista = [...this.alunos.values()].filter((a) => a.respostas[indice]).sort((a, b) => a.apelido.localeCompare(b.apelido, "pt-BR"));
-    const quem = lista.find((a) => a.respostas[indice]?.certo) ?? lista[0];
-    return quem ? { pergunta: this.perguntaDe(indice, quem.id), deQuem: quem.apelido } : { pergunta: this.perguntaDe(indice), deQuem: null };
   }
 
   private tempoDa(indice: number) {
@@ -219,21 +215,21 @@ export class SalaDoProfessor {
   private reenviar(aluno: AlunoNaSala) {
     const r = aluno.respostas[this.indice];
     if (this.fase === "pergunta" && r) {
-      if (r.segundos === null) this.enviar(aluno.id, this.msgDaPergunta(aluno));
+      if (r.segundos === null) this.enviar(aluno.id, this.msgDaPergunta());
       else if (r.resposta) this.enviar(aluno.id, { tipo: "recebida", indice: this.indice, resposta: r.resposta });
     } else if (this.fase === "resultado" && r) {
       this.enviar(aluno.id, { tipo: "resultado", resultado: this.resultadoDo(aluno) });
     }
   }
 
-  private msgDaPergunta(aluno: AlunoNaSala): MsgProfessor {
+  private msgDaPergunta(): MsgProfessor {
     const restante = this.prazo === null ? 0 : Math.max(0, Math.ceil((this.prazo - this.agora()) / 1000));
     return {
       tipo: "pergunta",
       indice: this.indice,
       perguntas: this.plano.length,
       modelo: this.plano[this.indice].modelo,
-      semente: sementeDaPergunta(this.semente, this.indice, this.config.sorteio, aluno.id),
+      semente: sementeDaPergunta(this.semente, this.indice),
       tempo: this.tempoDa(this.indice),
       restante,
     };
@@ -253,8 +249,8 @@ export class SalaDoProfessor {
     this.pontosAntes = this.pontuados();
     for (const a of this.alunos.values()) {
       if (!a.conectado) continue;
-      a.respostas[indice] = { resposta: null, segundos: null, certo: false, semente: sementeDaPergunta(this.semente, indice, this.config.sorteio, a.id) };
-      this.enviar(a.id, this.msgDaPergunta(a));
+      a.respostas[indice] = { resposta: null, segundos: null, certo: false, semente: sementeDaPergunta(this.semente, indice) };
+      this.enviar(a.id, this.msgDaPergunta());
     }
     this.mudou();
   }
@@ -267,7 +263,7 @@ export class SalaDoProfessor {
     if (this.agora() > this.prazo + FOLGA_MS) return;
     r.resposta = resposta;
     r.segundos = Math.min(segundos, this.tempoDa(indice));
-    r.certo = corrigir(this.perguntaDe(indice, aluno.id), resposta);
+    r.certo = corrigir(this.perguntaDe(indice), resposta);
     this.enviar(aluno.id, { tipo: "recebida", indice, resposta });
     const f = this.fotografar();
     this.paraTodos((a) => (a.respostas[indice]?.segundos != null ? { tipo: "progresso", indice, responderam: f.responderam, de: f.participando } : null));
@@ -367,17 +363,12 @@ export class SalaDoProfessor {
     };
     for (const a of participantes) {
       const r = a.respostas[indice]!;
-      const p = this.perguntaDe(indice, a.id);
+      const p = this.perguntaDe(indice);
       if (!r.resposta) somar("sem resposta", false);
-      else if (this.config.sorteio === "por-turma") somar(chaveDaResposta(p, r.resposta), r.certo, r.certo ? undefined : erroDaResposta(p, r.resposta));
-      else if (r.certo) somar("certa", true); // cada um tem os seus números: junta pelo erro, não pelo número
-      else {
-        const erro = erroDaResposta(p, r.resposta);
-        somar(erro ?? "outra resposta errada", false, erro);
-      }
+      else somar(chaveDaResposta(p, r.resposta), r.certo, r.certo ? undefined : erroDaResposta(p, r.resposta));
     }
     // a certa sempre aparece, mesmo se ninguém marcou
-    const certaTexto = this.config.sorteio === "por-turma" ? textoDaCerta(this.perguntaDe(indice)) : "certa";
+    const certaTexto = textoDaCerta(this.perguntaDe(indice));
     if (!grupos.has(certaTexto)) grupos.set(certaTexto, { texto: certaTexto, quantos: 0, certa: true });
     const lista = [...grupos.values()].sort((a, b) => Number(b.certa) - Number(a.certa) || Number(a.texto === "sem resposta") - Number(b.texto === "sem resposta") || b.quantos - a.quantos);
     const erradas = lista.filter((g) => !g.certa && g.texto !== "sem resposta" && g.quantos > 0);
@@ -391,6 +382,11 @@ export class SalaDoProfessor {
       erroMaisComum: erradas[0] ?? null,
       placar: classificar(depois).map((x) => ({ ...x, ganhou: ganhou.get(x.id) ?? 0 })),
       mexeu: quemSeMexeu(this.pontosAntes, depois),
+      podio: participantes.map((a) => {
+        const r = a.respostas[indice]!;
+        const antes = this.pontosAntes.find((x) => x.id === a.id)?.pontos ?? 0;
+        return { id: a.id, apelido: a.apelido, pontos: a.pontos, antes, como: r.certo ? "acertou" : r.resposta ? "errou" : "sem-resposta" };
+      }),
     };
   }
 }

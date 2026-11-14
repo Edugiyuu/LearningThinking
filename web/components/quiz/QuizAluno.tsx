@@ -7,12 +7,13 @@ import { Aqua } from "@/components/mascote";
 import { SalaDoAluno, type EstadoDoAluno } from "@/lib/quiz/aluno";
 import { entrarNaSala, type LigacaoDoAluno } from "@/lib/quiz/conexao";
 import { textoDaResposta, type Resposta } from "@/lib/quiz/perguntas";
-import { codigoValido, juntarNomes, normalizarCodigo } from "@/lib/quiz/quiz";
+import { TAMANHO_DO_CODIGO, codigoValido, juntarNomes, normalizarCodigo } from "@/lib/quiz/quiz";
 import { APELIDO_MAX, limparApelido } from "@/lib/quiz/sala";
 import { BarraDeTempo, ChipAssunto, ordinal, segundosAte, useAgora } from "./comum";
-import { Responder } from "./Responder";
+import { Responder, oQueResponder } from "./Responder";
 
-// Quiz ao vivo (ADR-0034): o aluno, no celular ou no computador (telas A1–A6 e D1–D6 do Figma).
+// Quiz ao vivo (ADR-0034): o aluno, no computador (telas D1–D6 do Figma). A pergunta fica no
+// projetor; aqui ele só responde, vendo onde a resposta entra.
 
 type Entrada = { codigo: string; apelido: string; id: string };
 const CHAVE = "quiz-aluno";
@@ -48,7 +49,6 @@ export default function QuizAluno() {
     return (
       <FormEntrar
         codigoInicial={codigoDaUrl}
-        doQr={!!codigoDaUrl}
         onEntrar={(codigo, apelido) => {
           const guardado = lerGuardado();
           // mesmo aparelho e mesmo apelido: mantém o id (volta com os mesmos pontos)
@@ -61,16 +61,16 @@ export default function QuizAluno() {
   return <NaSala key={entrada.id + entrada.codigo} entrada={entrada} onSair={sair} />;
 }
 
-/* ---------- A1 · Entrar ---------- */
+/* ---------- D1 · Entrar ---------- */
 
-function FormEntrar({ codigoInicial, doQr, onEntrar }: { codigoInicial: string; doQr: boolean; onEntrar: (codigo: string, apelido: string) => void }) {
+function FormEntrar({ codigoInicial, onEntrar }: { codigoInicial: string; onEntrar: (codigo: string, apelido: string) => void }) {
   const [codigo, setCodigo] = useState(codigoInicial);
   const [apelido, setApelido] = useState("");
   const ok = codigoValido(codigo) && limparApelido(apelido).length > 0;
   return (
     <Moldura>
       <form
-        className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 py-10"
+        className="mx-auto flex w-full max-w-xl flex-col gap-6 px-4 py-10"
         onSubmit={(e) => {
           e.preventDefault();
           if (ok) onEntrar(codigo, limparApelido(apelido));
@@ -81,20 +81,7 @@ function FormEntrar({ codigoInicial, doQr, onEntrar }: { codigoInicial: string; 
           <p className="text-sm font-semibold text-aqua-ink">Quiz ao vivo</p>
           <h1 className="text-[32px] leading-tight font-semibold tracking-[-0.02em]">Entrar numa sala</h1>
         </div>
-        <label className="flex flex-col gap-2 text-sm font-semibold text-text-muted">
-          <span className="flex justify-between">
-            Código da sala {doQr && codigoValido(codigo) && <span className="font-medium text-[#1E9E5A]">✓ do QR code</span>}
-          </span>
-          <input
-            value={codigo}
-            onChange={(e) => setCodigo(normalizarCodigo(e.target.value))}
-            autoCapitalize="characters"
-            autoComplete="off"
-            spellCheck={false}
-            placeholder="K7M2QX"
-            className="h-16 rounded-2xl border-[1.5px] border-black/15 px-4 text-center font-mono text-3xl font-bold tracking-[0.3em] text-text uppercase outline-none placeholder:text-black/15 focus:border-aqua-ink focus:ring-4 focus:ring-aqua/30"
-          />
-        </label>
+        <CaixasDoCodigo codigo={codigo} onCodigo={setCodigo} />
         <label className="flex flex-col gap-2 text-sm font-semibold text-text-muted">
           Seu apelido
           <input
@@ -107,11 +94,53 @@ function FormEntrar({ codigoInicial, doQr, onEntrar }: { codigoInicial: string; 
           />
           <span className="text-[13px] font-normal text-text-subtle">Use um apelido. Nada de nome completo. Ele aparece na tela do professor.</span>
         </label>
-        <button type="submit" disabled={!ok} className="h-14 rounded-full bg-text text-[17px] font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-30">
+        <button type="submit" disabled={!ok} className="h-14 rounded-full bg-text text-[17px] font-bold text-white hover:opacity-90 disabled:opacity-30">
           Entrar
         </button>
       </form>
     </Moldura>
+  );
+}
+
+/**
+ * O código da sala em 6 caixas grandes, uma por letra (D1). É um campo só, por baixo das caixas:
+ * colar o código inteiro e apagar funcionam como num campo comum.
+ */
+function CaixasDoCodigo({ codigo, onCodigo }: { codigo: string; onCodigo: (c: string) => void }) {
+  const [foco, setFoco] = useState(false);
+  return (
+    <label className="flex flex-col gap-2 text-sm font-semibold text-text-muted">
+      Código da sala (está no projetor)
+      <span className="relative block">
+        <input
+          value={codigo}
+          onChange={(e) => onCodigo(normalizarCodigo(e.target.value))}
+          onFocus={() => setFoco(true)}
+          onBlur={() => setFoco(false)}
+          autoFocus={!codigo}
+          autoCapitalize="characters"
+          autoComplete="off"
+          spellCheck={false}
+          aria-label="Código da sala, 6 letras e números"
+          className="absolute inset-0 z-10 w-full cursor-text opacity-0"
+        />
+        <span className="grid grid-cols-6 gap-2 sm:gap-3" aria-hidden>
+          {Array.from({ length: TAMANHO_DO_CODIGO }, (_, i) => {
+            const atual = foco && i === Math.min(codigo.length, TAMANHO_DO_CODIGO - 1);
+            return (
+              <span
+                key={i}
+                className={`grid h-20 place-items-center rounded-2xl border-2 bg-white font-mono text-4xl font-bold text-text ${
+                  atual ? "border-aqua-ink ring-4 ring-aqua/30" : codigo[i] ? "border-aqua" : "border-black/15"
+                }`}
+              >
+                {codigo[i] ?? ""}
+              </span>
+            );
+          })}
+        </span>
+      </span>
+    </label>
   );
 }
 
@@ -194,7 +223,7 @@ function NaSala({ entrada, onSair }: { entrada: Entrada; onSair: () => void }) {
   }
 }
 
-/* ---------- A2/D2 · Esperando (com quem está na sala, decisão 14) ---------- */
+/* ---------- D2 · Esperando (com quem está na sala, decisão 14) ---------- */
 
 const MOSTRAR_NA_ESPERA = 19;
 
@@ -224,13 +253,13 @@ function Espera({ e }: { e: EstadoDoAluno }) {
             {resto > 0 && <li className="rounded-full border border-dashed border-black/20 px-5 py-2.5 text-[15px] text-text-muted">+{resto} alunos</li>}
           </ul>
         </div>
-        <p className="mt-12 text-sm text-text-subtle">As perguntas aparecem na tela do professor e você responde por aqui.</p>
+        <p className="mt-12 text-sm text-text-subtle">As perguntas aparecem no projetor e você responde por aqui.</p>
       </div>
     </Moldura>
   );
 }
 
-/* ---------- A3/D3 · A pergunta · A4/D4 · Resposta enviada ---------- */
+/* ---------- D3 · Responder · D4 · Resposta enviada ---------- */
 
 function NaPergunta({ e, onResponder }: { e: EstadoDoAluno; onResponder: (r: Resposta) => void }) {
   const agora = useAgora();
@@ -278,8 +307,11 @@ function NaPergunta({ e, onResponder }: { e: EstadoDoAluno; onResponder: (r: Res
   return (
     <div className="flex min-h-dvh flex-col">
       {topo}
-      <main className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 py-5 sm:px-6 sm:py-8">
-        <h1 className="text-[20px] leading-snug font-semibold sm:text-[28px]">{p.enunciado}</h1>
+      <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6">
+        <div>
+          <p className="text-[15px] font-semibold text-aqua-ink">A pergunta está no projetor. Aqui você responde.</p>
+          <h1 className="mt-1 text-[28px] leading-snug font-semibold">{oQueResponder(p)}</h1>
+        </div>
         {acabou && <p className="rounded-xl bg-[#FFF4E8] px-4 py-3 font-semibold text-[#CE6A1F]">O tempo acabou. Espere o resultado.</p>}
         <Responder p={p} desligado={acabou} onResponder={onResponder} />
       </main>
@@ -287,7 +319,7 @@ function NaPergunta({ e, onResponder }: { e: EstadoDoAluno; onResponder: (r: Res
   );
 }
 
-/* ---------- A5/D5 · Certo ou errado (sem a explicação: ela fica no projetor, decisão 10) ---------- */
+/* ---------- D5 · Certo ou errado (sem a explicação: ela fica no projetor, decisão 10) ---------- */
 
 function Resultado({ e }: { e: EstadoDoAluno }) {
   const r = e.resultado!;
@@ -300,13 +332,13 @@ function Resultado({ e }: { e: EstadoDoAluno }) {
         <p className="text-lg text-text-muted">
           Total {r.pontos} · {ordinal(r.posicao)} lugar{r.empatados > 0 ? `, empate com mais ${r.empatados}` : ""}
         </p>
-        <p className="mt-6 text-sm text-text-subtle">Olhe a tela do professor para ver a conta.</p>
+        <p className="mt-6 text-sm text-text-subtle">Olhe o projetor para ver a conta.</p>
       </div>
     </Moldura>
   );
 }
 
-/* ---------- A6/D6 · Fim ---------- */
+/* ---------- D6 · Fim ---------- */
 
 function Fim({ e, onSair }: { e: EstadoDoAluno; onSair: () => void }) {
   const f = e.fim!;

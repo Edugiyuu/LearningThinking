@@ -1,5 +1,5 @@
 import { corParaEntradas, retropropagar } from "../treino";
-import { ENTRADAS, PESOS, exato2, fmt, fmtPeso, lerNumero } from "./numeros";
+import { exato2, fmt, fmtPeso, lerNumero } from "./numeros";
 import { CORES, REDE, corDasEntradas, passar, sortearRede } from "./rede-quiz";
 import {
   ASSUNTOS,
@@ -60,12 +60,23 @@ describe("a rede do quiz usa a conta do lab", () => {
     expect(p.valores.n1).toBe(Math.max(0, p.somas.n1));
   });
 
-  test("entradas e pesos sorteados são os que dá para fazer de cabeça", () => {
+  test("entradas e pesos sorteados têm 2 casas e não são sempre redondos", () => {
+    const casas = new Set<string>();
     for (const s of SEMENTES) {
       const rede = sortearRede(sorteador(s));
-      for (const e of rede.entradas) expect(ENTRADAS).toContain(e);
-      for (const w of Object.values(rede.pesos)) expect(PESOS).toContain(w);
+      for (const e of rede.entradas) {
+        expect(e).toBeGreaterThanOrEqual(0);
+        expect(e).toBeLessThanOrEqual(1);
+        expect(exato2(e)).toBe(true);
+        casas.add(fmt(e).slice(-1));
+      }
+      for (const w of Object.values(rede.pesos)) {
+        expect(Math.abs(w)).toBeGreaterThanOrEqual(0.1);
+        expect(Math.abs(w)).toBeLessThanOrEqual(2);
+        expect(exato2(w)).toBe(true);
+      }
     }
+    expect(casas.size).toBe(10); // aparecem números como 0,36 e 0,61, não só 0,20 e 0,50
   });
 });
 
@@ -75,8 +86,9 @@ describe("cada modelo de pergunta", () => {
   });
 
   test.each(IDS_DOS_MODELOS)("%s: os números mudam com a semente (sem decoreba)", (modelo) => {
-    const enunciados = new Set(SEMENTES.slice(0, 60).map((s) => gerarPergunta(modelo, s).enunciado));
-    expect(enunciados.size).toBeGreaterThan(5);
+    // o enunciado pode ser sempre igual (os números ficam no desenho); a pergunta inteira não
+    const perguntas = new Set(SEMENTES.slice(0, 60).map((s) => JSON.stringify(gerarPergunta(modelo, s))));
+    expect(perguntas.size).toBeGreaterThan(5);
   });
 
   test.each(IDS_DOS_MODELOS)("%s: a certa vale e as erradas não", (modelo) => {
@@ -109,17 +121,11 @@ describe("cada modelo de pergunta", () => {
     }
   });
 
-  test.each(IDS_DOS_MODELOS)("%s: o enunciado geral (o do projetor no sorteio por aluno) é o mesmo para todos", (modelo) => {
-    const gerais = new Set(SEMENTES.slice(0, 60).map((s) => gerarPergunta(modelo, s).geral));
-    expect(gerais.size).toBe(1);
-    expect([...gerais][0]).not.toMatch(/\d,\d/);
-  });
-
-  test("a resposta digitada aceita até 0,01 de diferença", () => {
+  test("a resposta digitada aceita até 0,02 de diferença (o aluno arredonda as partes da conta)", () => {
     const p = gerarPergunta("treino-passinho", 3);
     if (p.forma.tipo !== "numero") throw new Error("devia ser número");
-    expect(corrigir(p, { tipo: "numero", valor: p.forma.certa + 0.01 })).toBe(true);
-    expect(corrigir(p, { tipo: "numero", valor: p.forma.certa + 0.02 })).toBe(false);
+    expect(corrigir(p, { tipo: "numero", valor: p.forma.certa + 0.02 })).toBe(true);
+    expect(corrigir(p, { tipo: "numero", valor: p.forma.certa + 0.03 })).toBe(false);
   });
 });
 
