@@ -55,43 +55,9 @@ const celulasClaude: Celula[] = [
   [9, 5, 1, 2, CLAUDE],
 ];
 
-export function Pixels({
-  celulas,
-  colunas,
-  linhas,
-  unidade,
-  rotulo,
-  className,
-  style,
-}: {
-  celulas: Celula[];
-  colunas: number;
-  linhas: number;
-  unidade: number;
-  rotulo?: string;
-  className?: string;
-  style?: React.CSSProperties;
-}) {
-  const w = colunas * unidade;
-  const h = linhas * unidade;
-  return (
-    <svg
-      width={w}
-      height={h}
-      viewBox={`0 0 ${colunas} ${linhas}`}
-      shapeRendering="crispEdges"
-      className={className}
-      style={style}
-      role={rotulo ? "img" : undefined}
-      aria-label={rotulo}
-      aria-hidden={rotulo ? undefined : true}
-    >
-      {celulas.map(([x, y, cw, ch, cor], i) => (
-        <rect key={i} x={x} y={y} width={cw} height={ch} fill={cor} />
-      ))}
-    </svg>
-  );
-}
+// O desenho em si fica em pixels.tsx (componente de cliente: precisa saber a escala da tela).
+import { Pixels } from "./pixels";
+export { Pixels };
 
 /** Aqua, o mascote do LearningThinking: um bloco do laboratório com olhos (grade 10 × 6). */
 export function Aqua({
