@@ -42,6 +42,7 @@ A coluna "No Figma?" diz se o problema já está no desenho (então o conserto c
 | # | Onde | O que acontece | Por que confunde |
 |---|---|---|---|
 | B1 | Canvas × Modo Foco | O canvas mostra "Camada 2" e "Saída" como dois blocos. O Modo Foco chama a Camada 2 de "Saída", e o mapa "Onde estamos" mostra só Entrada, Camada 1 e Saída. O painel, no mesmo passo, diz "Camada 2 · neurônio 1". | Três nomes para a mesma coisa na mesma tela. O aluno não sabe se são peças diferentes. |
+| B1 | **O autor escolheu "Saída"** como o nome do neurônio da última camada. O painel Contas passou a dizer "Saída" (antes "Camada 2 · neurônio 1"), como o Modo Foco e a volta já diziam. No canvas, a camada ligada ao bloco Saída mostra "Camada 2 · Saída", para dizer que é ela que faz a conta da Saída; o bloco Saída continua sendo onde a resposta aparece. |
 | B2 | Laboratório | "Passinho", "culpa" e "repetição" aparecem sem o nome técnico: **taxa de aprendizado** (o tamanho do ajuste em cada peso), **gradiente** (quanto cada peso contribuiu para o erro) e **época** (uma passada por todos os exemplos). | O aluno aprende o apelido e não reconhece o termo quando o vir em outro lugar. O quiz já escreve "o passinho (taxa de aprendizado)"; o lab não. |
 | B3 | Tutoriais × Laboratório | O bloco Backward pass e o Treinar já existem, mas o tutorial 05 · Como a rede aprende está "Em breve". | O aluno encontra "a culpa volta" no lab sem ninguém ter explicado antes. |
 | B4 | Fim do Rodar | No passo 12 de 12 o botão Próximo apaga e não há nenhum convite para o que vem depois. | A rodada termina sem dizer "e agora?". |
@@ -152,7 +153,6 @@ Só o que não muda desenho nem decisão aceita:
 
 ### Esperando o autor
 
-- **Um nome para a última camada (B1):** hoje o canvas diz "Camada 2" e o Modo Foco e a volta dizem "Saída". Os testes de `lib/foco.ts` esperam "Saída".
 - **Com Figma antes do código:** tutorial 05 (B3), convites no fim do Rodar (B4), lista "Meus projetos" (B6), menu e aviso no celular (A6), tirar aluno da sala (C7), cartão maior no projetor (C6).
 
 ## Consequências

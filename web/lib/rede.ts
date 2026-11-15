@@ -352,7 +352,8 @@ export function prepararRodada(nodes: NoDaRede[], fios: Fio[], pesos: Pesos): { 
     const final = k === caminho.length - 1;
     const origens = origensDe(nodes, anterior);
     neuroniosDe(nodes, camadaId).forEach((n, i) => {
-      nomes.set(n.id, `${titulo(camadaId)} · neurônio ${i + 1}`);
+      // o neurônio da última camada é a "Saída", com o mesmo nome no painel, no Modo Foco e na volta (ADR-0035, B1)
+      nomes.set(n.id, final ? "Saída" : `${titulo(camadaId)} · neurônio ${i + 1}`);
       let soma = 0;
       for (const o of origens) {
         const e = valores.get(o.chave) ?? 0;
