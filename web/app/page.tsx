@@ -103,17 +103,6 @@ export default function Home() {
               >
                 Ver tutoriais
               </Link>
-              {/* Quiz ao vivo (ADR-0034): o aluno com o código do professor entra direto por aqui */}
-              <div className="flex flex-col items-center gap-1.5">
-                <Link
-                  href="/quiz/entrar"
-                  className="flex items-center gap-2.5 rounded-full border border-aqua-ink bg-aqua-50 px-8 py-4 text-base font-semibold text-aqua-on transition-colors hover:bg-aqua/25"
-                >
-                  <Aqua unidade={2} />
-                  Entrar numa sala
-                </Link>
-                <span className="text-xs text-aqua-ink">tem um código do professor? →</span>
-              </div>
             </div>
           </div>
           <div className="relative mt-14">

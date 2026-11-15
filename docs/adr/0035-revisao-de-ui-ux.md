@@ -55,6 +55,7 @@ A coluna "No Figma?" diz se o problema já está no desenho (então o conserto c
 
 | # | Onde | O que acontece |
 |---|---|---|
+| Home | *(Pedido do autor em 2026-11-15.)* O botão "Entrar numa sala" saiu da Home: "Quiz ao vivo" já está no menu logo acima, e lá o aluno acha "Entrar numa sala". Isso muda o item 6 da [ADR-0034](0034-quiz-ao-vivo.md) e deixa a Home igual ao frame "Home · Desktop · mascote" do Figma. |
 | C1 | Tutoriais | "5 tutoriais, na ordem" ao lado de "0 de 4 concluídos" (também no Figma). |
 | C2 | Tutorial 01 | Dá para pular direto ao passo 11 e clicar em "Praticar no laboratório" sem responder o teste rápido. |
 | C3 | Modo Foco | "A soma do Camada 1"; os rótulos R, G, B e "Camada 1 · neurônio 1" ficam escondidos atrás dos círculos (também no Figma); a soma final já aparece, em cinza, antes de a conta chegar nela. |
