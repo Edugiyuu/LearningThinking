@@ -148,7 +148,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
   // "ver como ela pensou": a cor perguntada entra só na conta mostrada, nunca na montagem salva
   const [consulta, setConsulta] = useState<string | null>(null);
   const [transicao, setTransicao] = useState<"entrando" | "voltando" | "chegou" | null>(null);
-  const { screenToFlowPosition, zoomIn, zoomOut } = useReactFlow<NoDaRede>();
+  const { screenToFlowPosition, zoomIn, zoomOut, fitView } = useReactFlow<NoDaRede>();
   const remedir = useUpdateNodeInternals();
 
   // Arrastar um bloco muda a lista de blocos a cada quadro, mas só a posição muda (ADR-0032).
@@ -244,6 +244,13 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
     if (!emAndamento) formatoDoTreino.current = formato;
     else if (formato !== formatoDoTreino.current) parar();
   }, [formato, emAndamento, parar]);
+
+  // o botão Treinar mora no bloco Backward pass (ADR-0025, item 13; mantido na ADR-0035): ao começar o treino,
+  // a tela volta para a rede, para o aluno ver as linhas mudando de cor e espessura
+  const ajusteDaForma = useMemo(() => ajusteDaRede(nodesDaForma), [nodesDaForma]);
+  useEffect(() => {
+    if (emAndamento) fitView({ ...ajusteDaForma, duration: 500 });
+  }, [emAndamento, fitView, ajusteDaForma]);
 
   const total = passosDaIda + (voltaPassos?.length ?? 0);
 

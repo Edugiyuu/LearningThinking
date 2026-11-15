@@ -107,7 +107,7 @@ Nenhuma está decidida. Estão na ordem em que a IA faria.
 
 - Abrir a rede com zoom perto de 1 e re-enquadrar quando um bloco é solto (A2, A3).
 - **Bloco Backward pass.** A ADR-0025 (item 13) decidiu que os controles do Treinar ficam no bloco, e o Figma diz "o bloco é o lugar do aprendizado". Duas saídas, para o autor escolher:
-  1. manter tudo no bloco e resolver com o zoom e o enquadramento acima;
+  1. manter tudo no bloco e resolver com o zoom e o enquadramento acima; **(escolhida pelo autor em 2026-11-14)**
   2. deixar no bloco a resposta certa e Mostrar/Salvar, e levar passinho, repetições, velocidade e o botão para o painel da direita, onde o treino já aparece. Isso muda a ADR-0025.
 - "Forward / Backward" vira aba de verdade, que pula para o começo da volta, ou perde a aparência de botão (A4).
 - No fim do Rodar, três convites: "Mudar a cor", "Ver a volta" (se o bloco estiver ligado) e "Treinar" (B4).
@@ -139,7 +139,7 @@ Só o que não muda desenho nem decisão aceita:
 |---|---|
 | A1 | "Sobre" saiu do menu até a página existir. |
 | A2 | O laboratório abre enquadrando só a rede (sem o bloco Backward pass), com zoom até 1. Em 1366 × 768 a rede ficou cerca de 1,3× maior. O número do peso passou de 10,5 para 12 px (13 px no da vez). |
-| A3 (parte) | O bloco Backward pass, ao ser solto, sobe o que for preciso para caber inteiro na parte visível do canvas. O tamanho do bloco não mudou: isso depende da escolha abaixo. |
+| A3 | **O autor escolheu a opção 1: tudo continua no bloco** (a ADR-0025, item 13, não muda). Ao ser solto, o bloco sobe o que for preciso para caber inteiro na parte visível do canvas. Ao clicar em Treinar, a tela volta para a rede (enquadramento animado de 0,5 s), para o aluno ver as linhas mudando. |
 | A4 | "Forward" e "◀ Backward" viraram abas de verdade: pulam para o começo da ida e da volta. |
 | A5 | "Som: ligado" foi para a barra de cima das telas projetadas, ao lado do que já estava lá. |
 | B2 | "Passinho (taxa de aprendizado)", "Repetições (épocas)", "culpa (o gradiente: quanto cada parte pesou no erro)" e "passinho (taxa de aprendizado) × culpa (gradiente)". |
@@ -152,7 +152,6 @@ Só o que não muda desenho nem decisão aceita:
 
 ### Esperando o autor
 
-- **Bloco Backward pass (A3):** opção 1 (tudo no bloco, só com o enquadramento) ou opção 2 (controles do treino no painel, muda a ADR-0025).
 - **Um nome para a última camada (B1):** hoje o canvas diz "Camada 2" e o Modo Foco e a volta dizem "Saída". Os testes de `lib/foco.ts` esperam "Saída".
 - **Com Figma antes do código:** tutorial 05 (B3), convites no fim do Rodar (B4), lista "Meus projetos" (B6), menu e aviso no celular (A6), tirar aluno da sala (C7), cartão maior no projetor (C6).
 
