@@ -12,14 +12,14 @@ const temas: { id: Tema; titulo: string; texto: string; disponivel: boolean; Ico
   {
     id: "redes-neurais",
     titulo: "Redes neurais",
-    texto: "A base de tudo: monte camadas de neurônios e veja, conta por conta, uma entrada virar resposta.",
+    texto: "A base de tudo: monte neurônios e veja, conta por conta, uma entrada virar resposta.",
     disponivel: true,
     Icone: IconeRede,
   },
   {
     id: "busca-por-significado",
     titulo: "Busca por significado",
-    texto: "Feita com redes neurais: elas transformam frases em números para achar textos parecidos.",
+    texto: "Feita com redes neurais: frases viram números para achar textos parecidos.",
     disponivel: false,
     Icone: IconePontos,
   },

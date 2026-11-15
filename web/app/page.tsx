@@ -30,23 +30,21 @@ const passos = [
   },
 ];
 
-const temas = [
-  {
-    titulo: "Redes neurais",
-    texto: "A base de tudo: monte camadas, treine do zero e veja cada peso mudar enquanto a rede aprende.",
-    disponivel: true,
-    selo: "bg-aqua/30 text-aqua-ink",
-  },
+// Redes neurais é a base; os outros dois temas são feitos com redes neurais (ADR-0035, B8)
+const base = {
+  titulo: "Redes neurais",
+  texto: "A base de tudo: monte camadas, treine do zero e veja cada peso mudar enquanto a rede aprende.",
+};
+
+const feitosComRedes = [
   {
     titulo: "Busca por significado",
     texto: "Feita com redes neurais: elas transformam frases em números e acham textos com o mesmo significado.",
-    disponivel: false,
     selo: "bg-ciano/15 text-ciano-ink",
   },
   {
     titulo: "RAG",
     texto: "Feito com redes neurais: uma busca acha os trechos nos seus documentos e outra rede escreve a resposta.",
-    disponivel: false,
     selo: "bg-verde/15 text-verde-ink",
   },
 ];
@@ -137,28 +135,26 @@ export default function Home() {
         {/* Explore */}
         <section className="mx-auto mt-28 max-w-[1280px] px-4 sm:px-6 xl:px-0">
           <Sobretitulo>Explore</Sobretitulo>
-          <TituloSecao>Comece pelas redes neurais. O resto vem aí.</TituloSecao>
-          <div className="mt-16 grid gap-10 md:grid-cols-3">
-            {temas.map((t) => (
-              <article
-                key={t.titulo}
-                className={`relative min-h-[230px] rounded-[var(--radius-card)] border p-8 ${
-                  t.disponivel ? "border-aqua/70 bg-aqua/[.12]" : "border-black/[.06] bg-bg-subtle"
-                }`}
-              >
-                <span className={`inline-block rounded-full px-3 py-1.5 text-xs font-semibold ${t.selo}`}>
-                  {t.disponivel ? "Disponível" : "Em breve"}
-                </span>
+          <TituloSecao>Tudo começa nas redes neurais.</TituloSecao>
+          <article className="relative mt-16 rounded-[var(--radius-card)] border border-aqua/70 bg-aqua/[.12] p-8">
+            <span className="inline-block rounded-full bg-aqua/30 px-3 py-1.5 text-xs font-semibold text-aqua-ink">Disponível</span>
+            <Aqua pose="contente" unidade={4} className="absolute top-8 right-8" />
+            <h3 className="mt-6 text-2xl font-semibold">{base.titulo}</h3>
+            <p className="mt-4 max-w-[720px] text-base text-text-muted">{base.texto}</p>
+          </article>
+          <p className="mt-10 text-sm font-semibold text-text-muted">Feitos com redes neurais · em breve</p>
+          <div className="mt-3 grid gap-5 md:grid-cols-2">
+            {feitosComRedes.map((t) => (
+              <article key={t.titulo} className="relative rounded-[var(--radius-card)] border border-black/[.06] bg-bg-subtle p-8">
+                <span className={`inline-block rounded-full px-3 py-1.5 text-xs font-semibold ${t.selo}`}>Em breve</span>
                 <div className="absolute top-8 right-8 flex items-start" aria-hidden>
-                  <Aqua pose={t.disponivel ? "contente" : "dormindo"} unidade={4} />
-                  {!t.disponivel && (
-                    <span className="-mt-3 ml-0.5 text-xs font-semibold text-text-subtle">
-                      z<sup className="text-[9px]">z</sup>
-                    </span>
-                  )}
+                  <Aqua pose="dormindo" unidade={4} />
+                  <span className="-mt-3 ml-0.5 text-xs font-semibold text-text-subtle">
+                    z<sup className="text-[9px]">z</sup>
+                  </span>
                 </div>
-                <h3 className="mt-6 text-2xl font-semibold">{t.titulo}</h3>
-                <p className="mt-4 text-base text-text-muted">{t.texto}</p>
+                <h3 className="mt-5 text-2xl font-semibold">{t.titulo}</h3>
+                <p className="mt-3 max-w-[540px] text-base text-text-muted">{t.texto}</p>
               </article>
             ))}
           </div>
