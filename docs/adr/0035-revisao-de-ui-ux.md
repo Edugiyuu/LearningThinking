@@ -147,13 +147,14 @@ Só o que não muda desenho nem decisão aceita:
 | B2 | "Passinho (taxa de aprendizado)", "Repetições (épocas)", "culpa (o gradiente: quanto cada parte pesou no erro)" e "passinho (taxa de aprendizado) × culpa (gradiente)". |
 | B5 | O bloco Saída avisa que a Aqua fica em dúvida entre 0,30 e 0,70. |
 | B7 | "Ela usa a rede deste projeto." |
-| B8 | Redes neurais é "a base de tudo"; Busca por significado e RAG dizem que são "feitos com redes neurais". "Uma cor virar resposta" virou "uma entrada virar resposta" (Home e Novo projeto). |
+| B8 (só o texto) | Redes neurais é "a base de tudo"; Busca por significado e RAG dizem que são "feitos com redes neurais". "Uma cor virar resposta" virou "uma entrada virar resposta" (Home e Novo projeto). |
 | C1 | "4 tutoriais, na ordem, e mais 1 em breve." |
 | C3 (parte) | "A soma da Camada 1". |
 | C5 | "1 de 1 acertou"; "Todos responderam" quando ninguém ficou sem responder; o código de exemplo virou "······". |
 
 ### Esperando o autor
 
+- **B8, o desenho:** os três temas ainda aparecem como cartões irmãos, lado a lado. Proposta: Redes neurais como o cartão da base, e Busca por significado e RAG embaixo, agrupados como "feitos com redes neurais" (Home e Novo projeto). Começa no Figma.
 - **Com Figma antes do código:** tutorial 05 (B3), convites no fim do Rodar (B4), lista "Meus projetos" (B6), menu e aviso no celular (A6), tirar aluno da sala (C7), cartão maior no projetor (C6).
 
 ## Consequências
