@@ -2,12 +2,11 @@ import Link from "next/link";
 import { Aqua } from "@/components/mascote";
 
 /** Barra das páginas do site (Home, Tutoriais, Quiz ao vivo): logo, menu e "Criar novo projeto". */
-export function TopoSite({ ativo }: { ativo?: "laboratorio" | "tutoriais" | "quiz" | "sobre" }) {
+export function TopoSite({ ativo }: { ativo?: "laboratorio" | "tutoriais" | "quiz" }) {
   const itens = [
     { id: "laboratorio", href: "/laboratorio", rotulo: "Laboratório" },
     { id: "tutoriais", href: "/tutoriais", rotulo: "Tutoriais" },
     { id: "quiz", href: "/quiz", rotulo: "Quiz ao vivo" },
-    { id: "sobre", href: "/sobre", rotulo: "Sobre" },
   ] as const;
   return (
     <header className="mx-auto flex h-20 w-full max-w-[1280px] items-center justify-between px-4 sm:px-6 xl:px-0">

@@ -239,7 +239,7 @@ export function ControlesDoTreino({ treino }: { treino: Treino }) {
   return (
     <div className="treino-bloco">
       <b className="treino-bloco-titulo">Treinar</b>
-      <span className="treino-bloco-rotulo">Passinho</span>
+      <span className="treino-bloco-rotulo">Passinho (taxa de aprendizado)</span>
       <div className="alternar tres">
         {(Object.keys(NOME_PASSINHO) as Passinho[]).map((p) => (
           <button key={p} className={config.passinho === p ? "ativo" : ""} onClick={() => setConfig({ passinho: p })} title="Quanto cada peso muda por vez. Grande demais: a rede pode travar.">
@@ -249,7 +249,7 @@ export function ControlesDoTreino({ treino }: { treino: Treino }) {
       </div>
       <div className="treinar-campos">
         <label>
-          <span>Repetições</span>
+          <span title="Uma repetição passa por todas as cores dos Dados uma vez.">Repetições (épocas)</span>
           <input
             type="number"
             min={1}

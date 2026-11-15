@@ -54,9 +54,14 @@ function PainelContas({ rodada, volta, modoVolta, atual, erros, automatico, foco
 
       {/* Fixos no topo: a conta abaixo muda de altura a cada passo, e os botões não podem pular (ADR-0025). */}
       {rodada && volta && (
-        <div className="direcao" aria-label="Direção das contas">
-          <span className={naVolta ? "feita" : "agora"}>Forward {naVolta ? "✓" : `· ${atual + 1} de ${daIda}`}</span>
-          <span className={naVolta ? "agora" : ""}>◀ Backward {naVolta ? `· ${atual - daIda + 1} de ${volta.length}` : ""}</span>
+        // abas de verdade (ADR-0035, A4): pulam para o começo da ida ou da volta
+        <div className="direcao" role="group" aria-label="Direção das contas">
+          <button type="button" className={naVolta ? "feita" : "agora"} aria-pressed={!naVolta} onClick={() => irPara(0)}>
+            Forward {naVolta ? "✓" : `· ${atual + 1} de ${daIda}`}
+          </button>
+          <button type="button" className={naVolta ? "agora" : ""} aria-pressed={naVolta} onClick={() => irPara(daIda)}>
+            ◀ Backward {naVolta ? `· ${atual - daIda + 1} de ${volta.length}` : ""}
+          </button>
         </div>
       )}
 
@@ -188,7 +193,7 @@ function ContasDoPasso({ rodada, atual, passo, textoResposta }: { rodada: Rodada
         <span className="chip">Saída</span>
         <p>A Saída lê o último neurônio e decide a resposta.</p>
         <p className="contas-formula agora">{textoResposta(passo.saida, passo.valor, passo.resposta)}</p>
-        <p className="contas-nota">Abaixo de 0,50 a resposta é 0; a partir de 0,50 é 1.</p>
+        <p className="contas-nota">Abaixo de 0,50 a resposta é 0; a partir de 0,50 é 1. A Aqua é mais exigente: entre 0,30 e 0,70 ela diz que fica em dúvida.</p>
       </div>
     );
   }

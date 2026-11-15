@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import gsap from "gsap";
 import { Aqua } from "@/components/mascote";
 import { abrirSala } from "@/lib/quiz/conexao";
@@ -18,6 +18,9 @@ import { useTrilhaDoQuiz } from "./trilha";
 // A sala vive na memória desta aba: fechou a aba, acabou a sala, e nada fica guardado.
 
 type Aberta = { prof: SalaDoProfessor; fechar: () => void };
+
+/** O botão de som mora na barra de cima das telas projetadas (ADR-0035, A5), longe dos botões do professor. */
+const SomDaSala = createContext<{ mudo: boolean; alternar: () => void } | null>(null);
 
 export default function QuizProfessor({ onVoltar }: { onVoltar: () => void }) {
   const [sala, setSala] = useState<Aberta | null>(null);
@@ -87,7 +90,7 @@ function SalaAberta({ prof, instavel, onFechar }: { prof: SalaDoProfessor; insta
   };
 
   return (
-    <>
+    <SomDaSala.Provider value={e.fase === "espera" ? null : { mudo, alternar: () => setMudo((m) => !m) }}>
       {instavel && (
         <p className="bg-[#FFF4E8] px-4 py-2 text-center text-sm font-semibold text-[#CE6A1F]">
           A conexão com o serviço que apresenta os aparelhos caiu. Quem já está na sala continua; ninguém novo entra até voltar.
@@ -97,23 +100,14 @@ function SalaAberta({ prof, instavel, onFechar }: { prof: SalaDoProfessor; insta
       {e.fase === "pergunta" && <PerguntaAoVivo e={e} prof={prof} />}
       {e.fase === "resultado" && <ResultadoDaPergunta e={e} prof={prof} />}
       {e.fase === "fim" && <Fim e={e} prof={prof} onFechar={fechar} />}
-      {e.fase !== "espera" && (
-        <button
-          type="button"
-          onClick={() => setMudo((m) => !m)}
-          aria-pressed={mudo}
-          className="fixed bottom-4 right-4 rounded-full border border-black/15 bg-white px-4 py-2 text-sm font-medium shadow-sm hover:bg-black/[.03]"
-        >
-          {mudo ? "Som: desligado" : "Som: ligado"}
-        </button>
-      )}
-    </>
+    </SomDaSala.Provider>
   );
 }
 
 /* ---------- Topo das telas projetadas ---------- */
 
 function Topo({ children, direita }: { children?: React.ReactNode; direita?: React.ReactNode }) {
+  const som = useContext(SomDaSala);
   return (
     <header className="border-b border-black/[.06]">
       <div className="mx-auto flex h-16 max-w-[1280px] items-center gap-4 px-4 sm:px-6">
@@ -122,7 +116,19 @@ function Topo({ children, direita }: { children?: React.ReactNode; direita?: Rea
           <span className="hidden text-[15px] font-bold lg:inline">LearningThinking</span>
         </span>
         {children}
-        <span className="ml-auto flex items-center gap-4">{direita}</span>
+        <span className="ml-auto flex items-center gap-4">
+          {direita}
+          {som && (
+            <button
+              type="button"
+              onClick={som.alternar}
+              aria-pressed={som.mudo}
+              className="rounded-full border border-black/15 px-4 py-2 text-sm font-medium whitespace-nowrap hover:bg-black/[.03]"
+            >
+              {som.mudo ? "Som: desligado" : "Som: ligado"}
+            </button>
+          )}
+        </span>
       </div>
     </header>
   );
@@ -308,7 +314,7 @@ function ResultadoDaPergunta({ e, prof }: { e: EstadoDoProfessor; prof: SalaDoPr
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <Topo direita={<span className="text-[15px] text-text-muted">Tempo esgotado</span>}>
+      <Topo direita={<span className="text-[15px] text-text-muted">{r.podio.every((a) => a.como !== "sem-resposta") ? "Todos responderam" : "Tempo esgotado"}</span>}>
         <span className="font-semibold">
           Pergunta {e.indice + 1} de {e.plano.length}
         </span>
@@ -317,7 +323,7 @@ function ResultadoDaPergunta({ e, prof }: { e: EstadoDoProfessor; prof: SalaDoPr
       <main className="mx-auto w-full max-w-[1280px] flex-1 px-4 py-8 sm:px-6">
         <p className="text-xl text-text-muted">{p.enunciado}</p>
         <h1 className="mt-1 text-[clamp(40px,4.5vw,60px)] font-bold tracking-[-0.02em]">
-          {r.acertaram} de {r.participaram} acertaram
+          {r.acertaram} de {r.participaram} {r.acertaram === 1 ? "acertou" : "acertaram"}
         </h1>
 
         <div className="mt-6 grid gap-5 lg:grid-cols-[1.7fr_1fr]">
@@ -532,7 +538,7 @@ function Podio({ e, prof }: { e: EstadoDoProfessor; prof: SalaDoProfessor }) {
               </p>
               <p className="mt-1 text-[15px]">{prof.perguntaDe(i).enunciado}</p>
               <p className="mt-2 text-sm text-text-muted">
-                {acertos} de {de} acertaram
+                {acertos} de {de} {acertos === 1 ? "acertou" : "acertaram"}
               </p>
             </li>
           ))}

@@ -1,6 +1,6 @@
 # ADR-0035 · Revisão de UI/UX: falhas achadas no site e correções propostas
 
-- **Status:** Proposta (IA, 2026-11-14). Nada aqui foi decidido nem alterado no código. O autor escolhe o que entra, o que muda e o que fica como está.
+- **Status:** Em andamento (2026-11-14). O autor pediu para aplicar a ADR; o que já entrou está em "O que já foi feito". O resto espera decisão do autor ou o Figma.
 - **Data:** 2026-11-14
 - **Decisores:** Eduardo (autor); o levantamento e as propostas são da IA
 - **Conversa com:** [ADR-0020](0020-laboratorio-em-codigo.md) (laboratório só para computador), [ADR-0024](0024-treinar-com-backpropagation.md) e [ADR-0025](0025-bloco-backward-pass.md) (treino e bloco Backward pass), [ADR-0026](0026-modo-foco.md) (Modo Foco), [ADR-0028](0028-aba-da-aqua.md) (Perguntar à Aqua), [ADR-0030](0030-entradas-alem-de-cor.md) (entradas além de cor), [ADR-0034](0034-quiz-ao-vivo.md) (Quiz ao vivo)
@@ -130,6 +130,31 @@ Nenhuma está decidida. Estão na ordem em que a IA faria.
 - Tirar um aluno da sala de espera (C7).
 - Cartão da pergunta ocupando a altura da tela projetada, como no Figma (C6).
 - Conferir no teste na escola se a tela de resultado deve mostrar quantos marcaram cada alternativa, como a ADR-0034 previa.
+
+## O que já foi feito (branch `fix/revisao-ui-ux`)
+
+Só o que não muda desenho nem decisão aceita:
+
+| Item | O que mudou |
+|---|---|
+| A1 | "Sobre" saiu do menu até a página existir. |
+| A2 | O laboratório abre enquadrando só a rede (sem o bloco Backward pass), com zoom até 1. Em 1366 × 768 a rede ficou cerca de 1,3× maior. O número do peso passou de 10,5 para 12 px (13 px no da vez). |
+| A3 (parte) | O bloco Backward pass, ao ser solto, sobe o que for preciso para caber inteiro na parte visível do canvas. O tamanho do bloco não mudou: isso depende da escolha abaixo. |
+| A4 | "Forward" e "◀ Backward" viraram abas de verdade: pulam para o começo da ida e da volta. |
+| A5 | "Som: ligado" foi para a barra de cima das telas projetadas, ao lado do que já estava lá. |
+| B2 | "Passinho (taxa de aprendizado)", "Repetições (épocas)", "culpa (o gradiente: quanto cada parte pesou no erro)" e "passinho (taxa de aprendizado) × culpa (gradiente)". |
+| B5 | O bloco Saída avisa que a Aqua fica em dúvida entre 0,30 e 0,70. |
+| B7 | "Ela usa a rede deste projeto." |
+| B8 | Redes neurais é "a base de tudo"; Busca por significado e RAG dizem que são "feitos com redes neurais". "Uma cor virar resposta" virou "uma entrada virar resposta" (Home e Novo projeto). |
+| C1 | "4 tutoriais, na ordem, e mais 1 em breve." |
+| C3 (parte) | "A soma da Camada 1". |
+| C5 | "1 de 1 acertou"; "Todos responderam" quando ninguém ficou sem responder; o código de exemplo virou "······". |
+
+### Esperando o autor
+
+- **Bloco Backward pass (A3):** opção 1 (tudo no bloco, só com o enquadramento) ou opção 2 (controles do treino no painel, muda a ADR-0025).
+- **Um nome para a última camada (B1):** hoje o canvas diz "Camada 2" e o Modo Foco e a volta dizem "Saída". Os testes de `lib/foco.ts` esperam "Saída".
+- **Com Figma antes do código:** tutorial 05 (B3), convites no fim do Rodar (B4), lista "Meus projetos" (B6), menu e aviso no celular (A6), tirar aluno da sala (C7), cartão maior no projetor (C6).
 
 ## Consequências
 

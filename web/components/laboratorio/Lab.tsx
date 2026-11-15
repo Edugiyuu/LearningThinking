@@ -71,7 +71,14 @@ const nodeTypes = { camada: CamadaNode, neuronio: NeuronioNode, saida: SaidaNode
 const edgeTypes = { peso: PesoEdge };
 const TIPO_ARRASTE = "application/x-bloco";
 // props do <ReactFlow> que não podem virar um objeto novo a cada desenho (ADR-0032)
-const AJUSTE_INICIAL = { padding: 0.25 };
+// ao abrir, enquadra só a rede (não o bloco Backward pass, que é alto) e sem passar do zoom 1, para os
+// números dos pesos ficarem legíveis numa tela de 1366 × 768 (ADR-0035, A2)
+const ajusteDaRede = (nodes: NoDaRede[]) => {
+  const daRede = nodes.filter((n) => n.type !== "backward" && !n.parentId).map((n) => ({ id: n.id }));
+  return { padding: 0.06, maxZoom: 1, nodes: daRede.length ? daRede : undefined };
+};
+// altura do bloco Backward pass no canvas (zoom 1): ao soltar, ele sobe o que for preciso para caber (ADR-0035, A3)
+const ALTURA_BACKWARD = 610;
 const SEM_ERROS: never[] = [];
 // as Aquas do topo não mudam enquanto um bloco é arrastado: memorizadas, não se redesenham a cada movimento
 const Aqua = memo(AquaDesenho);
@@ -121,6 +128,7 @@ type Salvamento = "salvo" | "nao-salvo";
 
 function Laboratorio({ projeto }: { projeto: Projeto | null }) {
   const [inicial] = useState(() => montagemDoProjeto(projeto));
+  const [ajusteInicial] = useState(() => ajusteDaRede(inicial.nodes));
   const [nodes, setNodes] = useState<NoDaRede[]>(inicial.nodes);
   const [fiosBrutos, setFios] = useState<Fio[]>(inicial.fios);
   const [pesos, setPesos] = useState<Pesos>(inicial.pesos);
@@ -522,7 +530,12 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
           setAviso("Use só um bloco Backward pass por montagem.");
           return;
         }
-        setNodes((ns) => [...ns, criarBackward(ponto.x, ponto.y)]);
+        // cai inteiro na parte visível do canvas, em vez de cortado embaixo
+        const tela = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        const topo = screenToFlowPosition({ x: e.clientX, y: tela.top + 16 }).y;
+        const fundo = screenToFlowPosition({ x: e.clientX, y: tela.bottom - 56 }).y;
+        const y = Math.max(topo, Math.min(ponto.y, fundo - ALTURA_BACKWARD));
+        setNodes((ns) => [...ns, criarBackward(ponto.x, y)]);
       }
 
       if (tipo === "neuronio") {
@@ -644,7 +657,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
               onEdgeDoubleClick={onEdgeDoubleClick}
               zoomOnDoubleClick={false}
               fitView
-              fitViewOptions={AJUSTE_INICIAL}
+              fitViewOptions={ajusteInicial}
             >
               <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
             </ReactFlow>

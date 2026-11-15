@@ -39,7 +39,7 @@ export default function Quiz() {
             <div className="mt-6 flex items-center gap-4 rounded-2xl bg-white p-4">
               <Aqua unidade={5} />
               <span className="text-sm text-text-muted">código da sala</span>
-              <span className="ml-auto font-mono text-2xl font-bold tracking-[0.15em] text-black/20">K7M2QX</span>
+              <span className="ml-auto font-mono text-2xl font-bold tracking-[0.15em] text-black/20" aria-hidden>······</span>
             </div>
             <button type="button" onClick={() => setProfessor(true)} className="mt-6 self-start rounded-full bg-text px-10 py-4 font-semibold text-white hover:opacity-90">
               Criar sala

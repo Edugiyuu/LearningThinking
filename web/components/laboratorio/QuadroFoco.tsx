@@ -268,7 +268,7 @@ function SomaDoNeuronio({
 }) {
   return (
     <div className="foco-soma">
-      <div className="foco-rotulo">A soma {destino === "Saída" ? "da Saída" : `do ${destino}`}</div>
+      <div className="foco-rotulo">A soma {/^(Saída|Camada)/.test(destino) ? "da" : "do"} {destino}</div>
       <ul>
         {partes.map((p) => (
           <li key={p.linha} className={p.agora ? "agora" : ""}>

@@ -33,19 +33,19 @@ const passos = [
 const temas = [
   {
     titulo: "Redes neurais",
-    texto: "Monte camadas, treine do zero e veja cada peso mudar enquanto a rede aprende.",
+    texto: "A base de tudo: monte camadas, treine do zero e veja cada peso mudar enquanto a rede aprende.",
     disponivel: true,
     selo: "bg-aqua/30 text-aqua-ink",
   },
   {
     titulo: "Busca por significado",
-    texto: "Transforme frases em números e encontre textos com o mesmo significado.",
+    texto: "Feita com redes neurais: elas transformam frases em números e acham textos com o mesmo significado.",
     disponivel: false,
     selo: "bg-ciano/15 text-ciano-ink",
   },
   {
     titulo: "RAG",
-    texto: "Veja como uma IA consulta os seus documentos antes de responder.",
+    texto: "Feito com redes neurais: uma busca acha os trechos nos seus documentos e outra rede escreve a resposta.",
     disponivel: false,
     selo: "bg-verde/15 text-verde-ink",
   },
