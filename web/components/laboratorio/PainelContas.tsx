@@ -27,13 +27,19 @@ type Props = {
   soTreinar: boolean;
   /** Havia uma rodada, mas a montagem mudou e ela saiu da tela (ADR-0035, C10). */
   montagemMudou?: boolean;
+  /** Os convites do último passo (ADR-0035, B4). */
+  convites?: Convites;
+  aoConvidar?: (c: Convite) => void;
 };
+
+export type Convite = "entrada" | "volta" | "aqua";
+export type Convites = { entradaDeCor: boolean; treinar: boolean; aquaAberta: boolean };
 
 // memorizado: não se redesenha enquanto um bloco é arrastado no canvas (ADR-0032)
 export default memo(PainelContas);
 
 /** Painel da direita: as contas, uma multiplicação de cada vez, e o Treinar. */
-function PainelContas({ rodada, volta, modoVolta, atual, erros, automatico, foco, setFoco, irPara, setAutomatico, textoResposta, treinar, soTreinar, montagemMudou }: Props) {
+function PainelContas({ rodada, volta, modoVolta, atual, erros, automatico, foco, setFoco, irPara, setAutomatico, textoResposta, treinar, soTreinar, montagemMudou, convites, aoConvidar }: Props) {
   const daIda = rodada?.passos.length ?? 0;
   const total = daIda + (volta?.length ?? 0);
   const naVolta = !!volta && atual >= daIda;
@@ -119,6 +125,8 @@ function PainelContas({ rodada, volta, modoVolta, atual, erros, automatico, foco
       )}
 
       {rodada && passo && <ContasDoPasso rodada={rodada} atual={atual} passo={passo} textoResposta={textoResposta} />}
+
+      {rodada && convites && aoConvidar && atual === total - 1 && <EAgora convites={convites} aoConvidar={aoConvidar} />}
       {rodada && volta && naVolta && <ContasDaVolta rodada={rodada} passos={volta} atual={atual - daIda} modo={modoVolta} />}
 
       {treinar}
@@ -255,5 +263,33 @@ function ContasDoPasso({ rodada, atual, passo, textoResposta }: { rodada: Rodada
         </p>
       ) : null}
     </div>
+  );
+}
+
+/** Frame "Laboratório · Painel · fim do Rodar com convites" no Figma (ADR-0035, B4). */
+function EAgora({ convites, aoConvidar }: { convites: Convites; aoConvidar: (c: Convite) => void }) {
+  const { entradaDeCor, treinar, aquaAberta } = convites;
+  const itens: { c: Convite; titulo: string; texto: string; desligado?: boolean }[] = [
+    {
+      c: "entrada",
+      titulo: entradaDeCor ? "Mudar a cor da Entrada" : "Mudar os números da Entrada",
+      texto: entradaDeCor ? "e rodar de novo com outra cor" : "e rodar de novo com outros números",
+    },
+    treinar
+      ? { c: "volta", titulo: "Treinar a rede", texto: "o botão Treinar fica no bloco Backward pass" }
+      : { c: "volta", titulo: "Ver a culpa voltar", texto: "ligue o bloco Backward pass na Saída" },
+    { c: "aqua", titulo: "Perguntar à Aqua", texto: aquaAberta ? "ela usa esta rede numa cor nova" : "ainda não dá: veja o aviso no botão do topo", desligado: !aquaAberta },
+  ];
+  return (
+    <section className="e-agora" aria-labelledby="e-agora-titulo">
+      <h3 id="e-agora-titulo">E agora?</h3>
+      <p>A rodada acabou. Experimente:</p>
+      {itens.map((i) => (
+        <button key={i.c} type="button" disabled={i.desligado} onClick={() => aoConvidar(i.c)}>
+          <b>{i.titulo}</b>
+          <span>{i.texto}</span>
+        </button>
+      ))}
+    </section>
   );
 }

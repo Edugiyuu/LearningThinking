@@ -26,7 +26,7 @@ import EntradaNode from "@/components/laboratorio/EntradaNode";
 import NeuronioNode from "@/components/laboratorio/NeuronioNode";
 import SaidaNode from "@/components/laboratorio/SaidaNode";
 import PesoEdge from "@/components/laboratorio/PesoEdge";
-import PainelContas from "@/components/laboratorio/PainelContas";
+import PainelContas, { type Convite } from "@/components/laboratorio/PainelContas";
 import LadoRecolhivel from "@/components/laboratorio/LadoRecolhivel";
 import QuadroFoco from "@/components/laboratorio/QuadroFoco";
 import AbaAqua, { type ConversaAqua } from "@/components/laboratorio/AbaAqua";
@@ -393,7 +393,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
    * quem sai de dentro dos neurônios dela. Vale para o "← Voltar para a Aqua" (que limpa a cor
    * perguntada e a rodada só de ida) e para o "Perguntar à Aqua" do topo (que deixa o lab como está).
    */
-  const irParaAqua = (limparConsulta: boolean) => {
+  const irParaAqua = useCallback((limparConsulta: boolean) => {
     const fim = () => {
       if (limparConsulta) {
         setConsulta(null);
@@ -406,7 +406,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
     if (semMovimento) return fim();
     setTransicao("voltando");
     gsap.to(brancoDoLab.current, { autoAlpha: 1, duration: 0.25, onComplete: fim });
-  };
+  }, []);
 
   const voltarParaAqua = () => irParaAqua(true);
 
@@ -438,6 +438,34 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
     },
     [nodesDaForma],
   );
+  // O fim do Rodar com três convites (ADR-0035, B4): mudar a entrada, ver a volta ou treinar, perguntar à Aqua.
+  const { emAndamento: treinando } = treino;
+  const aoConvidar = useCallback(
+    (c: Convite) => {
+      const centrar = (id: string) => fitView({ nodes: [{ id }], duration: 500, maxZoom: 1, padding: 0.4 });
+      if (c === "entrada") {
+        const e = nodesDaForma.find((n) => n.type === "entrada");
+        if (!e) return;
+        centrar(e.id);
+        setNodes((ns) => ns.map((n) => ({ ...n, selected: n.id === e.id })));
+      } else if (c === "volta") {
+        const b = nodesDaForma.find((n) => n.type === "backward");
+        if (b) centrar(b.id);
+        else setAviso("Arraste o bloco Backward pass para o canvas, ligue a Saída nele e clique em Rodar de novo.");
+      } else if (!motivoAquaFechada && !treinando) irParaAqua(false);
+    },
+    [nodesDaForma, fitView, motivoAquaFechada, treinando, irParaAqua],
+  );
+  const temBackward = nodesDaForma.some((n) => n.type === "backward");
+  const convites = useMemo(
+    () => ({
+      entradaDeCor: entrada?.tipo === "cor",
+      treinar: temBackward && !!voltaPassos,
+      aquaAberta: !motivoAquaFechada,
+    }),
+    [entrada?.tipo, temBackward, voltaPassos, motivoAquaFechada],
+  );
+
   const secaoTreinar = useMemo(() => <SecaoTreinar treino={treino} exemplos={exemplos} rodarAgora={rodarAgora} />, [treino, exemplos, rodarAgora]);
 
   // o fim da ida no Modo Foco pinta a Saída com a cor da resposta (ADR-0026, item 9)
@@ -715,6 +743,8 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
             soTreinar={treino.fase !== "pronto"}
             treinar={secaoTreinar}
             montagemMudou={execucao !== null && ativa === null}
+            convites={convites}
+            aoConvidar={aoConvidar}
           />
           </LadoRecolhivel>
 

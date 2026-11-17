@@ -3467,3 +3467,59 @@
     flex-direction: column;
   }
 }
+
+/* ---------- Fim do Rodar: "E agora?" (ADR-0035, B4) ---------- */
+.e-agora {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 14px 16px 16px;
+  border: 1px solid var(--destaque);
+  border-radius: 16px;
+  background: #e6f8fa;
+}
+
+.e-agora h3 {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--destaque-texto);
+}
+
+.e-agora > p {
+  margin-bottom: 2px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.e-agora button {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px;
+  border: 1px solid #d2d2d7;
+  border-radius: 12px;
+  background: #ffffff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.e-agora button:hover:not(:disabled) {
+  border-color: var(--destaque);
+}
+
+.e-agora button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.e-agora b {
+  font-size: 14px;
+}
+
+.e-agora span {
+  font-size: 12px;
+  color: var(--text-muted);
+}
