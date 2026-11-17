@@ -56,7 +56,7 @@ export default function Tutoriais() {
                 Redes neurais
               </h2>
               <p className="mt-1 text-[15px] text-text-muted">
-                {tutoriais.length} tutoriais, na ordem, e mais {tutoriaisEmBreve.length} em breve. Cerca de {minutos} minutos.
+                {tutoriais.length} tutoriais, na ordem{tutoriaisEmBreve.length > 0 ? `, e mais ${tutoriaisEmBreve.length} em breve` : ""}. Cerca de {minutos} minutos.
               </p>
             </div>
             <ProgressoDaTrilha />

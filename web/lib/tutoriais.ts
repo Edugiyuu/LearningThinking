@@ -18,7 +18,14 @@ export type Visual =
   | { tipo: "reta"; naFaixa: boolean }
   | { tipo: "curva"; soma: number; interativo?: boolean; marcos?: boolean }
   | { tipo: "painel-lab" }
-  | { tipo: "montagem"; fase: "blocos" | "fios" | "todos" | "solta" | "basica" };
+  | { tipo: "montagem"; fase: "blocos" | "fios" | "todos" | "solta" | "basica" }
+  // 05 · Como a rede aprende (ADR-0035, B3)
+  | { tipo: "erro" }
+  | { tipo: "volta" }
+  | { tipo: "inclinacao" }
+  | { tipo: "culpa-linha" }
+  | { tipo: "passinho"; interativo?: boolean }
+  | { tipo: "repeticao"; interativo?: boolean };
 
 /**
  * A conta do passo. "peso" e "sigmoide" acompanham o controle deslizante do palco;
@@ -378,16 +385,102 @@ export const tutoriais: Tutorial[] = [
       },
     ],
   },
-];
-
-/** Os próximos tutoriais, ainda sem conteúdo. "Como a rede aprende" depende do Treinar. */
-export const tutoriaisEmBreve = [
   {
+    // Roteiro: frame "Tutorial 05 · Como a rede aprende · roteiro" no Figma (ADR-0035, B3).
+    // Mesmo exemplo do Modo Foco (ADR-0026): o neurônio 2 passou 4,00, o peso da linha é −0,50,
+    // a Saída respondeu 0,50 e o certo era 0. As contas batem com lib/backward.ts.
+    slug: "como-a-rede-aprende",
     numero: "05",
     titulo: "Como a rede aprende",
     descricao: "O erro volta pela rede e cada peso é ajustado um pouco. É o que o botão Treinar faz.",
+    minutos: 7,
+    passos: [
+      {
+        assunto: "Erro",
+        titulo: "A rede errou",
+        texto: [
+          "A Aqua viu uma cor azul. A Saída respondeu 0,50, bem no meio. O certo era 0 (azul).",
+          "A distância entre a resposta e o certo é o erro. Aprender é fazer esse número diminuir.",
+        ],
+        termos: ["erro: a distância entre a resposta e o certo"],
+        visual: { tipo: "erro" },
+        conta: { linhas: ["erro = |certo − resposta|", "|0 − 0,50| = 0,50"] },
+      },
+      {
+        assunto: "Backward pass",
+        titulo: "Quem tem culpa?",
+        texto: [
+          "O erro aparece na Saída, mas quem fez a conta foram os pesos das linhas.",
+          "Então a rede faz o caminho de volta, da Saída até a Entrada, e pergunta a cada linha: quanto você pesou nesse erro? A resposta de cada linha é a culpa dela.",
+        ],
+        termos: ["backward pass (retropropagação): o caminho de volta, da Saída até a Entrada", "culpa (gradiente): quanto cada peso pesou no erro"],
+        visual: { tipo: "volta" },
+      },
+      {
+        titulo: "A culpa da Saída",
+        texto: [
+          "A culpa começa na Saída: o erro com sinal (resposta − certo) vezes a inclinação da sigmoide no ponto da resposta.",
+          "Em 0,50 a curva está no meio, bem inclinada: 0,25. Perto de 0 ou de 1 ela fica quase plana, e a culpa encolhe.",
+        ],
+        visual: { tipo: "inclinacao" },
+        conta: { linhas: ["(0,50 − 0) × 0,25 = 0,125", "culpa da Saída = 0,125"] },
+      },
+      {
+        titulo: "A culpa da linha",
+        texto: [
+          "A linha que vem do neurônio 2 trouxe 4,00 para a Saída. Quanto mais ela trouxe, mais culpa leva.",
+          "A culpa da linha é a culpa da Saída vezes o que passou por ela.",
+        ],
+        visual: { tipo: "culpa-linha" },
+        conta: { linhas: ["culpa da Saída × o que passou", "0,125 × 4,00 = 0,50"] },
+      },
+      {
+        assunto: "Taxa de aprendizado",
+        titulo: "O passinho",
+        texto: [
+          "Agora o peso anda contra a culpa. Culpa positiva: o peso desce. Culpa negativa: o peso sobe.",
+          "Quanto ele anda é o passinho vezes a culpa. Mexa no passinho e veja o peso e a resposta mudarem.",
+        ],
+        termos: ["passinho (taxa de aprendizado): o tamanho de cada ajuste"],
+        visual: { tipo: "passinho", interativo: true },
+        conta: { linhas: ["peso novo = peso − passinho × culpa", "−0,50 − 0,5 × 0,50 = −0,75"], nota: "Com o passinho 0,5, como no Médio do laboratório." },
+        quebra: {
+          titulo: "Passo grande demais",
+          texto: "Aqui, com uma cor só, um passo maior parece melhor. Com muitas cores, um passo grande faz os pesos pularem longe: no laboratório, o passinho Grande pode travar a rede com o erro alto.",
+        },
+      },
+      {
+        assunto: "Época",
+        titulo: "De novo, e de novo",
+        texto: [
+          "Uma volta melhora só um pouco. Treinar é repetir: a cada repetição a rede vê todas as cores dos Dados, mede o erro, volta a culpa e anda um passinho.",
+          "Mexa nas repetições e veja o erro médio cair. A curva é de um treino de verdade, na montagem básica.",
+        ],
+        termos: ["repetição (época): uma passada por todas as cores dos Dados"],
+        visual: { tipo: "repeticao", interativo: true },
+        naIA: "No laboratório, o bloco Backward pass faz uma volta: em Mostrar você vê a culpa; em Salvar, os pesos andam. O botão Treinar, no mesmo bloco, repete tudo centenas de vezes.",
+      },
+    ],
+    testes: [
+      {
+        pergunta: "A Saída respondeu 0,90 e o certo era 1. Qual é o erro?",
+        opcoes: [{ texto: "0,10", certa: true }, { texto: "0,90" }, { texto: "1,90" }],
+        explicacao: "Isso. O erro é a distância entre a resposta e o certo: |1 − 0,90| = 0,10.",
+        conta: ["|1 − 0,90| = 0,10"],
+      },
+      {
+        pergunta: "A culpa de um peso deu positiva. Para o erro diminuir, o peso…",
+        opcoes: [{ texto: "sobe" }, { texto: "desce", certa: true }, { texto: "fica igual" }],
+        explicacao: "Isso. O peso anda contra a culpa: peso novo = peso − passinho × culpa. Culpa positiva, o peso desce.",
+        aprendeu: ["O erro", "A culpa volta (backward pass)", "O passinho (taxa de aprendizado)", "Repetir (época)"],
+        noLab: "Ligue o bloco Backward pass na Saída, deixe em Mostrar e clique em Rodar: depois da ida vem a volta, linha por linha. Depois, clique em Treinar no mesmo bloco.",
+      },
+    ],
   },
 ];
+
+/** Os próximos tutoriais, ainda sem conteúdo. */
+export const tutoriaisEmBreve: { numero: string; titulo: string; descricao: string }[] = [];
 
 export function buscarTutorial(slug: string): Tutorial | undefined {
   return tutoriais.find((t) => t.slug === slug);

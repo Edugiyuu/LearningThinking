@@ -1,7 +1,8 @@
 "use client";
 
 import { Aqua, type PoseAqua } from "@/components/mascote";
-import { formatar } from "@/lib/rede";
+import { formatar, montagemBasica } from "@/lib/rede";
+import { EXEMPLOS_PRONTOS, lerRede, sortearPesos, treinar } from "@/lib/treino";
 import type { Visual } from "@/lib/tutoriais";
 import { Ativacao, Cor, Cores, Historia, Ponte, Revisao, Soma, TesteCor, type EstadoTeste } from "./neuronio";
 
@@ -476,6 +477,206 @@ export function AquaLampada({ acesa, className }: { acesa: boolean; className?: 
 
 /* ---------------- Palco ---------------- */
 
+/* ---------------- 05 · Como a rede aprende (ADR-0035, B3) ---------------- */
+// O exemplo do Modo Foco (ADR-0026): o neurônio 2 passou 4,00, peso −0,50, a Saída respondeu 0,50, o certo é 0.
+
+const AMBAR = "#D97706";
+const AMBAR_FUNDO = "#FEF3C7";
+
+function ErroNaBarra() {
+  const x = (v: number) => 120 + v * 560;
+  return (
+    <svg viewBox="0 0 800 520" className="h-auto w-full" role="img" aria-label="Uma barra de 0 a 1: o certo é 0, a resposta foi 0,50, e o trecho entre eles é o erro de 0,50.">
+      <text x={120} y={150} fontSize={13} fontWeight={500} fill={MUDO}>a resposta da Saída, de 0 a 1</text>
+      <rect x={120} y={252} width={560} height={16} rx={8} fill={AQUA_FUNDO} stroke={AQUA} strokeWidth={2} />
+      <rect x={x(0)} y={252} width={x(0.5) - x(0)} height={16} rx={8} fill={AMBAR} fillOpacity={0.55} />
+      <text x={x(0)} y={300} textAnchor="middle" fontSize={13} fontFamily={MONO} fill={SUTIL}>0</text>
+      <text x={x(1)} y={300} textAnchor="middle" fontSize={13} fontFamily={MONO} fill={SUTIL}>1</text>
+      <circle cx={x(0)} cy={260} r={12} fill="#378ADD" stroke="#FFFFFF" strokeWidth={3} />
+      <text x={x(0)} y={226} textAnchor="middle" fontSize={13} fontWeight={600} fill={TEXTO}>certo: 0 (azul)</text>
+      <circle cx={x(0.5)} cy={260} r={12} fill={TEXTO} stroke="#FFFFFF" strokeWidth={3} />
+      <text x={x(0.5)} y={226} textAnchor="middle" fontSize={13} fontWeight={600} fill={TEXTO}>resposta: 0,50</text>
+      <line x1={x(0) + 14} y1={318} x2={x(0.5) - 14} y2={318} stroke={AMBAR} strokeWidth={2} />
+      <Etiqueta x={x(0.25)} y={344} texto="erro 0,50" cor={AMBAR} largura={96} />
+      <AquaEm x={x(0.5) - 24} y={110} unidade={6} />
+    </svg>
+  );
+}
+
+/** A rede da montagem básica, em três colunas, com a culpa voltando da Saída até a Entrada. */
+function Volta() {
+  const entradas: [number, number][] = [
+    [150, 170],
+    [150, 260],
+    [150, 350],
+  ];
+  const meio: [number, number][] = [
+    [400, 210],
+    [400, 310],
+  ];
+  const saida: [number, number] = [640, 260];
+  return (
+    <svg viewBox="0 0 800 520" className="h-auto w-full" role="img" aria-label="A rede em três colunas. Uma seta âmbar volta da Saída até a Entrada: é a culpa voltando.">
+      {entradas.flatMap((a) => meio.map((b) => <line key={`${a}-${b}`} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke={CINZA} strokeOpacity={0.35} strokeWidth={2} />))}
+      {meio.map((b) => (
+        <line key={`${b}`} x1={b[0]} y1={b[1]} x2={saida[0]} y2={saida[1]} stroke={CINZA} strokeOpacity={0.35} strokeWidth={2} />
+      ))}
+      {entradas.map(([x, y], i) => (
+        <g key={i}>
+          <circle cx={x} cy={y} r={14} fill="#FFFFFF" stroke={CINZA} strokeWidth={2.5} />
+          <text x={x - 30} y={y + 5} textAnchor="end" fontSize={13} fontWeight={600} fill={MUDO}>
+            {"RGB"[i]}
+          </text>
+        </g>
+      ))}
+      {meio.map(([x, y], i) => (
+        <circle key={i} cx={x} cy={y} r={20} fill={AQUA_FUNDO} stroke={AQUA} strokeWidth={2.5} />
+      ))}
+      <circle cx={saida[0]} cy={saida[1]} r={26} fill={AQUA_FUNDO} stroke={AQUA_TEXTO} strokeWidth={3} />
+      <text x={150} y={420} textAnchor="middle" fontSize={13} fontWeight={600} fill={MUDO}>Entrada</text>
+      <text x={400} y={420} textAnchor="middle" fontSize={13} fontWeight={600} fill={MUDO}>Camada 1</text>
+      <text x={640} y={420} textAnchor="middle" fontSize={13} fontWeight={600} fill={MUDO}>Saída</text>
+      <text x={400} y={470} textAnchor="middle" fontSize={13} fontWeight={500} fill={MUDO}>ida: os números vão da Entrada até a Saída →</text>
+      <path d="M640 220 C 600 100, 220 100, 160 145" fill="none" stroke={AMBAR} strokeWidth={4} strokeDasharray="10 8" strokeLinecap="round" />
+      <path d="M156 150 l6 -20 l12 14 z" fill={AMBAR} />
+      <Etiqueta x={400} y={112} texto="← a culpa volta" cor={AMBAR} largura={150} />
+      <AquaEm x={668} y={296} unidade={6} />
+    </svg>
+  );
+}
+
+/** A sigmoide com o ponto em 0,50 e a reta da inclinação (0,25); nas pontas, quase plana. */
+function Inclinacao() {
+  const px = xCurva(0);
+  const py = yCurva(0.5);
+  const dydx = (0.25 * (CY0 - CY1)) / ((CX1 - CX0) / 12);
+  const ponta = { x: xCurva(-4.5), y: yCurva(sigmoide(-4.5)) };
+  return (
+    <svg viewBox="0 0 840 500" className="h-auto w-full" role="img" aria-label="A curva sigmoide. No ponto 0,50 a reta da inclinação mostra 0,25; nas pontas, a curva é quase plana.">
+      <line x1={CX0} y1={CY0} x2={CX1} y2={CY0} stroke="#000" strokeOpacity={0.12} />
+      <line x1={CX0} y1={CY1} x2={CX1} y2={CY1} stroke="#000" strokeOpacity={0.08} strokeDasharray="4 4" />
+      <text x={CX0 - 14} y={CY0 + 4} textAnchor="end" fontSize={13} fontFamily={MONO} fill={SUTIL}>0</text>
+      <text x={CX0 - 14} y={CY1 + 4} textAnchor="end" fontSize={13} fontFamily={MONO} fill={SUTIL}>1</text>
+      <path d={CAMINHO_S} fill="none" stroke={AQUA} strokeWidth={4} strokeLinejoin="round" />
+      <line x1={px - 75} y1={py + 75 * dydx} x2={px + 75} y2={py - 75 * dydx} stroke={AMBAR} strokeWidth={3} strokeLinecap="round" />
+      <circle cx={px} cy={py} r={10} fill={TEXTO} stroke="#FFFFFF" strokeWidth={3} />
+      <Etiqueta x={px + 160} y={py + 40} texto="inclinação 0,25" cor={AMBAR} largura={150} />
+      <Etiqueta x={px - 120} y={py - 50} texto="resposta 0,50" cor={TEXTO} largura={130} />
+      <circle cx={ponta.x} cy={ponta.y} r={7} fill={CINZA} />
+      <text x={ponta.x + 4} y={ponta.y - 22} fontSize={13} fontWeight={500} fill={MUDO}>
+        aqui, quase plana: a culpa encolhe
+      </text>
+    </svg>
+  );
+}
+
+/** A linha do neurônio 2 até a Saída, com a culpa voltando por ela. */
+function CulpaDaLinha() {
+  return (
+    <svg viewBox="0 0 800 520" className="h-auto w-full" role="img" aria-label="A linha do neurônio 2 até a Saída. Passaram 4,00 por ela; a culpa da Saída é 0,125 e a culpa da linha é 0,50.">
+      <line x1={190} y1={260} x2={590} y2={260} stroke={VERMELHO} strokeOpacity={0.85} strokeWidth={3} />
+      <Etiqueta x={290} y={222} texto="peso −0,50" cor={VERMELHO_TEXTO} largura={110} />
+      <circle cx={170} cy={260} r={34} fill={AQUA_FUNDO} stroke={AQUA} strokeWidth={3} />
+      <text x={170} y={266} textAnchor="middle" fontSize={16} fontWeight={600} fontFamily={MONO} fill={TEXTO}>4,00</text>
+      <text x={170} y={322} textAnchor="middle" fontSize={13} fontWeight={600} fill={MUDO}>neurônio 2</text>
+      <text x={170} y={342} textAnchor="middle" fontSize={12} fill={SUTIL}>passou 4,00</text>
+      <circle cx={620} cy={260} r={40} fill={AQUA_FUNDO} stroke={AQUA_TEXTO} strokeWidth={3} />
+      <text x={620} y={266} textAnchor="middle" fontSize={16} fontWeight={600} fontFamily={MONO} fill={TEXTO}>0,50</text>
+      <text x={620} y={330} textAnchor="middle" fontSize={13} fontWeight={600} fill={MUDO}>Saída</text>
+      <Etiqueta x={620} y={360} texto="culpa 0,125" cor={AMBAR} largura={120} />
+      <circle cx={430} cy={260} r={28} fill={AMBAR_FUNDO} stroke={AMBAR} strokeWidth={3} />
+      <text x={430} y={265} textAnchor="middle" fontSize={14} fontWeight={700} fontFamily={MONO} fill={AMBAR}>0,50</text>
+      <text x={430} y={312} textAnchor="middle" fontSize={13} fontWeight={600} fill={AMBAR}>← culpa da linha</text>
+      <AquaEm x={592} y={130} unidade={6} />
+    </svg>
+  );
+}
+
+/** O peso andando na reta conforme o passinho (o valor do controle deslizante). */
+function PassinhoNaReta({ passinho }: { passinho: number }) {
+  const culpa = 0.5;
+  const antes = -0.5;
+  const depois = antes - passinho * culpa;
+  // a soma da Saída era 0 (resposta 0,50); a linha trouxe 4,00, então a soma muda 4 × (depois − antes)
+  const resposta = sigmoide(4 * (depois - antes));
+  const x = (p: number) => 120 + ((p + 2) / 2.5) * 560;
+  const xr = (v: number) => 120 + v * 560;
+  return (
+    <svg viewBox="0 0 800 520" className="h-auto w-full" role="img" aria-label={`O peso anda de −0,50 para ${formatar(depois)}. A resposta vai de 0,50 para ${formatar(resposta)}.`}>
+      <defs>
+        <marker id="seta-passinho" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0 0 L10 5 L0 10 z" fill={AMBAR} />
+        </marker>
+      </defs>
+      <text x={120} y={110} fontSize={13} fontWeight={500} fill={MUDO}>o peso da linha</text>
+      <line x1={x(-2)} y1={200} x2={x(0.5)} y2={200} stroke="#000" strokeOpacity={0.18} strokeWidth={2} />
+      {[-2, -1.5, -1, -0.5, 0, 0.5].map((t) => (
+        <g key={t}>
+          <line x1={x(t)} y1={194} x2={x(t)} y2={206} stroke="#000" strokeOpacity={0.18} />
+          <text x={x(t)} y={232} textAnchor="middle" fontSize={12} fontFamily={MONO} fill={SUTIL}>{formatar(t)}</text>
+        </g>
+      ))}
+      {passinho > 0.01 && <line x1={x(antes)} y1={170} x2={x(depois) + 6} y2={170} stroke={AMBAR} strokeWidth={3} markerEnd="url(#seta-passinho)" />}
+      <circle cx={x(antes)} cy={200} r={9} fill="#FFFFFF" stroke={VERMELHO} strokeWidth={3} />
+      <circle cx={x(depois)} cy={200} r={11} fill={VERMELHO} />
+      <Etiqueta x={x(antes)} y={140} texto="antes −0,50" cor={MUDO} largura={120} />
+      <Etiqueta x={x(depois)} y={262} texto={`depois ${formatar(depois)}`} cor={VERMELHO_TEXTO} largura={136} />
+      <text x={120} y={330} fontSize={13} fontWeight={500} fill={MUDO}>a resposta da Saída (o certo é 0)</text>
+      <rect x={120} y={372} width={560} height={12} rx={6} fill={AQUA_FUNDO} stroke={AQUA} strokeWidth={2} />
+      <text x={110} y={383} textAnchor="end" fontSize={12} fontFamily={MONO} fill={SUTIL}>0</text>
+      <text x={690} y={383} fontSize={12} fontFamily={MONO} fill={SUTIL}>1</text>
+      <circle cx={xr(0.5)} cy={378} r={7} fill="#FFFFFF" stroke={TEXTO} strokeWidth={2} />
+      <text x={xr(0.5)} y={360} textAnchor="middle" fontSize={12} fill={SUTIL}>antes 0,50</text>
+      <circle cx={xr(resposta)} cy={378} r={10} fill={TEXTO} />
+      <Etiqueta x={xr(resposta)} y={420} texto={formatar(resposta)} cor={TEXTO} largura={64} />
+    </svg>
+  );
+}
+
+const REPETICOES_DO_GRAFICO = 300;
+
+/** O erro médio de um treino de verdade na montagem básica (passinho médio), repetição por repetição. Calculado uma vez só. */
+let curvaGuardada: number[] | null = null;
+function curvaDoTreino(): number[] {
+  if (curvaGuardada) return curvaGuardada;
+  const m = montagemBasica();
+  const lida = lerRede(m.nodes, m.fios, m.pesos);
+  if (!lida) return [];
+  const pesos = sortearPesos(lida.rede, EXEMPLOS_PRONTOS, 7);
+  const g = treinar({ rede: lida.rede, pesos, exemplos: EXEMPLOS_PRONTOS, repeticoes: REPETICOES_DO_GRAFICO, passinho: "medio", semente: 7 });
+  curvaGuardada = [g.antes.erro, ...g.quadros.map((q) => q.erro)];
+  return curvaGuardada;
+}
+
+function Repeticao({ ate }: { ate: number }) {
+  const erros = curvaDoTreino();
+  const n = Math.max(0, Math.min(REPETICOES_DO_GRAFICO, Math.round(ate)));
+  const max = Math.max(0.05, ...erros);
+  const x = (i: number) => 110 + (i / REPETICOES_DO_GRAFICO) * 620;
+  const y = (e: number) => 420 - (e / max) * 320;
+  const caminho = erros
+    .slice(0, n + 1)
+    .map((e, i) => `${i ? "L" : "M"}${x(i).toFixed(1)} ${y(e).toFixed(1)}`)
+    .join(" ");
+  const erro = erros[n] ?? 0;
+  return (
+    <svg viewBox="0 0 800 520" className="h-auto w-full" role="img" aria-label={`Depois de ${n} repetições, o erro médio é ${formatar(erro)}.`}>
+      <line x1={110} y1={420} x2={730} y2={420} stroke="#000" strokeOpacity={0.15} />
+      <line x1={110} y1={100} x2={110} y2={420} stroke="#000" strokeOpacity={0.15} />
+      <text x={96} y={y(max) + 4} textAnchor="end" fontSize={12} fontFamily={MONO} fill={SUTIL}>{formatar(max)}</text>
+      <text x={96} y={424} textAnchor="end" fontSize={12} fontFamily={MONO} fill={SUTIL}>0</text>
+      <text x={110} y={446} fontSize={12} fontFamily={MONO} fill={SUTIL}>0</text>
+      <text x={730} y={446} textAnchor="end" fontSize={12} fontFamily={MONO} fill={SUTIL}>{REPETICOES_DO_GRAFICO}</text>
+      <text x={420} y={476} textAnchor="middle" fontSize={13} fontWeight={500} fill={MUDO}>repetições (épocas)</text>
+      <text x={110} y={80} fontSize={13} fontWeight={500} fill={MUDO}>erro médio nas {EXEMPLOS_PRONTOS.length} cores dos Dados</text>
+      <path d={caminho} fill="none" stroke={AMBAR} strokeWidth={3} strokeLinejoin="round" />
+      <circle cx={x(n)} cy={y(erro)} r={8} fill={AMBAR} stroke="#FFFFFF" strokeWidth={3} />
+      <Etiqueta x={Math.min(660, x(n) + 70)} y={y(erro) - 30} texto={`erro ${formatar(erro)}`} cor={AMBAR} largura={110} />
+      <AquaEm x={640} y={120} unidade={6} pose={erro < 0.15 ? "contente" : "normal"} />
+    </svg>
+  );
+}
+
 export function Palco({ visual, valor, estado = "pergunta" }: { visual: Visual; valor: number; estado?: EstadoTeste }) {
   switch (visual.tipo) {
     case "cerebro":
@@ -506,6 +707,18 @@ export function Palco({ visual, valor, estado = "pergunta" }: { visual: Visual; 
       return <PainelLab />;
     case "montagem":
       return <Montagem fase={visual.fase} />;
+    case "erro":
+      return <ErroNaBarra />;
+    case "volta":
+      return <Volta />;
+    case "inclinacao":
+      return <Inclinacao />;
+    case "culpa-linha":
+      return <CulpaDaLinha />;
+    case "passinho":
+      return <PassinhoNaReta passinho={valor} />;
+    case "repeticao":
+      return <Repeticao ate={valor} />;
   }
 }
 
@@ -513,6 +726,7 @@ export function Palco({ visual, valor, estado = "pergunta" }: { visual: Visual; 
 export function valorInicial(visual: Visual): number {
   if (visual.tipo === "peso") return visual.peso;
   if (visual.tipo === "curva") return visual.soma;
+  if (visual.tipo === "passinho") return 0.5;
   return 0;
 }
 
@@ -548,6 +762,18 @@ export function Miniatura({ slug }: { slug: string }) {
         <circle cx={190} cy={100} r={22} fill={VERDE} stroke={AQUA} strokeWidth={2.5} />
         <text x={190} y={104} textAnchor="middle" fontSize={12} fontWeight={600} fontFamily={MONO} fill="#FFFFFF">0,50</text>
         <AquaEm x={222} y={160} unidade={4} pose="contente" />
+      </svg>
+    );
+  if (slug === "como-a-rede-aprende")
+    return (
+      <svg viewBox="0 0 278 200" className={caixa} aria-hidden>
+        <line x1={30} y1={160} x2={250} y2={160} stroke="#000" strokeOpacity={0.12} />
+        <path
+          d={Array.from({ length: 23 }, (_, i) => `${i ? "L" : "M"}${(30 + i * 10).toFixed(1)} ${(160 - 110 * Math.exp(-i / 5)).toFixed(1)}`).join(" ")}
+          fill="none" stroke={AMBAR} strokeWidth={3} strokeLinejoin="round"
+        />
+        <text x={30} y={40} fontSize={11} fontWeight={600} fill={AMBAR}>erro</text>
+        <AquaEm x={200} y={92} unidade={4} pose="contente" />
       </svg>
     );
   if (slug === "sigmoide")

@@ -338,6 +338,36 @@ function Resultado({ n }: { n: number }) {
 /** O controle deslizante dos passos interativos (peso ou soma). */
 function Controle({ passo, valor, onValor }: { passo: Passo; valor: number; onValor: (n: number) => void }) {
   const v = passo.visual;
+  // 05: o passinho e as repetições (ADR-0035, B3)
+  if ((v.tipo === "passinho" || v.tipo === "repeticao") && v.interativo) {
+    const ePassinho = v.tipo === "passinho";
+    return (
+      <div className="rounded-2xl border border-black/[.06] bg-white px-5 py-4 sm:px-8">
+        <div className="flex items-baseline justify-between gap-4">
+          <label htmlFor="controle-passo" className="text-[13px] font-semibold">
+            {ePassinho ? "Mexa no passinho" : "Mexa nas repetições"}
+          </label>
+          <output htmlFor="controle-passo" className="font-mono text-[15px] font-semibold tabular-nums">
+            {ePassinho ? `${formatar(valor)} → peso ${formatar(-0.5 - valor * 0.5)}` : `${Math.round(valor)} repetições`}
+          </output>
+        </div>
+        <input
+          id="controle-passo"
+          type="range"
+          min={0}
+          max={ePassinho ? 2 : 300}
+          step={ePassinho ? 0.05 : 1}
+          value={valor}
+          onChange={(e) => onValor(Number(e.target.value))}
+          className="mt-3 w-full accent-aqua-ink"
+        />
+        <div className="flex justify-between font-mono text-[11px] text-text-subtle">
+          <span>0</span>
+          <span>{ePassinho ? "2" : "300"}</span>
+        </div>
+      </div>
+    );
+  }
   if (!((v.tipo === "peso" || v.tipo === "curva") && v.interativo)) return null;
   const ePeso = v.tipo === "peso";
   const [min, max] = ePeso ? [-2, 2] : [-6, 6];
