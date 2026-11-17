@@ -96,7 +96,7 @@ function SalaAberta({ prof, instavel, onFechar }: { prof: SalaDoProfessor; insta
           A conexão com o serviço que apresenta os aparelhos caiu. Quem já está na sala continua; ninguém novo entra até voltar.
         </p>
       )}
-      {e.fase === "espera" && <Espera e={e} onComecar={() => prof.comecar()} onFechar={fechar} />}
+      {e.fase === "espera" && <Espera e={e} onComecar={() => prof.comecar()} onFechar={fechar} onTirar={(a) => window.confirm(`Tirar ${a.apelido} da sala? Esse apelido não vai poder entrar de novo.`) && prof.tirar(a.id)} />}
       {e.fase === "pergunta" && <PerguntaAoVivo e={e} prof={prof} />}
       {e.fase === "resultado" && <ResultadoDaPergunta e={e} prof={prof} />}
       {e.fase === "fim" && <Fim e={e} prof={prof} onFechar={fechar} />}
@@ -136,7 +136,7 @@ function Topo({ children, direita }: { children?: React.ReactNode; direita?: Rea
 
 /* ---------- P2 · Sala de espera ---------- */
 
-function Espera({ e, onComecar, onFechar }: { e: EstadoDoProfessor; onComecar: () => void; onFechar: () => void }) {
+function Espera({ e, onComecar, onFechar, onTirar }: { e: EstadoDoProfessor; onComecar: () => void; onFechar: () => void; onTirar: (a: AlunoNaSala) => void }) {
   const link = linkDoAluno(e.codigo);
   const enderecoCurto = link.replace(/^https?:\/\//, "").replace(/\/\?codigo=.*$/, "").replace(/\/entrar$/, "");
   const presentes = e.alunos.filter((a) => a.conectado);
@@ -179,8 +179,11 @@ function Espera({ e, onComecar, onFechar }: { e: EstadoDoProfessor; onComecar: (
           </p>
           <ul ref={lista} className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
             {presentes.map((a) => (
-              <li key={a.id} data-id={a.id} className={`truncate rounded-full px-6 py-3 text-[17px] font-semibold ${a.id === ultimo ? "border border-aqua bg-aqua-50" : "bg-bg-subtle"}`}>
-                {a.apelido}
+              <li key={a.id} data-id={a.id} className={`flex items-center gap-2 rounded-full py-3 pr-3 pl-6 text-[17px] font-semibold ${a.id === ultimo ? "border border-aqua bg-aqua-50" : "bg-bg-subtle"}`}>
+                <span className="min-w-0 flex-1 truncate">{a.apelido}</span>
+                <button type="button" onClick={() => onTirar(a)} aria-label={`Tirar ${a.apelido} da sala`} className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-lg font-medium text-text-subtle hover:bg-black/[.06] hover:text-text">
+                  ×
+                </button>
               </li>
             ))}
           </ul>
@@ -239,6 +242,7 @@ function PerguntaAoVivo({ e, prof }: { e: EstadoDoProfessor; prof: SalaDoProfess
   const restante = segundosAte(e.prazo, agora);
   const total = p.forma.tipo === "numero" ? e.config.tempoContas : e.config.tempoAlternativas;
   const desenho = desenhoProjetado(p);
+  const temVisual = Boolean(p.amostra || p.termometro || p.fala || desenho);
   const f = p.forma;
 
   return (
@@ -265,9 +269,10 @@ function PerguntaAoVivo({ e, prof }: { e: EstadoDoProfessor; prof: SalaDoProfess
       </Topo>
       <main className="mx-auto flex w-full max-w-[1280px] flex-1 flex-col gap-6 px-4 py-8 sm:px-6">
         <h1 className="text-[clamp(26px,3vw,40px)] leading-snug font-semibold">{p.enunciado}</h1>
-        <div className={`grid gap-6 ${f.tipo === "alternativas" ? "lg:grid-cols-[1.4fr_1fr]" : ""}`}>
-          <div className="flex flex-col gap-4">
-            <VisualDaPergunta p={p} />
+        {/* sem desenho, as alternativas ocupam a largura toda; com desenho, metade cada (ADR-0035, C6) */}
+        <div className={`grid flex-1 gap-6 ${f.tipo === "alternativas" && temVisual ? "lg:grid-cols-2" : ""}`}>
+          <div className={temVisual ? "flex flex-col gap-4" : "hidden"}>
+            <VisualDaPergunta p={p} projetado />
             {desenho && (
               <div className="rounded-[24px] border border-black/[.08] bg-[#FAFAFA] p-4">
                 <RedeDesenho desenho={desenho} linhaDaPergunta={f.tipo === "linha" ? f.linha : undefined} />
@@ -276,9 +281,9 @@ function PerguntaAoVivo({ e, prof }: { e: EstadoDoProfessor; prof: SalaDoProfess
             )}
           </div>
           {f.tipo === "alternativas" && (
-            <ol className="flex flex-col gap-3">
+            <ol className={temVisual ? "flex flex-col gap-4" : "grid gap-4 lg:grid-cols-2"}>
               {f.opcoes.map((o, i) => (
-                <li key={i} className="flex items-center gap-5 rounded-2xl border border-black/10 bg-white px-5 py-4 text-2xl font-semibold">
+                <li key={i} className="flex min-h-[96px] flex-1 items-center gap-5 rounded-2xl border border-black/10 bg-white px-6 py-4 text-[clamp(22px,2.2vw,32px)] font-semibold">
                   <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-text text-2xl font-bold text-white">{LETRAS[i]}</span>
                   {o.texto}
                 </li>

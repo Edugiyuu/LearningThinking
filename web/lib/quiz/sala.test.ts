@@ -198,3 +198,18 @@ test("mensagens com formato errado são ignoradas", () => {
   expect(lerMsgAluno({ tipo: "entrar", id: "x", apelido: "Um apelido bem comprido demais" })).toEqual({ tipo: "entrar", id: "x", apelido: "Um apelido bem c" });
   expect(lerMsgAluno("oi")).toBeNull();
 });
+
+test("o professor tira um aluno da sala de espera, e aquele apelido não volta (ADR-0035, C7)", () => {
+  const { prof, entrar } = montar();
+  const bobo = entrar("b", "Apelido Feio");
+  entrar("l", "Lu");
+  prof.tirar("b");
+  expect(bobo.estado().fase).toBe("recusado");
+  expect(prof.estado().alunos.map((a) => a.apelido)).toEqual(["Lu"]);
+  // o mesmo apelido não entra de novo, nem com outro aparelho
+  const deNovo = entrar("b2", "apelido feio");
+  expect(deNovo.estado().fase).toBe("recusado");
+  // com outro apelido, entra
+  const outro = entrar("b3", "Bruno");
+  expect(outro.estado().fase).not.toBe("recusado");
+});

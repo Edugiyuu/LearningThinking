@@ -88,6 +88,8 @@ export class SalaDoProfessor {
   private pontosAntes: Pontuado[] = [];
   private perguntas = new Map<string, Pergunta>();
   private ouvintes = new Set<() => void>();
+  /** apelidos que o professor tirou da sala: não entram de novo (ADR-0035, C7) */
+  private tirados = new Set<string>();
   private foto: EstadoDoProfessor;
 
   constructor(
@@ -196,6 +198,7 @@ export class SalaDoProfessor {
     if (this.fase === "fim") return recusar("Este quiz já acabou.");
     let aluno = this.alunos.get(id);
     if (!aluno) {
+      if (this.tirados.has(apelido.toLocaleLowerCase("pt-BR"))) return recusar("O professor tirou esse apelido da sala.");
       const repetido = [...this.alunos.values()].some((a) => a.apelido.toLocaleLowerCase("pt-BR") === apelido.toLocaleLowerCase("pt-BR"));
       if (repetido) return recusar("Esse apelido já está na sala. Escolha outro.");
       if (this.alunos.size >= ALUNOS_MAX) return recusar("A sala está cheia.");
@@ -325,6 +328,18 @@ export class SalaDoProfessor {
         },
       });
     }
+    this.mudou();
+  }
+
+  /** Tira um aluno da sala de espera (ex.: apelido impróprio). Aquele apelido não entra de novo (ADR-0035, C7). */
+  tirar(alunoId: string) {
+    const aluno = this.alunos.get(alunoId);
+    if (!aluno || this.fase !== "espera") return;
+    this.enviar(alunoId, { tipo: "recusado", motivo: "O professor tirou você da sala. Fale com ele para entrar de novo com outro apelido." });
+    this.tirados.add(aluno.apelido.toLocaleLowerCase("pt-BR"));
+    for (const [conexaoId, id] of this.alunoDaConexao) if (id === alunoId) this.alunoDaConexao.delete(conexaoId);
+    this.alunos.delete(alunoId);
+    this.mandarTurma();
     this.mudou();
   }
 

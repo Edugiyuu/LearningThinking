@@ -9,22 +9,27 @@ import { LETRAS } from "./comum";
 import { MiniRede, Termometro } from "./RedeDesenho";
 
 /** A cor, a Aqua com o que ela disse e o termômetro: o que a pergunta mostra no projetor. */
-export function VisualDaPergunta({ p }: { p: Pergunta }) {
+/** `projetado`: no projetor do professor o cartão ocupa a altura das alternativas, com a cor grande (ADR-0035, C6; P3a no Figma). */
+export function VisualDaPergunta({ p, projetado = false }: { p: Pergunta; projetado?: boolean }) {
   if (!p.amostra && !p.termometro && !p.fala) return null;
   return (
-    <div className="flex flex-col gap-4 rounded-[20px] border border-black/[.08] bg-[#FAFAFA] p-4 sm:p-6">
+    <div
+      className={`flex flex-col rounded-[20px] border border-black/[.08] bg-[#FAFAFA] ${
+        projetado ? "h-full justify-center gap-10 p-8 lg:p-10" : "gap-4 p-4 sm:p-6"
+      }`}
+    >
       {(p.amostra || p.fala) && (
-        <div className="flex items-center gap-4">
+        <div className={`flex items-center ${projetado ? `gap-8 ${p.fala ? "" : "justify-center"}` : "gap-4"}`}>
           {p.amostra && (
             <div className="flex flex-col items-center gap-1">
-              <span className="block size-20 rounded-xl border border-black/10" style={{ background: p.amostra.cor }} />
-              {p.amostra.nome && <span className="text-xs text-text-muted">{p.amostra.nome}</span>}
+              <span className={`block rounded-xl border border-black/10 ${projetado ? (p.fala ? "size-32 rounded-2xl" : "size-48 rounded-3xl") : "size-20"}`} style={{ background: p.amostra.cor }} />
+              {p.amostra.nome && <span className={projetado ? "mt-1 text-lg text-text-muted" : "text-xs text-text-muted"}>{p.amostra.nome}</span>}
             </div>
           )}
           {p.fala && (
             <>
-              <AquaAnimada momento="esperando" unidade={4} rotulo="A Aqua" className="shrink-0" />
-              <span className="rounded-2xl border border-black/10 bg-white px-4 py-3 text-xl font-bold">{p.fala}</span>
+              <AquaAnimada momento="esperando" unidade={projetado ? 6 : 4} rotulo="A Aqua" className="shrink-0" />
+              <span className={`rounded-2xl border border-black/10 bg-white font-bold ${projetado ? "px-6 py-4 text-3xl" : "px-4 py-3 text-xl"}`}>{p.fala}</span>
             </>
           )}
         </div>
