@@ -619,6 +619,14 @@
   background: var(--destaque);
 }
 
+/* a área de pegar o fio é maior que a bolinha: 28 px, mais fácil de acertar com o mouse (ADR-0035, C10) */
+.porta::after {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+}
+
 /* ---------- Bolinha que anda na linha da vez ---------- */
 .bolinha {
   pointer-events: none;

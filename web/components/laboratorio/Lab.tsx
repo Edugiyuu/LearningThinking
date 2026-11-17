@@ -696,7 +696,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
                 <span className="legenda-dica">Duplo clique no número muda o peso</span>
               )}
             </div>
-            <ResultadoTreino treino={treino} rotulos={rotulos} rodarAgora={rodarAgora} />
+            <ResultadoTreino treino={treino} rotulos={rotulos} />
           </div>
 
           <LadoRecolhivel lado="direita" nome="Contas">
@@ -714,6 +714,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
             textoResposta={textoResposta}
             soTreinar={treino.fase !== "pronto"}
             treinar={secaoTreinar}
+            montagemMudou={execucao !== null && ativa === null}
           />
           </LadoRecolhivel>
 

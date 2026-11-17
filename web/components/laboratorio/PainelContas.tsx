@@ -25,13 +25,15 @@ type Props = {
   treinar: ReactNode;
   /** Enquanto o treino passa ou depois dele, o painel mostra só o Treinar. */
   soTreinar: boolean;
+  /** Havia uma rodada, mas a montagem mudou e ela saiu da tela (ADR-0035, C10). */
+  montagemMudou?: boolean;
 };
 
 // memorizado: não se redesenha enquanto um bloco é arrastado no canvas (ADR-0032)
 export default memo(PainelContas);
 
 /** Painel da direita: as contas, uma multiplicação de cada vez, e o Treinar. */
-function PainelContas({ rodada, volta, modoVolta, atual, erros, automatico, foco, setFoco, irPara, setAutomatico, textoResposta, treinar, soTreinar }: Props) {
+function PainelContas({ rodada, volta, modoVolta, atual, erros, automatico, foco, setFoco, irPara, setAutomatico, textoResposta, treinar, soTreinar, montagemMudou }: Props) {
   const daIda = rodada?.passos.length ?? 0;
   const total = daIda + (volta?.length ?? 0);
   const naVolta = !!volta && atual >= daIda;
@@ -109,7 +111,11 @@ function PainelContas({ rodada, volta, modoVolta, atual, erros, automatico, foco
       )}
 
       {!rodada && graves.length === 0 && (
-        <p className="contas-vazio">Clique em Rodar para ver os números atravessarem a rede, uma conta de cada vez.</p>
+        <p className="contas-vazio">
+          {montagemMudou
+            ? "Você mudou a montagem, então a rodada anterior saiu: as contas dela não valem mais. Clique em Rodar para fazer as contas de novo."
+            : "Clique em Rodar para ver os números atravessarem a rede, uma conta de cada vez."}
+        </p>
       )}
 
       {rodada && passo && <ContasDoPasso rodada={rodada} atual={atual} passo={passo} textoResposta={textoResposta} />}

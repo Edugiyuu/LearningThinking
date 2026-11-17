@@ -15,7 +15,7 @@ import { AquaLampada, Palco, sigmoide, valorInicial } from "./visuais";
 
 const BOTAO_SECUNDARIO =
   "whitespace-nowrap rounded-full border border-black/15 bg-white px-6 py-3 text-[15px] font-medium transition-colors hover:bg-black/[.03] disabled:pointer-events-none disabled:opacity-40";
-const BOTAO_ESCURO = "whitespace-nowrap rounded-full bg-text px-6 py-3 text-[15px] font-semibold text-white transition-opacity hover:opacity-90";
+const BOTAO_ESCURO = "whitespace-nowrap rounded-full bg-text px-6 py-3 text-[15px] font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40";
 
 export default function Aula({ tutorial, passoInicial }: { tutorial: Tutorial; passoInicial: number }) {
   const total = totalDePassos(tutorial);
@@ -56,7 +56,7 @@ export default function Aula({ tutorial, passoInicial }: { tutorial: Tutorial; p
     function tecla(e: KeyboardEvent) {
       const alvo = e.target as HTMLElement;
       if (alvo.closest("input, textarea, select, [contenteditable]")) return; // o slider usa as setas
-      if (e.key === "ArrowRight") irPara(passo + 1);
+      if (e.key === "ArrowRight" && (atual || escolha !== null)) irPara(passo + 1);
       if (e.key === "ArrowLeft") irPara(passo - 1);
     }
     window.addEventListener("keydown", tecla);
@@ -66,12 +66,12 @@ export default function Aula({ tutorial, passoInicial }: { tutorial: Tutorial; p
   return (
     <div className="flex min-h-screen flex-col lg:h-dvh lg:min-h-0">
       <header className="grid h-16 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-4 border-b border-black/[.06] px-4 sm:px-8">
-        <Link href="/tutoriais" className="text-sm whitespace-nowrap text-text-muted hover:text-text">
-          ← Tutoriais
+        <Link href="/tutoriais" className="text-sm whitespace-nowrap text-text-muted hover:text-text" aria-label="Voltar para os tutoriais">
+          ← <span className="hidden sm:inline">Tutoriais</span>
         </Link>
-        <div className="flex flex-col items-center gap-2">
-          <p className="text-[15px] font-semibold">{tutorial.titulo}</p>
-          <ol className="flex gap-1.5" aria-label={`Passo ${passo} de ${total}`}>
+        <div className="flex min-w-0 flex-col items-center gap-2">
+          <p className="max-w-full truncate text-[15px] font-semibold">{tutorial.titulo}</p>
+          <ol className="flex gap-1 sm:gap-1.5" aria-label={`Passo ${passo} de ${total}`}>
             {Array.from({ length: total }, (_, i) => (
               <li key={i}>
                 <button
@@ -79,7 +79,7 @@ export default function Aula({ tutorial, passoInicial }: { tutorial: Tutorial; p
                   onClick={() => irPara(i + 1)}
                   aria-label={`Ir para o passo ${i + 1}`}
                   aria-current={i + 1 === passo ? "step" : undefined}
-                  className={`block h-1 w-6 rounded-full transition-colors sm:w-10 ${i < passo ? "bg-aqua" : "bg-[#E5E5EA] hover:bg-black/20"}`}
+                  className={`block h-1 w-2.5 rounded-full transition-colors sm:w-6 lg:w-10 ${i < passo ? "bg-aqua" : "bg-[#E5E5EA] hover:bg-black/20"}`}
                 />
               </li>
             ))}
@@ -127,8 +127,13 @@ export default function Aula({ tutorial, passoInicial }: { tutorial: Tutorial; p
             </button>
             {atual && <span className="hidden text-xs whitespace-nowrap text-text-subtle xl:inline">← → no teclado</span>}
             {atual || !ultimaPergunta ? (
-              <button type="button" className={BOTAO_ESCURO} onClick={() => irPara(passo + 1)}>
+              // no teste rápido, só segue depois de responder (ADR-0035, C2)
+              <button type="button" className={BOTAO_ESCURO} disabled={!atual && escolha === null} onClick={() => irPara(passo + 1)}>
                 {atual ? "Próximo →" : "Próxima →"}
+              </button>
+            ) : escolha === null ? (
+              <button type="button" className={BOTAO_ESCURO} disabled title="Responda o teste rápido primeiro">
+                Praticar no laboratório →
               </button>
             ) : (
               <Link

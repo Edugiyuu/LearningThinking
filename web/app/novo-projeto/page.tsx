@@ -63,12 +63,12 @@ export default function NovoProjeto() {
   return (
     <>
       <TopoSimples />
-      <main className="mx-auto w-full max-w-[1040px] flex-1 px-4 pt-8 pb-16 sm:px-6 lg:px-0">
+      <main className="mx-auto w-full max-w-[1040px] flex-1 px-4 pt-8 pb-16 sm:px-6 lg:px-0 [@media(max-height:820px)]:pt-3 [@media(max-height:820px)]:pb-8">
         <div className="flex flex-col items-center text-center">
-          <span className="rounded-full border border-aqua/70 bg-aqua/15 px-7 py-1.5 text-[13px] text-aqua-ink">
+          <span className="rounded-full border border-aqua/70 bg-aqua/15 px-7 py-1.5 text-[13px] text-aqua-ink [@media(max-height:820px)]:hidden">
             Novo projeto
           </span>
-          <h1 className="mt-5 text-[32px] leading-[1.2] font-bold tracking-[-0.02em] sm:text-[44px]">
+          <h1 className="mt-5 [@media(max-height:820px)]:mt-0 text-[32px] leading-[1.2] font-bold tracking-[-0.02em] sm:text-[44px]">
             O que você quer montar?
           </h1>
           <p className="mt-2 text-base text-text-muted">
@@ -76,7 +76,8 @@ export default function NovoProjeto() {
           </p>
         </div>
 
-        <form onSubmit={criar} className="mt-12">
+        {/* em telas baixas (1366 × 768) tudo fica mais junto para "Criar projeto" aparecer sem rolar (ADR-0035, C8) */}
+        <form onSubmit={criar} className="mt-12 [@media(max-height:820px)]:mt-6">
           <fieldset>
             <legend className="text-[13px] font-bold text-aqua-ink">1 · O que a rede neural vai fazer · as três usam redes neurais</legend>
             <div className="mt-3 grid gap-4 md:grid-cols-3">
@@ -85,7 +86,7 @@ export default function NovoProjeto() {
                 return (
                   <label
                     key={id}
-                    className={`relative flex min-h-[200px] flex-col justify-between rounded-[20px] border-2 p-7 transition-colors ${
+                    className={`relative flex min-h-[200px] flex-col justify-between rounded-[20px] border-2 p-7 transition-colors [@media(max-height:820px)]:min-h-[168px] [@media(max-height:820px)]:p-5 ${
                       marcado
                         ? "border-aqua bg-aqua-50"
                         : disponivel
@@ -125,7 +126,7 @@ export default function NovoProjeto() {
             </div>
           </fieldset>
 
-          <fieldset className="mt-9">
+          <fieldset className="mt-9 [@media(max-height:820px)]:mt-5">
             <legend className="text-[13px] font-bold text-aqua-ink">2 · Como começar</legend>
             <div className="mt-3 grid gap-2.5 md:grid-cols-2">
               {inicios.map(({ id, titulo, texto, Miniatura }) => {
@@ -157,7 +158,7 @@ export default function NovoProjeto() {
             </div>
           </fieldset>
 
-          <div className="mt-11 flex flex-col gap-6 border-t border-black/[.08] pt-6 sm:flex-row sm:items-end sm:justify-between">
+          <div className="mt-11 [@media(max-height:820px)]:mt-6 [@media(max-height:820px)]:pt-4 flex flex-col gap-6 border-t border-black/[.08] pt-6 sm:flex-row sm:items-end sm:justify-between">
             <label className="block w-full max-w-[420px]">
               <span className="text-xs text-text-muted">Nome do projeto</span>
               <input
