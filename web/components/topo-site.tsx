@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Aqua } from "@/components/mascote";
+import { MenuCelular } from "@/components/menu-celular";
 
 /** Barra das páginas do site (Home, Tutoriais, Quiz ao vivo): logo, menu e "Criar novo projeto". */
 export function TopoSite({ ativo }: { ativo?: "laboratorio" | "tutoriais" | "quiz" }) {
@@ -28,9 +29,10 @@ export function TopoSite({ ativo }: { ativo?: "laboratorio" | "tutoriais" | "qui
           ),
         )}
       </nav>
+      <MenuCelular itens={itens} ativo={ativo} />
       <Link
         href="/novo-projeto"
-        className="hidden rounded-full border border-black/10 bg-black/[.04] px-5 py-2.5 text-sm font-medium whitespace-nowrap transition-colors hover:bg-black/[.07] sm:inline-block"
+        className="hidden rounded-full border border-black/10 bg-black/[.04] px-5 py-2.5 text-sm font-medium whitespace-nowrap transition-colors hover:bg-black/[.07] md:inline-block"
       >
         Criar novo projeto
       </Link>
