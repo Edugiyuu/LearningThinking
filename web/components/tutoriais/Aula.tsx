@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import gsap from "gsap";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Aqua, AquaReacao } from "@/components/mascote";
 import { salvarProgresso } from "@/lib/progresso-tutoriais";
+import { abrirProjeto, projetoBasico } from "@/lib/projetos";
 import { formatar } from "@/lib/rede";
 import { totalDePassos, type Conta, type Passo, type Teste, type Tutorial } from "@/lib/tutoriais";
 import { AquaLampada, Palco, sigmoide, valorInicial } from "./visuais";
@@ -27,6 +29,14 @@ export default function Aula({ tutorial, passoInicial }: { tutorial: Tutorial; p
   const [valor, setValor] = useState(() => (atual ? valorInicial(atual.visual) : 0));
   const [escolha, setEscolha] = useState<number | null>(null);
   const acertou = escolha !== null && Boolean(teste?.opcoes[escolha]?.certa);
+
+  const router = useRouter();
+  function praticar() {
+    const basico = projetoBasico();
+    if (!basico) return router.push("/novo-projeto");
+    abrirProjeto(basico.id);
+    router.push("/laboratorio");
+  }
 
   function irPara(n: number) {
     const proximo = Math.min(Math.max(1, n), total);
@@ -136,12 +146,14 @@ export default function Aula({ tutorial, passoInicial }: { tutorial: Tutorial; p
                 Praticar no laboratório →
               </button>
             ) : (
-              <Link
-                href="/novo-projeto"
+              // abre o projeto básico que já existe; sem ele, vai criar um (ADR-0035, B6)
+              <button
+                type="button"
+                onClick={praticar}
                 className="whitespace-nowrap rounded-full bg-aqua px-6 py-3 text-[15px] font-semibold text-aqua-on transition-opacity hover:opacity-90"
               >
                 Praticar no laboratório →
-              </Link>
+              </button>
             )}
           </nav>
         </section>

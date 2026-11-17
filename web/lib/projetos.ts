@@ -83,3 +83,41 @@ export function salvarMontagem(id: string, m: Montagem): boolean {
     return false;
   }
 }
+
+/* ---------- Meus projetos (ADR-0035, B6) ---------- */
+
+/** O id do projeto aberto por último (o que o laboratório abre). */
+export function idDoAberto(): string | null {
+  try {
+    return localStorage.getItem(CHAVE_ABERTO);
+  } catch {
+    return null;
+  }
+}
+
+/** Marca um projeto como aberto: o laboratório passa a abrir ele. */
+export function abrirProjeto(id: string) {
+  try {
+    localStorage.setItem(CHAVE_ABERTO, id);
+  } catch {
+    // sem localStorage não há lista de projetos
+  }
+}
+
+/** Apaga o projeto e a montagem dele. Não dá para desfazer. */
+export function apagarProjeto(id: string) {
+  try {
+    localStorage.setItem(CHAVE_PROJETOS, JSON.stringify(ler().filter((p) => p.id !== id)));
+    localStorage.removeItem(chaveMontagem(id));
+    if (localStorage.getItem(CHAVE_ABERTO) === id) localStorage.removeItem(CHAVE_ABERTO);
+  } catch {
+    // nada a apagar
+  }
+}
+
+/** O projeto "Básico pronto" de Classificar mais recente, para o "Praticar no laboratório" dos tutoriais. */
+export function projetoBasico(): Projeto | undefined {
+  return ler()
+    .filter((p) => p.tema === "redes-neurais" && p.inicio === "basico")
+    .sort((a, b) => b.criadoEm.localeCompare(a.criadoEm))[0];
+}

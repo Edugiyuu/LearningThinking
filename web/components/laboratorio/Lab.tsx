@@ -597,7 +597,9 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
               <span>LearningThinking</span>
             </Link>
             <span className="lab-divisor" />
-            <span className="lab-projeto">{projeto?.nome ?? "Experimento"}</span>
+            <Link href="/projetos" className="lab-projeto" title="Meus projetos">
+              {projeto?.nome ?? "Experimento"}
+            </Link>
             <span className="lab-salvo">
               {salvamento === "salvo" ? "Salvo" : "Não salvo"}
             </span>

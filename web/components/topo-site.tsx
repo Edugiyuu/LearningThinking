@@ -5,7 +5,7 @@ import { MenuCelular } from "@/components/menu-celular";
 /** Barra das páginas do site (Home, Tutoriais, Quiz ao vivo): logo, menu e "Criar novo projeto". */
 export function TopoSite({ ativo }: { ativo?: "laboratorio" | "tutoriais" | "quiz" }) {
   const itens = [
-    { id: "laboratorio", href: "/laboratorio", rotulo: "Laboratório" },
+    { id: "laboratorio", href: "/projetos", rotulo: "Laboratório" }, // a lista "Meus projetos" (ADR-0035, B6)
     { id: "tutoriais", href: "/tutoriais", rotulo: "Tutoriais" },
     { id: "quiz", href: "/quiz", rotulo: "Quiz ao vivo" },
   ] as const;

@@ -73,6 +73,12 @@
   white-space: nowrap;
 }
 
+/* o nome do projeto leva à lista "Meus projetos" (ADR-0035, B6) */
+a.lab-projeto:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .lab-salvo {
   font-size: 12px;
   color: var(--text-subtle);
