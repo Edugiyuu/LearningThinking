@@ -577,7 +577,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
 
           <div className="lab-abas" role="tablist" aria-label="Tema do laboratório">
             <button role="tab" aria-selected className="ativa">
-              Redes neurais
+              Classificar
             </button>
             <button role="tab" aria-selected={false} disabled>
               Busca por significado <span className="sr-only">(em breve)</span>

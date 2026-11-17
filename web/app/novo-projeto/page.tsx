@@ -11,22 +11,23 @@ import { criarProjeto, type Inicio, type Tema } from "@/lib/projetos";
 const temas: { id: Tema; titulo: string; texto: string; disponivel: boolean; Icone: () => React.ReactElement }[] = [
   {
     id: "redes-neurais",
-    titulo: "Redes neurais",
-    texto: "A base de tudo: monte neurônios e veja, conta por conta, uma entrada virar resposta.",
+    // os três temas usam redes neurais: cada um tem o nome do que a rede faz (ADR-0035, B8)
+    titulo: "Classificar",
+    texto: "A rede decide entre duas respostas. Veja, conta por conta, uma entrada virar resposta.",
     disponivel: true,
     Icone: IconeRede,
   },
   {
     id: "busca-por-significado",
     titulo: "Busca por significado",
-    texto: "Feita com redes neurais: frases viram números para achar textos parecidos.",
+    texto: "A rede transforma frases em números (embeddings) para achar textos parecidos.",
     disponivel: false,
     Icone: IconePontos,
   },
   {
     id: "rag",
     titulo: "RAG",
-    texto: "Feito com redes neurais: uma busca acha os trechos e outra rede escreve a resposta.",
+    texto: "Uma rede acha os trechos nos documentos e outra escreve a resposta.",
     disponivel: false,
     Icone: IconeDocumentos,
   },
@@ -77,7 +78,7 @@ export default function NovoProjeto() {
 
         <form onSubmit={criar} className="mt-12">
           <fieldset>
-            <legend className="text-[13px] font-bold text-aqua-ink">1 · Tema</legend>
+            <legend className="text-[13px] font-bold text-aqua-ink">1 · O que a rede neural vai fazer · as três usam redes neurais</legend>
             <div className="mt-3 grid gap-4 md:grid-cols-3">
               {temas.map(({ id, titulo, texto, disponivel, Icone }) => {
                 const marcado = tema === id;
