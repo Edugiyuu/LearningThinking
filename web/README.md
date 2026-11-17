@@ -30,5 +30,5 @@ Regras do site estático: nada que precise de servidor (cookies, route handlers 
 - `lib/projetos.ts`: projetos salvos no navegador
 - `app/globals.css`: tokens do [design system](../docs/04-design-system.md)
 - `components/mascote.tsx`: a Aqua e o mascote do Claude em pixel
-- `components/rede-heroi.tsx`: a rede neural do herói
+- `components/cena-heroi.tsx`: a cena do herói (ADR-0036, versão 2): a Aqua acende um campo de neurônios enquanto a câmera afasta; toca sozinha, sem quadro. O mundo vem de `scripts/gerar-cena-heroi.py`, que grava `components/cena-heroi-mundo.ts`
 - `public/ilustracoes/`: ilustrações dos cards "Como funciona"

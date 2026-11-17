@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Aqua, Claude } from "@/components/mascote";
-import { RedeHeroi } from "@/components/rede-heroi";
+import { CenaHeroi } from "@/components/cena-heroi";
 import { TopoSite } from "@/components/topo-site";
 
 // Home, igual ao frame "Home · Desktop · mascote" do Figma (ADR-0018).
@@ -103,11 +103,9 @@ export default function Home() {
               </Link>
             </div>
           </div>
-          <div className="relative mt-14">
-            <RedeHeroi />
-            <p className="mt-8 text-center text-[13px] font-medium text-text-subtle">
-              Uma rede neural de verdade, calculada no seu navegador.
-            </p>
+          {/* Cena sem quadro, toca sozinha: a Aqua acende um campo de neurônios (ADR-0036, versão 2) */}
+          <div className="relative mt-6">
+            <CenaHeroi />
           </div>
         </section>
 
