@@ -588,7 +588,6 @@ a.lab-projeto:hover {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--text);
-  animation: fundir 0.3s ease-out;
 }
 
 .neuronio.positivo .neuronio-valor,
@@ -596,21 +595,6 @@ a.lab-projeto:hover {
   color: #ffffff;
 }
 
-/* a bolinha entrou: o número dá um pulinho */
-@keyframes fundir {
-  from {
-    transform: scale(1.35);
-  }
-  to {
-    transform: scale(1);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .neuronio-valor {
-    animation: none;
-  }
-}
 
 .ponto {
   opacity: 0;

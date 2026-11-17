@@ -33,7 +33,7 @@ const ANIMA = "motion-safe:transition-[transform,opacity] motion-safe:duration-7
 
 function AquaEm({ x, y, unidade, pose = "normal" }: { x: number; y: number; unidade: number; pose?: PoseAqua }) {
   return (
-    <g transform={`translate(${x} ${y})`}>
+    <g transform={`translate(${x}, ${y})`}>
       <Aqua unidade={unidade} pose={pose} />
     </g>
   );

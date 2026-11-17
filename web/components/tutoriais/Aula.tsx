@@ -183,7 +183,8 @@ function useEntradaDoPasso(palco: React.RefObject<HTMLElement | null>, texto: Re
       const pecas = svg ? Array.from(svg.children) : Array.from(palco.current?.children ?? []);
       const tl = gsap.timeline({ defaults: { ease: "power2.out" } });
       if (svg && mexe) tl.from(svg, { x: 48 * lado, duration: 0.6, ease: "power3.out" }, 0);
-      tl.from(pecas, { opacity: 0, y: mexe ? 12 : 0, duration: 0.55, stagger: 0.05 }, 0);
+      // as peças aparecem uma depois da outra, mas a fila toda leva no máximo 0,6 s (palcos com muitas peças não arrastam)
+      tl.from(pecas, { opacity: 0, y: mexe ? 12 : 0, duration: 0.55, stagger: { amount: Math.min(0.6, pecas.length * 0.05) } }, 0);
       palco.current?.querySelectorAll<SVGGraphicsElement>("[data-cresce]").forEach((el) => {
         const direita = el.dataset.cresce === "direita";
         tl.from(el, { scaleX: 0, transformOrigin: direita ? "right center" : "left center", duration: 0.8, ease: "power3.out" }, direita ? 0.9 : 0.4);

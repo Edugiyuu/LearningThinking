@@ -46,7 +46,7 @@ const Z_ROXO = ROXO_X.reduce((s, x, i) => s + x * DETECTOR[i].w, 0); // −1,00
 
 /** As peças de pixel art da Aqua dentro do SVG do palco. */
 function Em({ x, y, children }: { x: number; y: number; children: React.ReactNode }) {
-  return <g transform={`translate(${x} ${y})`}>{children}</g>;
+  return <g transform={`translate(${x}, ${y})`}>{children}</g>;
 }
 
 /** Faixa aqua no pé do palco dizendo onde a ideia aparece no laboratório. */

@@ -536,12 +536,15 @@ function MapaOnde({
     const de = aquaAntes.current;
     aquaAntes.current = aqua;
     if (!el || de === aqua || semMovimento()) return;
+    // o React já pôs a Aqua na coluna nova (left); ela sai de onde estava com um x negativo e anda até 0.
+    // Anda por transform, sem mexer no layout a cada quadro (ADR-0035, animações).
+    const largura = el.parentElement?.clientWidth ?? 0;
     const tl = gsap.timeline();
-    tl.fromTo(el, { left: `${((de + 0.5) / n) * 100}%` }, { left: `${((aqua + 0.5) / n) * 100}%`, duration: 0.9, ease: "sine.inOut" })
+    tl.fromTo(el, { x: ((de - aqua) / n) * largura }, { x: 0, duration: 0.9, ease: "sine.inOut" })
       .to(el, { y: -unidade * 1.5, duration: 0.15, ease: "sine.out", yoyo: true, repeat: 5 }, 0);
     return () => {
       tl.kill();
-      gsap.set(el, { y: 0 });
+      gsap.set(el, { x: 0, y: 0 });
     };
   }, [aqua, n, unidade]);
   // só na lousa grande: quando a Aqua chega, a coluna da vez e o nó aceso aparecem com um pop
