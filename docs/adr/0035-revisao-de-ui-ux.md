@@ -1,6 +1,6 @@
 # ADR-0035 · Revisão de UI/UX: falhas achadas no site e correções propostas
 
-- **Status:** Em andamento (2026-11-14). O autor pediu para aplicar a ADR; o que já entrou está em "O que já foi feito". O resto espera decisão do autor ou o Figma.
+- **Status:** Aplicada (2026-11-16), com as decisões do autor nos itens A3, B1 e B8. Ficam de fora só o que precisa do teste na escola e a fluidez das animações (ver "O que ainda falta"). As propostas da IA nos itens novos (tutorial 05, Meus projetos, convites, celular) esperam a revisão do autor.
 - **Data:** 2026-11-14
 - **Decisores:** Eduardo (autor); o levantamento e as propostas são da IA
 - **Conversa com:** [ADR-0020](0020-laboratorio-em-codigo.md) (laboratório só para computador), [ADR-0024](0024-treinar-com-backpropagation.md) e [ADR-0025](0025-bloco-backward-pass.md) (treino e bloco Backward pass), [ADR-0026](0026-modo-foco.md) (Modo Foco), [ADR-0028](0028-aba-da-aqua.md) (Perguntar à Aqua), [ADR-0030](0030-entradas-alem-de-cor.md) (entradas além de cor), [ADR-0034](0034-quiz-ao-vivo.md) (Quiz ao vivo)
@@ -42,20 +42,18 @@ A coluna "No Figma?" diz se o problema já está no desenho (então o conserto c
 | # | Onde | O que acontece | Por que confunde |
 |---|---|---|---|
 | B1 | Canvas × Modo Foco | O canvas mostra "Camada 2" e "Saída" como dois blocos. O Modo Foco chama a Camada 2 de "Saída", e o mapa "Onde estamos" mostra só Entrada, Camada 1 e Saída. O painel, no mesmo passo, diz "Camada 2 · neurônio 1". | Três nomes para a mesma coisa na mesma tela. O aluno não sabe se são peças diferentes. |
-| B1 | **O autor escolheu "Saída"** como o nome do neurônio da última camada. O painel Contas passou a dizer "Saída" (antes "Camada 2 · neurônio 1"), como o Modo Foco e a volta já diziam. No canvas, a camada ligada ao bloco Saída mostra "Camada 2 · Saída", para dizer que é ela que faz a conta da Saída; o bloco Saída continua sendo onde a resposta aparece. |
 | B2 | Laboratório | "Passinho", "culpa" e "repetição" aparecem sem o nome técnico: **taxa de aprendizado** (o tamanho do ajuste em cada peso), **gradiente** (quanto cada peso contribuiu para o erro) e **época** (uma passada por todos os exemplos). | O aluno aprende o apelido e não reconhece o termo quando o vir em outro lugar. O quiz já escreve "o passinho (taxa de aprendizado)"; o lab não. |
 | B3 | Tutoriais × Laboratório | O bloco Backward pass e o Treinar já existem, mas o tutorial 05 · Como a rede aprende está "Em breve". | O aluno encontra "a culpa volta" no lab sem ninguém ter explicado antes. |
 | B4 | Fim do Rodar | No passo 12 de 12 o botão Próximo apaga e não há nenhum convite para o que vem depois. | A rodada termina sem dizer "e agora?". |
 | B5 | Saída × Aqua × Quiz | O bloco Saída diz "abaixo de 0,50 a resposta é 0; a partir de 0,50 é 1". A Aqua e o quiz usam "fico em dúvida" entre 0,30 e 0,70 (ADR-0028). | Com 0,60 o bloco Saída diz "laranja" e o quiz cobra "fico em dúvida". |
 | B6 | Projetos | Não existe lista de projetos. "Praticar no laboratório" (fim do tutorial) e "Criar novo projeto" sempre criam um projeto novo; "Laboratório" abre só o último. | Os projetos antigos ficam guardados no navegador, mas o aluno não tem como voltar a eles. |
 | B7 | Perguntar à Aqua | O texto diz "ela usa a rede que você treinou" mesmo quando a rede só rodou. A aba "Redes neurais" continua marcada, embora a tela seja outra. | O texto afirma um treino que não aconteceu. (Também está assim no Figma.) |
-| B8 | Primeiro o Figma, depois o código (2026-11-15 e 2026-11-16). O autor notou que, mesmo com os textos novos, o cartão "Redes neurais" ainda aparecia ao lado de Busca e RAG como se só ele fosse rede neural. **Decisão: os três temas usam redes neurais, e cada um tem o nome do que a rede faz.** O primeiro tema passa a se chamar **Classificar** (o nome técnico é *classificação*: a rede decide entre duas respostas, 0 ou 1). **Novo projeto:** a escolha virou "1 · O que a rede neural vai fazer · as três usam redes neurais", com Classificar, Busca por significado e RAG. **Laboratório:** a aba virou "Classificar" (o id `redes-neurais` dos projetos salvos não mudou). **Home:** "Três coisas que uma rede neural faz.", com Classificar no cartão largo ("Comece por aqui") e Busca e RAG embaixo, sob "Também com redes neurais · em breve". **Tutoriais:** "Outros temas" virou "Também feitos com redes neurais"; a trilha continua "Redes neurais", porque ensina como qualquer rede funciona. "Uma cor virar resposta" virou "uma entrada virar resposta" (ADR-0030). Muda o nome da aba da [ADR-0014](0014-laboratorio-abas-projetos-e-erros.md). |
+| B8 | Novo projeto e Home | Redes neurais, Busca por significado e RAG aparecem como três temas irmãos. O cartão de Redes neurais diz "uma cor virar resposta". | Ver a seção seguinte. |
 
 ### C. Falta de polimento
 
 | # | Onde | O que acontece |
 |---|---|---|
-| Home | *(Pedido do autor em 2026-11-15.)* O botão "Entrar numa sala" saiu da Home: "Quiz ao vivo" já está no menu logo acima, e lá o aluno acha "Entrar numa sala". Isso muda o item 6 da [ADR-0034](0034-quiz-ao-vivo.md) e deixa a Home igual ao frame "Home · Desktop · mascote" do Figma. |
 | C1 | Tutoriais | "5 tutoriais, na ordem" ao lado de "0 de 4 concluídos" (também no Figma). |
 | C2 | Tutorial 01 | Dá para pular direto ao passo 11 e clicar em "Praticar no laboratório" sem responder o teste rápido. |
 | C3 | Modo Foco | "A soma do Camada 1"; os rótulos R, G, B e "Camada 1 · neurônio 1" ficam escondidos atrás dos círculos (também no Figma); a soma final já aparece, em cinza, antes de a conta chegar nela. |
@@ -144,17 +142,33 @@ Só o que não muda desenho nem decisão aceita:
 | A3 | **O autor escolheu a opção 1: tudo continua no bloco** (a ADR-0025, item 13, não muda). Ao ser solto, o bloco sobe o que for preciso para caber inteiro na parte visível do canvas. Ao clicar em Treinar, a tela volta para a rede (enquadramento animado de 0,5 s), para o aluno ver as linhas mudando. |
 | A4 | "Forward" e "◀ Backward" viraram abas de verdade: pulam para o começo da ida e da volta. |
 | A5 | "Som: ligado" foi para a barra de cima das telas projetadas, ao lado do que já estava lá. |
+| B1 | **O autor escolheu "Saída"** como o nome do neurônio da última camada. O painel Contas passou a dizer "Saída" (antes "Camada 2 · neurônio 1"), como o Modo Foco e a volta já diziam. No canvas, a camada ligada ao bloco Saída mostra "Camada 2 · Saída", para dizer que é ela que faz a conta da Saída; o bloco Saída continua sendo onde a resposta aparece. |
 | B2 | "Passinho (taxa de aprendizado)", "Repetições (épocas)", "culpa (o gradiente: quanto cada parte pesou no erro)" e "passinho (taxa de aprendizado) × culpa (gradiente)". |
 | B5 | O bloco Saída avisa que a Aqua fica em dúvida entre 0,30 e 0,70. |
 | B7 | "Ela usa a rede deste projeto." |
-| B8 | Primeiro o Figma, depois o código (2026-11-15). **Home:** o título do Explore virou "Tudo começa nas redes neurais."; Redes neurais é um cartão largo, a base, e Busca por significado e RAG ficam embaixo, lado a lado, sob o rótulo "Feitos com redes neurais · em breve". Cada texto diz isso: "A base de tudo…", "Feita com redes neurais…", "Feito com redes neurais…". **Novo projeto:** os três cartões continuam lado a lado, porque ali são uma escolha de tema, e a tela já fica apertada em 768 px (C8); mudaram só os textos, iguais aos do Figma. "Uma cor virar resposta" virou "uma entrada virar resposta" (ADR-0030). No frame da Home, o menu também passou a mostrar "Quiz ao vivo" no lugar de "Sobre", como no código. |
-| C1 | "4 tutoriais, na ordem, e mais 1 em breve." |
-| C3 (parte) | "A soma da Camada 1". |
+| B8 | Primeiro o Figma, depois o código (2026-11-15 e 2026-11-16). O autor notou que, mesmo com os textos novos, o cartão "Redes neurais" ainda aparecia ao lado de Busca e RAG como se só ele fosse rede neural. **Decisão: os três temas usam redes neurais, e cada um tem o nome do que a rede faz.** O primeiro tema passa a se chamar **Classificar** (o nome técnico é *classificação*: a rede decide entre duas respostas, 0 ou 1). **Novo projeto:** a escolha virou "1 · O que a rede neural vai fazer · as três usam redes neurais", com Classificar, Busca por significado e RAG. **Laboratório:** a aba virou "Classificar" (o id `redes-neurais` dos projetos salvos não mudou). **Home:** "Três coisas que uma rede neural faz.", com Classificar no cartão largo ("Comece por aqui") e Busca e RAG embaixo, sob "Também com redes neurais · em breve". **Tutoriais:** "Outros temas" virou "Também feitos com redes neurais"; a trilha continua "Redes neurais", porque ensina como qualquer rede funciona. "Uma cor virar resposta" virou "uma entrada virar resposta" (ADR-0030). Muda o nome da aba da [ADR-0014](0014-laboratorio-abas-projetos-e-erros.md). |
+| A6 | Frames "Celular · Menu do topo aberto" e "Celular · Laboratório: melhor no computador" no Figma. No celular, o topo tem "Menu ☰", que abre Laboratório, Tutoriais, Quiz ao vivo e "Criar novo projeto". O laboratório, em telas com menos de 768 px, mostra "O laboratório é feito para o computador", com "Ver tutoriais", "Voltar para o início" e "Abrir o laboratório mesmo assim" ([ADR-0020](0020-laboratorio-em-codigo.md)). |
+| B3 | Tutorial **05 · Como a rede aprende**, com roteiro no Figma ("Tutorial 05 · Como a rede aprende · roteiro"). Seis passos com o exemplo do Modo Foco (neurônio 2 passou 4,00, peso −0,50, Saída 0,50, certo 0): o erro, quem tem culpa (backward pass), a culpa da Saída (inclinação da sigmoide), a culpa da linha, o passinho (taxa de aprendizado, interativo) e de novo e de novo (época, com a curva de um treino de verdade na montagem básica). Teste rápido com duas perguntas. As contas batem com `lib/backward.ts`. *Proposta da IA: textos e palcos esperam a revisão do autor.* |
+| B4 | Frame "Laboratório · Painel · fim do Rodar com convites" no Figma. No último passo do Rodar, o painel mostra "E agora?" com três convites: "Mudar a cor da Entrada" (leva a tela até a Entrada e a seleciona), "Ver a culpa voltar" (sem o bloco: avisa como ligar o Backward pass) ou "Treinar a rede" (com o bloco: leva a tela até ele) e "Perguntar à Aqua". |
+| B6 | Frame "Meus projetos · Desktop" no Figma. Página `/projetos` com os projetos deste navegador, o último aberto primeiro, com "Abrir →" e "Apagar" (pede confirmação; não dá para desfazer). "Laboratório" no menu e o nome do projeto na barra do lab levam a ela. "Praticar no laboratório" (fim do tutorial) abre o projeto Básico pronto que já existe; sem ele, vai para Novo projeto. |
+| C2 | No teste rápido, "Próxima" e "Praticar no laboratório" só liberam depois de responder (também a seta → do teclado). |
+| C3 | "A soma da Camada 1". No Modo Foco, R, G e B aparecem embaixo de cada círculo (mais espaço entre os nós), e as partes das linhas que ainda vêm e a soma ficam com "?" até a conta chegar nelas. |
+| C4 | Com a janela "Resultado do treino" aberta, o painel não repete o resultado: mostra só "O resultado está na janela do canvas", "Rodar com os pesos novos" e "Treinar de novo". A janela perdeu o botão "Rodar agora". |
+| C6 | Na pergunta projetada, a cor e a fala da Aqua ocupam a altura das alternativas, como no P3a (cor de 192 px, centralizada, quando está sozinha). Sem desenho, as alternativas usam a largura toda, em duas colunas. |
+| C7 | Na sala de espera, o × em cada apelido tira o aluno, depois de confirmar. Ele vê "O professor tirou você da sala", e aquele apelido não entra de novo. Marcado no frame P2 do Figma. Com teste em `lib/quiz/sala.test.ts`. |
+| C8 | Em telas baixas (até 820 px de altura), o Novo projeto fica mais junto e "Criar projeto" aparece sem rolar em 1366 × 768. |
+| C9 | Tutorial no celular: o título fica no centro e os tracinhos cabem na tela ("← Tutoriais" vira "←"). |
+| C10 | Quando a montagem muda e a rodada sai, o painel avisa: "Você mudou a montagem, então a rodada anterior saiu". A bolinha de ligar o fio continua com 12 px, mas a área de pegar passou a 28 px. |
+| Home | *(Pedido do autor em 2026-11-15.)* O botão "Entrar numa sala" saiu da Home: "Quiz ao vivo" já está no menu logo acima, e lá o aluno acha "Entrar numa sala". Isso muda o item 6 da [ADR-0034](0034-quiz-ao-vivo.md) e deixa a Home igual ao frame "Home · Desktop · mascote" do Figma. |
+| C1 | A trilha mostra a contagem certa ("5 tutoriais, na ordem", com o 05 feito; "e mais N em breve" só quando houver). |
 | C5 | "1 de 1 acertou"; "Todos responderam" quando ninguém ficou sem responder; o código de exemplo virou "······". |
 
-### Esperando o autor
+### O que ainda falta
 
-- **Com Figma antes do código:** tutorial 05 (B3), convites no fim do Rodar (B4), lista "Meus projetos" (B6), menu e aviso no celular (A6), tirar aluno da sala (C7), cartão maior no projetor (C6).
+- **Fluidez das animações.** Continua sem verificar: o painel do navegador ficou oculto, e nesse estado o navegador atrasa as animações. Precisa ser visto com a tela aberta.
+- **Quiz com turma de verdade.** O × e a pergunta maior foram testados com um aluno, na mesma máquina. Falta o teste na escola, que também decide se a tela de resultado deve mostrar quantos marcaram cada alternativa (ADR-0034).
+- **Revisão do autor** nas propostas novas: os textos e palcos do tutorial 05, a tela Meus projetos, os convites do fim do Rodar e as telas de celular.
+- **Figma:** os frames do Modo Foco ainda têm os rótulos R, G, B escondidos (C3), e o frame "Tutoriais · Desktop" ainda mostra o 05 sem as miniaturas novas.
 
 ## Consequências
 
@@ -171,4 +185,4 @@ Só o que não muda desenho nem decisão aceita:
 
 ## Quando revisitar
 
-Depois que o autor comparar esta lista com a dele e marcar o que entra. Cada item aceito vira uma branch própria (`fix/...` ou `feat/...`) e, quando for uma decisão de desenho, uma ADR própria.
+Depois do teste na escola, e quando o autor revisar o tutorial 05 e as telas novas. Tudo desta ADR ficou na branch `fix/revisao-ui-ux`.
