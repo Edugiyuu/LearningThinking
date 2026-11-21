@@ -72,3 +72,31 @@ body {
     min-height: calc(100dvh / 0.9);
   }
 }
+
+/* Home com rolagem (ADR-0038): cada seção é um quadro do Figma de 1440 px de largura.
+   No computador, os textos e cards ficam nas mesmas posições e tamanhos do quadro, medidos em
+   unidades da largura do quadro (cqw: 1cqw = 1% da largura), então a tela inteira escala junto.
+   No celular, a mesma marcação vira uma coluna normal e a nuvem fica atrás do texto. */
+.quadro {
+  container-type: inline-size;
+  position: relative;
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+}
+@media (min-width: 1024px) {
+  .quadro {
+    aspect-ratio: var(--aspecto, 1440 / 900);
+  }
+  .q {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    width: var(--w);
+    height: var(--h, auto);
+    font-size: var(--fs);
+    line-height: var(--lh, 1.21);
+    margin: 0;
+    padding: 0;
+  }
+}
