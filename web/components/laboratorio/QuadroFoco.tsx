@@ -204,8 +204,9 @@ function Ida({
 
 /** As linhas que chegam no neurônio: a da vez acesa, as outras apagadas (verde/vermelho = sinal do peso). */
 function DiagramaIda({ partes, destino, valor }: { partes: ParteDaSoma[]; destino: string; valor: number | null }) {
-  const passo = 74;
-  const altura = Math.max(170, partes.length * passo + 30);
+  // espaço entre os nós: o nome (R, G, B…) cabe embaixo do círculo sem ficar atrás do próximo (ADR-0035, C3)
+  const passo = 96;
+  const altura = Math.max(170, partes.length * passo + 20);
   const dy = altura / 2;
   const yDe = (i: number) => altura / 2 + (i - (partes.length - 1) / 2) * passo;
   return (
@@ -266,22 +267,26 @@ function SomaDoNeuronio({
   valor: number;
   ativando?: boolean;
 }) {
+  // só aparece o que a conta já fez: as partes das linhas que ainda vêm e a soma ficam com "?" (ADR-0035, C3)
+  const daVez = partes.findIndex((p) => p.agora);
+  const jaFez = (i: number) => ativando || daVez < 0 || i <= daVez;
+  const somaPronta = ativando || daVez < 0;
   return (
     <div className="foco-soma">
-      <div className="foco-rotulo">A soma {destino === "Saída" ? "da Saída" : `do ${destino}`}</div>
+      <div className="foco-rotulo">A soma {/^(Saída|Camada)/.test(destino) ? "da" : "do"} {destino}</div>
       <ul>
-        {partes.map((p) => (
+        {partes.map((p, i) => (
           <li key={p.linha} className={p.agora ? "agora" : ""}>
             <span>parte de {curto(p.nome)}</span>
-            <b className={p.parte < 0 ? "negativo" : ""}>{formatar(p.parte)}</b>
+            <b className={jaFez(i) && p.parte < 0 ? "negativo" : ""}>{jaFez(i) ? formatar(p.parte) : "?"}</b>
           </li>
         ))}
       </ul>
       <div className={`foco-soma-fim ${ativando ? "agora" : ""}`}>
         <span>
-          soma {formatar(soma)} → {final ? "sigmoide" : "ReLU"} →
+          soma {somaPronta ? formatar(soma) : "?"} → {final ? "sigmoide" : "ReLU"} →
         </span>
-        <b>{formatar(valor)}</b>
+        <b>{somaPronta ? formatar(valor) : "?"}</b>
       </div>
     </div>
   );
@@ -531,12 +536,15 @@ function MapaOnde({
     const de = aquaAntes.current;
     aquaAntes.current = aqua;
     if (!el || de === aqua || semMovimento()) return;
+    // o React já pôs a Aqua na coluna nova (left); ela sai de onde estava com um x negativo e anda até 0.
+    // Anda por transform, sem mexer no layout a cada quadro (ADR-0035, animações).
+    const largura = el.parentElement?.clientWidth ?? 0;
     const tl = gsap.timeline();
-    tl.fromTo(el, { left: `${((de + 0.5) / n) * 100}%` }, { left: `${((aqua + 0.5) / n) * 100}%`, duration: 0.9, ease: "sine.inOut" })
+    tl.fromTo(el, { x: ((de - aqua) / n) * largura }, { x: 0, duration: 0.9, ease: "sine.inOut" })
       .to(el, { y: -unidade * 1.5, duration: 0.15, ease: "sine.out", yoyo: true, repeat: 5 }, 0);
     return () => {
       tl.kill();
-      gsap.set(el, { y: 0 });
+      gsap.set(el, { x: 0, y: 0 });
     };
   }, [aqua, n, unidade]);
   // só na lousa grande: quando a Aqua chega, a coluna da vez e o nó aceso aparecem com um pop

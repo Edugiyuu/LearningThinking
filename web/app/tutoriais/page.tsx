@@ -56,7 +56,7 @@ export default function Tutoriais() {
                 Redes neurais
               </h2>
               <p className="mt-1 text-[15px] text-text-muted">
-                {tutoriais.length + tutoriaisEmBreve.length} tutoriais, na ordem. Cerca de {minutos} minutos.
+                {tutoriais.length} tutoriais, na ordem{tutoriaisEmBreve.length > 0 ? `, e mais ${tutoriaisEmBreve.length} em breve` : ""}. Cerca de {minutos} minutos.
               </p>
             </div>
             <ProgressoDaTrilha />
@@ -84,7 +84,7 @@ export default function Tutoriais() {
         </section>
 
         <section className="mx-auto mt-20 max-w-[1280px] px-4 sm:px-6 xl:px-0">
-          <h2 className="text-[22px] font-semibold">Outros temas</h2>
+          <h2 className="text-[22px] font-semibold">Também feitos com redes neurais</h2>
           <div className="mt-6 grid gap-6 md:grid-cols-2">
             {outrosTemas.map((t) => (
               <article

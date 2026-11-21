@@ -73,6 +73,12 @@
   white-space: nowrap;
 }
 
+/* o nome do projeto leva à lista "Meus projetos" (ADR-0035, B6) */
+a.lab-projeto:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .lab-salvo {
   font-size: 12px;
   color: var(--text-subtle);
@@ -414,6 +420,13 @@
   color: var(--text);
 }
 
+.camada-papel {
+  font-size: 10.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--text-muted);
+}
+
 .camada-titulo {
   padding: 8px 10px 4px;
 }
@@ -575,7 +588,6 @@
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--text);
-  animation: fundir 0.3s ease-out;
 }
 
 .neuronio.positivo .neuronio-valor,
@@ -583,21 +595,6 @@
   color: #ffffff;
 }
 
-/* a bolinha entrou: o número dá um pulinho */
-@keyframes fundir {
-  from {
-    transform: scale(1.35);
-  }
-  to {
-    transform: scale(1);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .neuronio-valor {
-    animation: none;
-  }
-}
 
 .ponto {
   opacity: 0;
@@ -610,6 +607,14 @@
   height: 12px;
   border: 2px solid #ffffff;
   background: var(--destaque);
+}
+
+/* a área de pegar o fio é maior que a bolinha: 28 px, mais fácil de acertar com o mouse (ADR-0035, C10) */
+.porta::after {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
 }
 
 /* ---------- Bolinha que anda na linha da vez ---------- */
@@ -671,7 +676,7 @@
   padding: 0 4px;
   border-radius: 8px;
   background: var(--bg-subtle);
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
   line-height: 16px;
@@ -699,7 +704,7 @@
 
 .peso.agora {
   z-index: 10;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text);
 }
@@ -1916,9 +1921,18 @@
   color: var(--text-muted);
 }
 
-.direcao span {
+.direcao button {
   padding: 3px 6px;
+  border: 0;
   border-radius: 11px;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.direcao button:not(.agora):hover {
+  background: rgb(0 0 0 / 0.06);
 }
 
 .direcao .agora {
@@ -3442,4 +3456,60 @@
   .aqua-cartao {
     flex-direction: column;
   }
+}
+
+/* ---------- Fim do Rodar: "E agora?" (ADR-0035, B4) ---------- */
+.e-agora {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 14px 16px 16px;
+  border: 1px solid var(--destaque);
+  border-radius: 16px;
+  background: #e6f8fa;
+}
+
+.e-agora h3 {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--destaque-texto);
+}
+
+.e-agora > p {
+  margin-bottom: 2px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.e-agora button {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px;
+  border: 1px solid #d2d2d7;
+  border-radius: 12px;
+  background: #ffffff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.e-agora button:hover:not(:disabled) {
+  border-color: var(--destaque);
+}
+
+.e-agora button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.e-agora b {
+  font-size: 14px;
+}
+
+.e-agora span {
+  font-size: 12px;
+  color: var(--text-muted);
 }

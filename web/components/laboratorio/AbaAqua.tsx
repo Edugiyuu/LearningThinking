@@ -81,7 +81,7 @@ export default function AbaAqua({
   return (
     <div ref={aba} className="aqua-aba">
       <h1>Perguntar à Aqua</h1>
-      <p className="aqua-sub">Ela usa a rede que você treinou neste projeto. Escolha uma cor e veja o que ela acha.</p>
+      <p className="aqua-sub">Ela usa a rede deste projeto. Escolha uma cor e veja o que ela acha.</p>
 
       <div className="aqua-cena">
         <div ref={palco} className="aqua-palco">

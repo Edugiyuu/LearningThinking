@@ -46,7 +46,7 @@ O site está no GitHub Pages ([ADR-0033](0033-publicar-no-github-pages.md)), que
 ### Pontos alinhados (2026-11-13, segunda conversa)
 
 5. **Uma aba nova, "Quiz ao vivo", sem nada a ver com o laboratório.** "Quiz é quiz e lab é lab": a aba fica no topo do site, ao lado de Laboratório e Tutoriais, e não abre projeto, canvas nem nada do lab. Ela só usa a mesma conta do lab por baixo (para os números baterem).
-6. **O aluno entra pela aba ou pela Home:** a aba tem "Criar sala" e "Entrar numa sala"; a Home ganha também um botão **"Entrar numa sala"**.
+6. *(Mudou em 2026-11-15, ver [ADR-0035](0035-revisao-de-ui-ux.md): o botão saiu da Home, porque "Quiz ao vivo" já está no menu logo acima.)* **O aluno entra pela aba:** a aba tem "Criar sala" e "Entrar numa sala".
 7. *(Mudou: o QR saiu, ver "Só computador e os mesmos números".)* **Código + QR code** na sala de espera. O QR abre direto a tela de apelido, com o código já preenchido.
 8. **Sem pontos por rapidez.** Acertou = 1000, errou = 0. O tempo só limita a pergunta; responder antes não dá vantagem. Quem empata fica na mesma posição.
 9. **Quantidade de perguntas livre**, de 3 a 20.

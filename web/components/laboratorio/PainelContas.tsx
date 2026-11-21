@@ -25,13 +25,21 @@ type Props = {
   treinar: ReactNode;
   /** Enquanto o treino passa ou depois dele, o painel mostra só o Treinar. */
   soTreinar: boolean;
+  /** Havia uma rodada, mas a montagem mudou e ela saiu da tela (ADR-0035, C10). */
+  montagemMudou?: boolean;
+  /** Os convites do último passo (ADR-0035, B4). */
+  convites?: Convites;
+  aoConvidar?: (c: Convite) => void;
 };
+
+export type Convite = "entrada" | "volta" | "aqua";
+export type Convites = { entradaDeCor: boolean; treinar: boolean; aquaAberta: boolean };
 
 // memorizado: não se redesenha enquanto um bloco é arrastado no canvas (ADR-0032)
 export default memo(PainelContas);
 
 /** Painel da direita: as contas, uma multiplicação de cada vez, e o Treinar. */
-function PainelContas({ rodada, volta, modoVolta, atual, erros, automatico, foco, setFoco, irPara, setAutomatico, textoResposta, treinar, soTreinar }: Props) {
+function PainelContas({ rodada, volta, modoVolta, atual, erros, automatico, foco, setFoco, irPara, setAutomatico, textoResposta, treinar, soTreinar, montagemMudou, convites, aoConvidar }: Props) {
   const daIda = rodada?.passos.length ?? 0;
   const total = daIda + (volta?.length ?? 0);
   const naVolta = !!volta && atual >= daIda;
@@ -54,9 +62,14 @@ function PainelContas({ rodada, volta, modoVolta, atual, erros, automatico, foco
 
       {/* Fixos no topo: a conta abaixo muda de altura a cada passo, e os botões não podem pular (ADR-0025). */}
       {rodada && volta && (
-        <div className="direcao" aria-label="Direção das contas">
-          <span className={naVolta ? "feita" : "agora"}>Forward {naVolta ? "✓" : `· ${atual + 1} de ${daIda}`}</span>
-          <span className={naVolta ? "agora" : ""}>◀ Backward {naVolta ? `· ${atual - daIda + 1} de ${volta.length}` : ""}</span>
+        // abas de verdade (ADR-0035, A4): pulam para o começo da ida ou da volta
+        <div className="direcao" role="group" aria-label="Direção das contas">
+          <button type="button" className={naVolta ? "feita" : "agora"} aria-pressed={!naVolta} onClick={() => irPara(0)}>
+            Forward {naVolta ? "✓" : `· ${atual + 1} de ${daIda}`}
+          </button>
+          <button type="button" className={naVolta ? "agora" : ""} aria-pressed={naVolta} onClick={() => irPara(daIda)}>
+            ◀ Backward {naVolta ? `· ${atual - daIda + 1} de ${volta.length}` : ""}
+          </button>
         </div>
       )}
 
@@ -104,10 +117,16 @@ function PainelContas({ rodada, volta, modoVolta, atual, erros, automatico, foco
       )}
 
       {!rodada && graves.length === 0 && (
-        <p className="contas-vazio">Clique em Rodar para ver os números atravessarem a rede, uma conta de cada vez.</p>
+        <p className="contas-vazio">
+          {montagemMudou
+            ? "Você mudou a montagem, então a rodada anterior saiu: as contas dela não valem mais. Clique em Rodar para fazer as contas de novo."
+            : "Clique em Rodar para ver os números atravessarem a rede, uma conta de cada vez."}
+        </p>
       )}
 
       {rodada && passo && <ContasDoPasso rodada={rodada} atual={atual} passo={passo} textoResposta={textoResposta} />}
+
+      {rodada && convites && aoConvidar && atual === total - 1 && <EAgora convites={convites} aoConvidar={aoConvidar} />}
       {rodada && volta && naVolta && <ContasDaVolta rodada={rodada} passos={volta} atual={atual - daIda} modo={modoVolta} />}
 
       {treinar}
@@ -188,7 +207,7 @@ function ContasDoPasso({ rodada, atual, passo, textoResposta }: { rodada: Rodada
         <span className="chip">Saída</span>
         <p>A Saída lê o último neurônio e decide a resposta.</p>
         <p className="contas-formula agora">{textoResposta(passo.saida, passo.valor, passo.resposta)}</p>
-        <p className="contas-nota">Abaixo de 0,50 a resposta é 0; a partir de 0,50 é 1.</p>
+        <p className="contas-nota">Abaixo de 0,50 a resposta é 0; a partir de 0,50 é 1. A Aqua é mais exigente: entre 0,30 e 0,70 ela diz que fica em dúvida.</p>
       </div>
     );
   }
@@ -244,5 +263,33 @@ function ContasDoPasso({ rodada, atual, passo, textoResposta }: { rodada: Rodada
         </p>
       ) : null}
     </div>
+  );
+}
+
+/** Frame "Laboratório · Painel · fim do Rodar com convites" no Figma (ADR-0035, B4). */
+function EAgora({ convites, aoConvidar }: { convites: Convites; aoConvidar: (c: Convite) => void }) {
+  const { entradaDeCor, treinar, aquaAberta } = convites;
+  const itens: { c: Convite; titulo: string; texto: string; desligado?: boolean }[] = [
+    {
+      c: "entrada",
+      titulo: entradaDeCor ? "Mudar a cor da Entrada" : "Mudar os números da Entrada",
+      texto: entradaDeCor ? "e rodar de novo com outra cor" : "e rodar de novo com outros números",
+    },
+    treinar
+      ? { c: "volta", titulo: "Treinar a rede", texto: "o botão Treinar fica no bloco Backward pass" }
+      : { c: "volta", titulo: "Ver a culpa voltar", texto: "ligue o bloco Backward pass na Saída" },
+    { c: "aqua", titulo: "Perguntar à Aqua", texto: aquaAberta ? "ela usa esta rede numa cor nova" : "ainda não dá: veja o aviso no botão do topo", desligado: !aquaAberta },
+  ];
+  return (
+    <section className="e-agora" aria-labelledby="e-agora-titulo">
+      <h3 id="e-agora-titulo">E agora?</h3>
+      <p>A rodada acabou. Experimente:</p>
+      {itens.map((i) => (
+        <button key={i.c} type="button" disabled={i.desligado} onClick={() => aoConvidar(i.c)}>
+          <b>{i.titulo}</b>
+          <span>{i.texto}</span>
+        </button>
+      ))}
+    </section>
   );
 }

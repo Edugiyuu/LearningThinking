@@ -1,6 +1,8 @@
 "use client";
 
 import { Handle, Position, type NodeProps } from "@xyflow/react";
+import gsap from "gsap";
+import { useLayoutEffect, useRef } from "react";
 import { formatar, type NeuronioNode as NeuronioNodeType } from "@/lib/rede";
 import { useLab } from "@/components/laboratorio/contexto";
 
@@ -22,13 +24,28 @@ export default function NeuronioNode({ id, selected }: NodeProps<NeuronioNodeTyp
     <div className={`neuronio ${sinal} ${selected ? "selecionado" : ""} ${agora ? "agora" : ""} ${parado ? "parado" : ""}`}>
       {/* a chave muda com o número: cada bolinha que entra dá um pulinho no valor */}
       {valor !== undefined && (
-        <span key={formatar(valor)} className="neuronio-valor">
-          {formatar(valor)}
-        </span>
+        <ValorQuePula key={formatar(valor)} texto={formatar(valor)} />
       )}
       {/* pontos de ligação invisíveis: as linhas são criadas automaticamente */}
       <Handle type="target" position={Position.Left} isConnectable={false} className="ponto" />
       <Handle type="source" position={Position.Right} isConnectable={false} className="ponto" />
     </div>
+  );
+}
+
+/** A bolinha entrou: o número dá um pulinho (timeline do GSAP; parado com "reduzir movimento"). */
+function ValorQuePula({ texto }: { texto: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  useLayoutEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const tween = gsap.fromTo(ref.current, { scale: 1.35 }, { scale: 1, duration: 0.3, ease: "power2.out" });
+    return () => {
+      tween.kill();
+    };
+  }, []);
+  return (
+    <span ref={ref} className="neuronio-valor">
+      {texto}
+    </span>
   );
 }

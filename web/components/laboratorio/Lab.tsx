@@ -26,7 +26,7 @@ import EntradaNode from "@/components/laboratorio/EntradaNode";
 import NeuronioNode from "@/components/laboratorio/NeuronioNode";
 import SaidaNode from "@/components/laboratorio/SaidaNode";
 import PesoEdge from "@/components/laboratorio/PesoEdge";
-import PainelContas from "@/components/laboratorio/PainelContas";
+import PainelContas, { type Convite } from "@/components/laboratorio/PainelContas";
 import LadoRecolhivel from "@/components/laboratorio/LadoRecolhivel";
 import QuadroFoco from "@/components/laboratorio/QuadroFoco";
 import AbaAqua, { type ConversaAqua } from "@/components/laboratorio/AbaAqua";
@@ -71,7 +71,14 @@ const nodeTypes = { camada: CamadaNode, neuronio: NeuronioNode, saida: SaidaNode
 const edgeTypes = { peso: PesoEdge };
 const TIPO_ARRASTE = "application/x-bloco";
 // props do <ReactFlow> que não podem virar um objeto novo a cada desenho (ADR-0032)
-const AJUSTE_INICIAL = { padding: 0.25 };
+// ao abrir, enquadra só a rede (não o bloco Backward pass, que é alto) e sem passar do zoom 1, para os
+// números dos pesos ficarem legíveis numa tela de 1366 × 768 (ADR-0035, A2)
+const ajusteDaRede = (nodes: NoDaRede[]) => {
+  const daRede = nodes.filter((n) => n.type !== "backward" && !n.parentId).map((n) => ({ id: n.id }));
+  return { padding: 0.06, maxZoom: 1, nodes: daRede.length ? daRede : undefined };
+};
+// altura do bloco Backward pass no canvas (zoom 1): ao soltar, ele sobe o que for preciso para caber (ADR-0035, A3)
+const ALTURA_BACKWARD = 610;
 const SEM_ERROS: never[] = [];
 // as Aquas do topo não mudam enquanto um bloco é arrastado: memorizadas, não se redesenham a cada movimento
 const Aqua = memo(AquaDesenho);
@@ -121,6 +128,7 @@ type Salvamento = "salvo" | "nao-salvo";
 
 function Laboratorio({ projeto }: { projeto: Projeto | null }) {
   const [inicial] = useState(() => montagemDoProjeto(projeto));
+  const [ajusteInicial] = useState(() => ajusteDaRede(inicial.nodes));
   const [nodes, setNodes] = useState<NoDaRede[]>(inicial.nodes);
   const [fiosBrutos, setFios] = useState<Fio[]>(inicial.fios);
   const [pesos, setPesos] = useState<Pesos>(inicial.pesos);
@@ -140,7 +148,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
   // "ver como ela pensou": a cor perguntada entra só na conta mostrada, nunca na montagem salva
   const [consulta, setConsulta] = useState<string | null>(null);
   const [transicao, setTransicao] = useState<"entrando" | "voltando" | "chegou" | null>(null);
-  const { screenToFlowPosition, zoomIn, zoomOut } = useReactFlow<NoDaRede>();
+  const { screenToFlowPosition, zoomIn, zoomOut, fitView } = useReactFlow<NoDaRede>();
   const remedir = useUpdateNodeInternals();
 
   // Arrastar um bloco muda a lista de blocos a cada quadro, mas só a posição muda (ADR-0032).
@@ -236,6 +244,13 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
     if (!emAndamento) formatoDoTreino.current = formato;
     else if (formato !== formatoDoTreino.current) parar();
   }, [formato, emAndamento, parar]);
+
+  // o botão Treinar mora no bloco Backward pass (ADR-0025, item 13; mantido na ADR-0035): ao começar o treino,
+  // a tela volta para a rede, para o aluno ver as linhas mudando de cor e espessura
+  const ajusteDaForma = useMemo(() => ajusteDaRede(nodesDaForma), [nodesDaForma]);
+  useEffect(() => {
+    if (emAndamento) fitView({ ...ajusteDaForma, duration: 500 });
+  }, [emAndamento, fitView, ajusteDaForma]);
 
   const total = passosDaIda + (voltaPassos?.length ?? 0);
 
@@ -378,7 +393,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
    * quem sai de dentro dos neurônios dela. Vale para o "← Voltar para a Aqua" (que limpa a cor
    * perguntada e a rodada só de ida) e para o "Perguntar à Aqua" do topo (que deixa o lab como está).
    */
-  const irParaAqua = (limparConsulta: boolean) => {
+  const irParaAqua = useCallback((limparConsulta: boolean) => {
     const fim = () => {
       if (limparConsulta) {
         setConsulta(null);
@@ -391,7 +406,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
     if (semMovimento) return fim();
     setTransicao("voltando");
     gsap.to(brancoDoLab.current, { autoAlpha: 1, duration: 0.25, onComplete: fim });
-  };
+  }, []);
 
   const voltarParaAqua = () => irParaAqua(true);
 
@@ -423,6 +438,34 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
     },
     [nodesDaForma],
   );
+  // O fim do Rodar com três convites (ADR-0035, B4): mudar a entrada, ver a volta ou treinar, perguntar à Aqua.
+  const { emAndamento: treinando } = treino;
+  const aoConvidar = useCallback(
+    (c: Convite) => {
+      const centrar = (id: string) => fitView({ nodes: [{ id }], duration: 500, maxZoom: 1, padding: 0.4 });
+      if (c === "entrada") {
+        const e = nodesDaForma.find((n) => n.type === "entrada");
+        if (!e) return;
+        centrar(e.id);
+        setNodes((ns) => ns.map((n) => ({ ...n, selected: n.id === e.id })));
+      } else if (c === "volta") {
+        const b = nodesDaForma.find((n) => n.type === "backward");
+        if (b) centrar(b.id);
+        else setAviso("Arraste o bloco Backward pass para o canvas, ligue a Saída nele e clique em Rodar de novo.");
+      } else if (!motivoAquaFechada && !treinando) irParaAqua(false);
+    },
+    [nodesDaForma, fitView, motivoAquaFechada, treinando, irParaAqua],
+  );
+  const temBackward = nodesDaForma.some((n) => n.type === "backward");
+  const convites = useMemo(
+    () => ({
+      entradaDeCor: entrada?.tipo === "cor",
+      treinar: temBackward && !!voltaPassos,
+      aquaAberta: !motivoAquaFechada,
+    }),
+    [entrada?.tipo, temBackward, voltaPassos, motivoAquaFechada],
+  );
+
   const secaoTreinar = useMemo(() => <SecaoTreinar treino={treino} exemplos={exemplos} rodarAgora={rodarAgora} />, [treino, exemplos, rodarAgora]);
 
   // o fim da ida no Modo Foco pinta a Saída com a cor da resposta (ADR-0026, item 9)
@@ -522,7 +565,12 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
           setAviso("Use só um bloco Backward pass por montagem.");
           return;
         }
-        setNodes((ns) => [...ns, criarBackward(ponto.x, ponto.y)]);
+        // cai inteiro na parte visível do canvas, em vez de cortado embaixo
+        const tela = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        const topo = screenToFlowPosition({ x: e.clientX, y: tela.top + 16 }).y;
+        const fundo = screenToFlowPosition({ x: e.clientX, y: tela.bottom - 56 }).y;
+        const y = Math.max(topo, Math.min(ponto.y, fundo - ALTURA_BACKWARD));
+        setNodes((ns) => [...ns, criarBackward(ponto.x, y)]);
       }
 
       if (tipo === "neuronio") {
@@ -549,7 +597,9 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
               <span>LearningThinking</span>
             </Link>
             <span className="lab-divisor" />
-            <span className="lab-projeto">{projeto?.nome ?? "Experimento"}</span>
+            <Link href="/projetos" className="lab-projeto" title="Meus projetos">
+              {projeto?.nome ?? "Experimento"}
+            </Link>
             <span className="lab-salvo">
               {salvamento === "salvo" ? "Salvo" : "Não salvo"}
             </span>
@@ -557,7 +607,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
 
           <div className="lab-abas" role="tablist" aria-label="Tema do laboratório">
             <button role="tab" aria-selected className="ativa">
-              Redes neurais
+              Classificar
             </button>
             <button role="tab" aria-selected={false} disabled>
               Busca por significado <span className="sr-only">(em breve)</span>
@@ -644,7 +694,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
               onEdgeDoubleClick={onEdgeDoubleClick}
               zoomOnDoubleClick={false}
               fitView
-              fitViewOptions={AJUSTE_INICIAL}
+              fitViewOptions={ajusteInicial}
             >
               <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
             </ReactFlow>
@@ -676,7 +726,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
                 <span className="legenda-dica">Duplo clique no número muda o peso</span>
               )}
             </div>
-            <ResultadoTreino treino={treino} rotulos={rotulos} rodarAgora={rodarAgora} />
+            <ResultadoTreino treino={treino} rotulos={rotulos} />
           </div>
 
           <LadoRecolhivel lado="direita" nome="Contas">
@@ -694,6 +744,9 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
             textoResposta={textoResposta}
             soTreinar={treino.fase !== "pronto"}
             treinar={secaoTreinar}
+            montagemMudou={execucao !== null && ativa === null}
+            convites={convites}
+            aoConvidar={aoConvidar}
           />
           </LadoRecolhivel>
 

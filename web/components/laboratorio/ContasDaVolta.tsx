@@ -109,7 +109,7 @@ function Cartao({
             </>,
           ]}
         />
-        <p className="volta-pe">Agora a culpa volta pela rede, da Saída até a Entrada.</p>
+        <p className="volta-pe">Agora a culpa (o gradiente: quanto cada parte pesou no erro) volta pela rede, da Saída até a Entrada.</p>
       </div>
     );
   }
@@ -184,7 +184,7 @@ function Cartao({
           </>,
         ]}
       />
-      <p className="volta-pe">o peso anda = passinho × culpa</p>
+      <p className="volta-pe">o peso anda = passinho (taxa de aprendizado) × culpa (gradiente)</p>
     </div>
   );
 }

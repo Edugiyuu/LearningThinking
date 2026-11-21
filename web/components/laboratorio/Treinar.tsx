@@ -239,7 +239,7 @@ export function ControlesDoTreino({ treino }: { treino: Treino }) {
   return (
     <div className="treino-bloco">
       <b className="treino-bloco-titulo">Treinar</b>
-      <span className="treino-bloco-rotulo">Passinho</span>
+      <span className="treino-bloco-rotulo">Passinho (taxa de aprendizado)</span>
       <div className="alternar tres">
         {(Object.keys(NOME_PASSINHO) as Passinho[]).map((p) => (
           <button key={p} className={config.passinho === p ? "ativo" : ""} onClick={() => setConfig({ passinho: p })} title="Quanto cada peso muda por vez. Grande demais: a rede pode travar.">
@@ -249,7 +249,7 @@ export function ControlesDoTreino({ treino }: { treino: Treino }) {
       </div>
       <div className="treinar-campos">
         <label>
-          <span>Repetições</span>
+          <span title="Uma repetição passa por todas as cores dos Dados uma vez.">Repetições (épocas)</span>
           <input
             type="number"
             min={1}
@@ -338,6 +338,19 @@ function Durante({ treino, exemplos }: { treino: Treino; exemplos: number }) {
 function Fim({ treino, rodarAgora }: { treino: Treino; rodarAgora: () => void }) {
   const g = treino.gravacao!;
   const certas = (respostas: number[]) => respostas.filter((r, i) => (r >= 0.5 ? 1 : 0) === treino.exemplosUsados[i]?.objetivo).length;
+  // com a janela aberta, o painel não repete o resultado: só os próximos passos (ADR-0035, C4)
+  if (treino.resultadoAberto)
+    return (
+      <>
+        <p className="treinar-nota esquerda">O resultado está na janela do canvas.</p>
+        <button className="botao escuro" onClick={rodarAgora}>
+          ▶ Rodar com os pesos novos
+        </button>
+        <button className="treinar-de-novo" onClick={treino.reiniciar}>
+          Treinar de novo
+        </button>
+      </>
+    );
   return (
     <>
       <div className="treinar-resumo">
@@ -403,7 +416,7 @@ function GraficoErro({ gravacao, ate, altura }: { gravacao: Gravacao; ate: numbe
 
 /* ---------- A janela flutuante do resultado ---------- */
 
-export function ResultadoTreino({ treino, rotulos, rodarAgora }: { treino: Treino; rotulos: Rotulos; rodarAgora: () => void }) {
+export function ResultadoTreino({ treino, rotulos }: { treino: Treino; rotulos: Rotulos }) {
   const [minimizada, setMinimizada] = useState(false);
   const g = treino.gravacao;
   if (!g || !treino.resultadoAberto || treino.fase !== "fim") return null;
@@ -474,9 +487,6 @@ export function ResultadoTreino({ treino, rotulos, rodarAgora }: { treino: Trein
               certas: <b>{certas(g.antes.respostas)} de {obj.length}</b> antes → <b className="certo">{certas(g.depois.respostas)} de {obj.length}</b> depois
               <span>só os pesos mudaram</span>
             </p>
-            <button className="botao escuro resultado-rodar" onClick={rodarAgora}>
-              ▶ Rodar agora
-            </button>
           </div>
         </div>
       )}

@@ -29,7 +29,7 @@ Telas no Figma (página 1, abaixo de "Novo projeto · Desktop"): **Tutoriais · 
    | 02 | Os pesos | volume → verde → vermelho → mexa você → onde fica no lab → teste |
    | 03 | A sigmoide | soma sem limite → tudo cabe entre 0 e 1 → curva em S → a conta com o *e* → no lab → teste |
    | 04 | Camadas e fios | blocos → o fio dá a ordem → todos com todos → camada solta → montagem básica → teste |
-   | 05 | Como a rede aprende | **Em breve**: depende do Treinar e da discussão do backward pass |
+   | 05 | Como a rede aprende | *(Feito em 2026-11-16, ver [ADR-0035](0035-revisao-de-ui-ux.md), B3.)* erro → quem tem culpa → culpa da Saída → culpa da linha → passinho → de novo e de novo → teste |
 8. **Progresso no navegador** (`localStorage`, chave `learningthinking:tutoriais`, formato com `versao: 1`), como os projetos. O passo atual fica na URL (`?passo=3`), então recarregar ou compartilhar o link abre no mesmo ponto. Concluído continua concluído mesmo se o aluno voltar para rever.
 9. **Barra do site como componente** (`web/components/topo-site.tsx`), usada na Home e na lista, com o item da página atual marcado em aqua.
 

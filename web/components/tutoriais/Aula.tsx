@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import gsap from "gsap";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Aqua, AquaReacao } from "@/components/mascote";
 import { salvarProgresso } from "@/lib/progresso-tutoriais";
+import { abrirProjeto, projetoBasico } from "@/lib/projetos";
 import { formatar } from "@/lib/rede";
 import { totalDePassos, type Conta, type Passo, type Teste, type Tutorial } from "@/lib/tutoriais";
 import { AquaLampada, Palco, sigmoide, valorInicial } from "./visuais";
@@ -15,7 +17,7 @@ import { AquaLampada, Palco, sigmoide, valorInicial } from "./visuais";
 
 const BOTAO_SECUNDARIO =
   "whitespace-nowrap rounded-full border border-black/15 bg-white px-6 py-3 text-[15px] font-medium transition-colors hover:bg-black/[.03] disabled:pointer-events-none disabled:opacity-40";
-const BOTAO_ESCURO = "whitespace-nowrap rounded-full bg-text px-6 py-3 text-[15px] font-semibold text-white transition-opacity hover:opacity-90";
+const BOTAO_ESCURO = "whitespace-nowrap rounded-full bg-text px-6 py-3 text-[15px] font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40";
 
 export default function Aula({ tutorial, passoInicial }: { tutorial: Tutorial; passoInicial: number }) {
   const total = totalDePassos(tutorial);
@@ -27,6 +29,14 @@ export default function Aula({ tutorial, passoInicial }: { tutorial: Tutorial; p
   const [valor, setValor] = useState(() => (atual ? valorInicial(atual.visual) : 0));
   const [escolha, setEscolha] = useState<number | null>(null);
   const acertou = escolha !== null && Boolean(teste?.opcoes[escolha]?.certa);
+
+  const router = useRouter();
+  function praticar() {
+    const basico = projetoBasico();
+    if (!basico) return router.push("/novo-projeto");
+    abrirProjeto(basico.id);
+    router.push("/laboratorio");
+  }
 
   function irPara(n: number) {
     const proximo = Math.min(Math.max(1, n), total);
@@ -56,7 +66,7 @@ export default function Aula({ tutorial, passoInicial }: { tutorial: Tutorial; p
     function tecla(e: KeyboardEvent) {
       const alvo = e.target as HTMLElement;
       if (alvo.closest("input, textarea, select, [contenteditable]")) return; // o slider usa as setas
-      if (e.key === "ArrowRight") irPara(passo + 1);
+      if (e.key === "ArrowRight" && (atual || escolha !== null)) irPara(passo + 1);
       if (e.key === "ArrowLeft") irPara(passo - 1);
     }
     window.addEventListener("keydown", tecla);
@@ -66,12 +76,12 @@ export default function Aula({ tutorial, passoInicial }: { tutorial: Tutorial; p
   return (
     <div className="flex min-h-screen flex-col lg:h-dvh lg:min-h-0">
       <header className="grid h-16 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-4 border-b border-black/[.06] px-4 sm:px-8">
-        <Link href="/tutoriais" className="text-sm whitespace-nowrap text-text-muted hover:text-text">
-          ← Tutoriais
+        <Link href="/tutoriais" className="text-sm whitespace-nowrap text-text-muted hover:text-text" aria-label="Voltar para os tutoriais">
+          ← <span className="hidden sm:inline">Tutoriais</span>
         </Link>
-        <div className="flex flex-col items-center gap-2">
-          <p className="text-[15px] font-semibold">{tutorial.titulo}</p>
-          <ol className="flex gap-1.5" aria-label={`Passo ${passo} de ${total}`}>
+        <div className="flex min-w-0 flex-col items-center gap-2">
+          <p className="max-w-full truncate text-[15px] font-semibold">{tutorial.titulo}</p>
+          <ol className="flex gap-1 sm:gap-1.5" aria-label={`Passo ${passo} de ${total}`}>
             {Array.from({ length: total }, (_, i) => (
               <li key={i}>
                 <button
@@ -79,7 +89,7 @@ export default function Aula({ tutorial, passoInicial }: { tutorial: Tutorial; p
                   onClick={() => irPara(i + 1)}
                   aria-label={`Ir para o passo ${i + 1}`}
                   aria-current={i + 1 === passo ? "step" : undefined}
-                  className={`block h-1 w-6 rounded-full transition-colors sm:w-10 ${i < passo ? "bg-aqua" : "bg-[#E5E5EA] hover:bg-black/20"}`}
+                  className={`block h-1 w-2.5 rounded-full transition-colors sm:w-6 lg:w-10 ${i < passo ? "bg-aqua" : "bg-[#E5E5EA] hover:bg-black/20"}`}
                 />
               </li>
             ))}
@@ -127,16 +137,23 @@ export default function Aula({ tutorial, passoInicial }: { tutorial: Tutorial; p
             </button>
             {atual && <span className="hidden text-xs whitespace-nowrap text-text-subtle xl:inline">← → no teclado</span>}
             {atual || !ultimaPergunta ? (
-              <button type="button" className={BOTAO_ESCURO} onClick={() => irPara(passo + 1)}>
+              // no teste rápido, só segue depois de responder (ADR-0035, C2)
+              <button type="button" className={BOTAO_ESCURO} disabled={!atual && escolha === null} onClick={() => irPara(passo + 1)}>
                 {atual ? "Próximo →" : "Próxima →"}
               </button>
+            ) : escolha === null ? (
+              <button type="button" className={BOTAO_ESCURO} disabled title="Responda o teste rápido primeiro">
+                Praticar no laboratório →
+              </button>
             ) : (
-              <Link
-                href="/novo-projeto"
+              // abre o projeto básico que já existe; sem ele, vai criar um (ADR-0035, B6)
+              <button
+                type="button"
+                onClick={praticar}
                 className="whitespace-nowrap rounded-full bg-aqua px-6 py-3 text-[15px] font-semibold text-aqua-on transition-opacity hover:opacity-90"
               >
                 Praticar no laboratório →
-              </Link>
+              </button>
             )}
           </nav>
         </section>
@@ -166,7 +183,8 @@ function useEntradaDoPasso(palco: React.RefObject<HTMLElement | null>, texto: Re
       const pecas = svg ? Array.from(svg.children) : Array.from(palco.current?.children ?? []);
       const tl = gsap.timeline({ defaults: { ease: "power2.out" } });
       if (svg && mexe) tl.from(svg, { x: 48 * lado, duration: 0.6, ease: "power3.out" }, 0);
-      tl.from(pecas, { opacity: 0, y: mexe ? 12 : 0, duration: 0.55, stagger: 0.05 }, 0);
+      // as peças aparecem uma depois da outra, mas a fila toda leva no máximo 0,6 s (palcos com muitas peças não arrastam)
+      tl.from(pecas, { opacity: 0, y: mexe ? 12 : 0, duration: 0.55, stagger: { amount: Math.min(0.6, pecas.length * 0.05) } }, 0);
       palco.current?.querySelectorAll<SVGGraphicsElement>("[data-cresce]").forEach((el) => {
         const direita = el.dataset.cresce === "direita";
         tl.from(el, { scaleX: 0, transformOrigin: direita ? "right center" : "left center", duration: 0.8, ease: "power3.out" }, direita ? 0.9 : 0.4);
@@ -321,6 +339,36 @@ function Resultado({ n }: { n: number }) {
 /** O controle deslizante dos passos interativos (peso ou soma). */
 function Controle({ passo, valor, onValor }: { passo: Passo; valor: number; onValor: (n: number) => void }) {
   const v = passo.visual;
+  // 05: o passinho e as repetições (ADR-0035, B3)
+  if ((v.tipo === "passinho" || v.tipo === "repeticao") && v.interativo) {
+    const ePassinho = v.tipo === "passinho";
+    return (
+      <div className="rounded-2xl border border-black/[.06] bg-white px-5 py-4 sm:px-8">
+        <div className="flex items-baseline justify-between gap-4">
+          <label htmlFor="controle-passo" className="text-[13px] font-semibold">
+            {ePassinho ? "Mexa no passinho" : "Mexa nas repetições"}
+          </label>
+          <output htmlFor="controle-passo" className="font-mono text-[15px] font-semibold tabular-nums">
+            {ePassinho ? `${formatar(valor)} → peso ${formatar(-0.5 - valor * 0.5)}` : `${Math.round(valor)} repetições`}
+          </output>
+        </div>
+        <input
+          id="controle-passo"
+          type="range"
+          min={0}
+          max={ePassinho ? 2 : 300}
+          step={ePassinho ? 0.05 : 1}
+          value={valor}
+          onChange={(e) => onValor(Number(e.target.value))}
+          className="mt-3 w-full accent-aqua-ink"
+        />
+        <div className="flex justify-between font-mono text-[11px] text-text-subtle">
+          <span>0</span>
+          <span>{ePassinho ? "2" : "300"}</span>
+        </div>
+      </div>
+    );
+  }
   if (!((v.tipo === "peso" || v.tipo === "curva") && v.interativo)) return null;
   const ePeso = v.tipo === "peso";
   const [min, max] = ePeso ? [-2, 2] : [-6, 6];
