@@ -1,7 +1,7 @@
 # ADR-0037 · Aba Busca por significado: como seria
 
-- **Status:** Proposta, **rascunho para discussão** (nada decidido ainda; tudo abaixo é proposta da IA para o autor ter uma ideia)
-- **Data:** 2026-11-16
+- **Status:** Proposta, **em discussão** (pergunta 1 decidida em 2026-11-21; o resto ainda é proposta da IA)
+- **Data:** 2026-11-16 · atualizada em 2026-11-21
 - **Decisores:** Eduardo (autor), com propostas da IA
 - **Usa:** [ADR-0014](0014-laboratorio-abas-projetos-e-erros.md) (a aba faz parte da v1), [ADR-0005](0005-ml-no-navegador.md) (Transformers.js no navegador), [currículo, módulo 3](../02-curriculo.md), [ADR-0035](0035-revisao-de-ui-ux.md) (Busca por significado é feita em cima de uma rede neural)
 
@@ -39,9 +39,38 @@ O passo 1 é o mesmo forward pass que o aluno já conhece da aba Redes neurais, 
 
 **A Aqua:** poderia ser quem "sai procurando" no mapa e volta com as frases achadas, com os olhos mudando conforme a nota (achou algo bem parecido × não achou nada).
 
+## Decidido
+
+### 1. De onde vêm os números do embedding (2026-11-21)
+
+**Decisão do autor:** opção **A**, modelo de verdade no navegador.
+
+- **Modelo:** `all-MiniLM-L6-v2`, versão **quantizada** (*quantization*: pesos guardados com menos casas decimais) de **23 MB**, rodando com Transformers.js. Cada frase vira **384 números**, porque a última camada desse modelo tem 384 neurônios; o número é escolha de quem criou o modelo, não um padrão.
+- **Só em inglês:** o modelo foi treinado em inglês. As frases e a pergunta precisam estar em inglês, e a aba avisa isso. O resto do site continua em português.
+- **O aluno monta enquanto baixa:** o download não bloqueia a aba. A página mostra que o modelo está baixando.
+- **Depois:** talvez trocar por um modelo **multilíngue** de 384 números (`paraphrase-multilingual-MiniLM-L12-v2` ou `multilingual-e5-small`, **118 MB** quantizados), para aceitar português. Por agora fica o de 23 MB.
+
+**Por que não o de 118 MB agora:** o download pesa mais, principalmente na escola, com vários alunos dividindo a mesma internet (conta feita em 2026-11-21: 30 alunos a 100 Mbps ≈ 1 min com 23 MB e ≈ 5 min com 118 MB). Tamanhos conferidos no Hugging Face na mesma data.
+
+**Detalhes propostos pela IA e aprovados pelo autor:**
+
+| Detalhe | Como fica |
+|---|---|
+| Quando baixa | Só quando o aluno abre a aba Busca por significado (**carregamento sob demanda**, *lazy loading*). Home e Redes neurais não baixam nada. |
+| Onde aparece | Dentro do bloco **Embedding**: barra de progresso e "12 de 23 MB". |
+| Rodar antes de terminar | Destaca o bloco Embedding com "ainda baixando", do mesmo jeito que os erros no lugar exato. |
+| Internet cai | Mensagem no bloco Embedding e botão **Tentar de novo**. |
+| Segunda visita | O navegador guarda o arquivo (**cache**); não baixa de novo. Só carregar na memória leva alguns segundos. |
+| Tela travando | O modelo roda num **Web Worker** (uma linha de execução separada da tela), como previa a [ADR-0017](0017-stack.md). |
+| Trocar de modelo | O nome do modelo fica num lugar só no código, para a troca pelo multilíngue ser uma linha. |
+
+**Consequência:** a conta do cosseno tem **384 parcelas sem nome**, então não cabe uma por uma no painel. O que o Rodar mostra fica para a pergunta 2.
+
+**Ainda não decidido:** de onde o arquivo é baixado, se dos servidores do Hugging Face (padrão do Transformers.js; o texto do aluno não sai do navegador, só o arquivo do modelo vem de fora) ou do próprio site no GitHub Pages.
+
 ## Perguntas em aberto (decisões do autor)
 
-1. **De onde vêm os números do embedding?** É a maior escolha, porque muda o que o aluno consegue fazer e ver:
+1. ~~**De onde vêm os números do embedding?**~~ **Decidido: opção A, em inglês (ver acima).** As opções que estavam na mesa:
    - **A · Modelo de verdade no navegador** (`all-MiniLM-L6-v2` com Transformers.js): o aluno escreve qualquer frase. Custa um download de uns 25 MB, e cada frase vira 384 números, que não dá para mostrar um por um.
    - **B · Números já calculados** para coleções prontas: abre na hora, sem download, mas o aluno não escreve frases novas.
    - **C · Embedding de brinquedo**, feito à mão: poucos eixos com nome (ex.: "é comida?", "é animal?", "é bom?") e o aluno dá a nota de cada frase. Dá para ver todas as contas, mas não é como funciona de verdade.
