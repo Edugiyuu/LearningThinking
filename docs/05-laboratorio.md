@@ -49,7 +49,7 @@ Fontes: [ADR-0013](adr/0013-formato-tutoriais-e-laboratorio.md), [ADR-0014](adr/
 
 ### Em aberto
 
-- Busca por significado: o [ADR-0014](adr/0014-laboratorio-abas-projetos-e-erros.md) coloca a aba na v1, mas a Home e a tela Novo projeto a mostram como "Em breve" porque ela ainda não foi desenhada. Faltam os blocos e a montagem básica.
+- Busca por significado: o [ADR-0014](adr/0014-laboratorio-abas-projetos-e-erros.md) coloca a aba na v1, mas a Home e a tela Novo projeto a mostram como "Em breve" porque ela ainda não foi desenhada. Faltam os blocos e a montagem básica. Rascunho com uma ideia de como seria e as perguntas em aberto: [ADR-0037](adr/0037-aba-busca-por-significado.md).
 - Mover um neurônio de uma camada para outra.
 - *Bias* (um número extra somado em cada neurônio): ainda não entrou.
 - Como o tutorial "mostra" o laboratório?
