@@ -6,6 +6,11 @@
 // Toca sozinha uma vez (como um vídeo) e depois fica com pulsos lentos; tem botão de pausa.
 // Sem quadro: o fundo é transparente e as bordas somem no branco da página (máscara com degradê).
 // O mundo vem de scripts/gerar-cena-heroi.py; aqui só se move a câmera, os pulsos e as luzes.
+//
+// Desenho em <canvas> (ADR-0035, fluidez): em SVG eram ~2.000 elementos, e cada quadro da câmera
+// fazia o navegador redesenhar todos (30-40 quadros por segundo). Aqui o GSAP continua sendo o relógio:
+// ele anima números (zoom, brilho de cada neurônio, posição de cada pulso) e um único desenho por quadro
+// lê esses números e pinta a cena.
 
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
@@ -17,7 +22,6 @@ const VERDE = "#2FA35B";
 const VERMELHO = "#D64545";
 const CINZA_LIGACAO = "#1D1D1F";
 const CINZA_NEURONIO = "#C7C7CC";
-const SVG_NS = "http://www.w3.org/2000/svg";
 
 // Linha do tempo: 0,6 s com a Aqua parada soltando os primeiros pulsos, depois 10 s de câmera afastando.
 const INICIO = 0.6;
@@ -30,29 +34,7 @@ const bracinho = (lado: number, zoom: number): [number, number] => {
   const p = pixelDaAqua(zoom);
   return [CX + (lado === 0 ? -9 : 9) * p, CY - p];
 };
-const raioDoPulso = (zoom: number) => Math.max(3.5, Math.min(10, 2.2 * zoom)); // em pixels da tela
-
-// A cena começa no zoom 6: a câmera fica no centro da Aqua, então só a escala muda.
-// Arredondado: o servidor e o navegador precisam escrever o mesmo número (senão o React reclama na hidratação).
-const n4 = (v: number) => Math.round(v * 1e4) / 1e4;
-const transformDaCamera = (zoom: number) => `translate(${n4(CX - CX * zoom)} ${n4(CY - CY * zoom)}) scale(${n4(zoom)})`;
-const transformDaAqua = (zoom: number) => `translate(${CX} ${CY}) scale(${n4(P1 * zoom ** 0.6)})`;
-
-// Camada apagada, desenhada uma vez no servidor: todas as ligações em cinza e os neurônios com anel cinza.
-const N = MUNDO.neuronios;
-const LIGACOES_CINZA = MUNDO.ligacoes
-  .map(([a, b]) => `M${N[a][0]} ${N[a][1]}L${N[b][0]} ${N[b][1]}`)
-  .join("");
-const NEURONIOS_CINZA = N.map(([x, y]) => `M${x} ${y}h.01`);
-// Cada neurônio é um ponto (linha de comprimento quase zero com ponta redonda): grupos por raio.
-const PONTOS_POR_RAIO = (() => {
-  const grupos = new Map<number, string[]>();
-  N.forEach(([, , r], i) => {
-    const k = Math.round(r * 4) / 4;
-    grupos.set(k, [...(grupos.get(k) ?? []), NEURONIOS_CINZA[i]]);
-  });
-  return [...grupos].map(([r, ds]) => ({ r, d: ds.join("") }));
-})();
+const raioDoPulso = (zoom: number) => Math.max(3.5, Math.min(10, 2.2 * zoom)); // em unidades do quadro
 
 // Aqua: grade oficial 20 x 12 (corpo 16 x 10), centrada em (0, 0).
 type Celula = [number, number, number, number, string];
@@ -71,119 +53,203 @@ const OLHOS_FELIZES: Celula[] = (
   [[5, 4], [6, 3], [7, 3], [8, 4], [11, 4], [12, 3], [13, 3], [14, 4]] as const
 ).map(([x, y]) => [x, y, 1, 1, OLHO]);
 
-function Pixels({ celulas }: { celulas: Celula[] }) {
-  return celulas.map(([x, y, w, h, cor], i) => (
-    <rect key={i} x={x - 10} y={y - 6} width={w} height={h} fill={cor} />
-  ));
-}
-
-function criar<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, string | number>, pai: Element) {
-  const el = document.createElementNS(SVG_NS, tag);
-  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, String(v));
-  pai.appendChild(el);
-  return el;
-}
-
-type Pulso = { g: SVGGElement; brilho: SVGCircleElement; nucleo: SVGCircleElement };
-
-/** Monta as camadas animadas e devolve a linha do tempo principal e a função que liga os pulsos lentos do fim. */
-function montarCena(svg: SVGSVGElement) {
-  const q = <T extends Element>(s: string) => svg.querySelector<T>(s)!;
-  const mundo = q<SVGGElement>("[data-mundo]");
-  const cinza = q<SVGPathElement>("[data-ligacoes-cinza]");
-  const camadaLigacoes = q<SVGGElement>("[data-ligacoes-acesas]");
-  const camadaNeuronios = q<SVGGElement>("[data-neuronios-acesos]");
-  const camadaPiscadas = q<SVGGElement>("[data-piscadas]");
-  const camadaPulsos = q<SVGGElement>("[data-pulsos]");
-  const aqua = q<SVGGElement>("[data-aqua]");
-  // Começa do zero (no modo de desenvolvimento o React monta o efeito duas vezes).
-  svg.querySelectorAll("[data-camada]").forEach((g) => g.replaceChildren());
-
-  // Ligações acesas: um caminho por ligação (para acender uma a uma), em grupos por cor e espessura.
-  // A espessura é em pixels da tela (vector-effect: non-scaling-stroke) e muda com o zoom no grupo.
-  const grupos = new Map<string, { g: SVGGElement; base: number }>();
-  const grupo = (sinal: number, w: number) => {
-    const base = Math.max(0.25, Math.round(w * 4) / 4);
-    const chave = `${sinal}:${base}`;
-    if (!grupos.has(chave)) {
-      const g = criar("g", { stroke: sinal > 0 ? VERDE : VERMELHO }, camadaLigacoes);
-      grupos.set(chave, { g, base });
-    }
-    return grupos.get(chave)!.g;
-  };
-  const ligacoes = MUNDO.ligacoes.map(([a, b, sinal, w, op]) =>
-    criar(
-      "path",
-      {
-        d: `M${N[a][0]} ${N[a][1]}L${N[b][0]} ${N[b][1]}`,
-        "stroke-opacity": (Math.round(op * 3) / 3) * 0.85,
-        opacity: 0,
-        "vector-effect": "non-scaling-stroke",
-      },
-      grupo(sinal, w),
-    ),
-  );
-  const bracos = MUNDO.bracos.map(([, , w]) =>
-    criar("path", { "stroke-opacity": 0.85, "vector-effect": "non-scaling-stroke" }, grupo(1, w)),
-  );
-
-  // Neurônios acesos (anel aqua por cima do cinza) e a piscada de quando o pulso chega.
-  const acesos = N.map(([x, y, r]) =>
-    criar("circle", { cx: x, cy: y, r: r * 0.83, fill: "#FFFFFF", stroke: AQUA, "stroke-width": r * 0.35, opacity: 0 }, camadaNeuronios),
-  );
-  const piscadas = N.map(([x, y, r]) => {
-    const g = criar("g", { opacity: 0, fill: AQUA }, camadaPiscadas);
-    criar("circle", { cx: x, cy: y, r: r * 2.5, "fill-opacity": 0.25 }, g);
-    criar("circle", { cx: x, cy: y, r }, g);
-    return g;
+const N = MUNDO.neuronios;
+// Neurônios agrupados pelo raio (arredondado a 0,25), para pintar os anéis com um traço por grupo.
+const POR_RAIO: [number, number[]][] = (() => {
+  const m = new Map<number, number[]>();
+  N.forEach(([, , r], i) => {
+    const k = Math.round(r * 4) / 4;
+    m.set(k, [...(m.get(k) ?? []), i]);
   });
+  return [...m];
+})();
+const comAlfa = (hex: string, a: number) =>
+  `rgba(${parseInt(hex.slice(1, 3), 16)}, ${parseInt(hex.slice(3, 5), 16)}, ${parseInt(hex.slice(5, 7), 16)}, ${a})`;
+// Espessura das ligações acesas, em pixels da tela, por grupo (como o vector-effect: non-scaling-stroke do SVG).
+const baseDaLigacao = (w: number) => Math.max(0.25, Math.round(w * 4) / 4);
+const espessuraAcesa = (base: number, zoom: number) => Math.max(0.8, base * zoom ** 0.75 * 1.25);
 
-  const novoPulso = (): Pulso => {
-    const g = criar("g", { visibility: "hidden" }, camadaPulsos);
-    return {
-      g,
-      brilho: criar("circle", { r: 1, "fill-opacity": 0.28 }, g),
-      nucleo: criar("circle", { r: 1 }, g),
-    };
-  };
-  const desenharPulso = (p: Pulso, x: number, y: number, zoom: number, visivel: boolean) => {
-    p.g.setAttribute("visibility", visivel ? "visible" : "hidden");
-    if (!visivel) return;
-    const r = raioDoPulso(zoom) / zoom;
-    p.g.setAttribute("transform", `translate(${x} ${y})`);
-    p.brilho.setAttribute("r", String(r * 1.6));
-    p.nucleo.setAttribute("r", String(r * 0.6));
-  };
+type Valor = { v: number };
+type Pulso = { u: number; de: number; ate: number };
 
-  // ---------- câmera ----------
-  let zoomAtual = Z0;
+/** Monta o estado animado e a linha do tempo; devolve também a função que desenha um quadro. */
+function montarCena(canvas: HTMLCanvasElement) {
+  const ctx = canvas.getContext("2d")!;
   const camera = { lz: Math.log(Z0) };
-  const aplicarCamera = () => {
-    const z = Math.exp(camera.lz);
-    zoomAtual = z;
-    mundo.setAttribute("transform", transformDaCamera(z));
-    aqua.setAttribute("transform", transformDaAqua(z));
-    cinza.setAttribute("stroke-width", String(Math.max(0.6, 0.6 * z)));
-    for (const { g, base } of grupos.values()) g.setAttribute("stroke-width", String(Math.max(0.8, base * z ** 0.75 * 1.25)));
-    MUNDO.bracos.forEach(([lado, i], k) => {
-      const [x, y] = bracinho(lado, z);
-      bracos[k].setAttribute("d", `M${x} ${y}L${N[i][0]} ${N[i][1]}`);
-    });
+  const olho = { feliz: 0 };
+  const acesos: Valor[] = N.map(() => ({ v: 0 }));
+  const piscadas: Valor[] = N.map(() => ({ v: 0 }));
+  const ligacoes: Valor[] = MUNDO.ligacoes.map(() => ({ v: 0 }));
+  const pulsos: Pulso[] = []; // os da onda (de < 0: sai do bracinho -de - 1)
+  let lentos: Pulso[] = []; // os do ciclo do fim
+  let sujo = true;
+  const marcar = () => {
+    sujo = true;
   };
-  aplicarCamera();
 
-  const tl = gsap.timeline({ defaults: { ease: "none" } });
-  tl.to(camera, { lz: 0, duration: DURACAO_CAMERA, ease: "sine.inOut", onUpdate: aplicarCamera }, INICIO);
+  function desenhar() {
+    sujo = false;
+    const k = canvas.width / W; // unidades do quadro -> pixels do canvas
+    const px = canvas.width / (canvas.clientWidth || W); // pixels da tela -> pixels do canvas
+    const z = Math.exp(camera.lz);
+    const X = (x: number) => (CX + (x - CX) * z) * k;
+    const Y = (y: number) => (CY + (y - CY) * z) * k;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.lineCap = "round";
+
+    // brilho do fundo (elipse 560 x 300 no centro)
+    ctx.save();
+    ctx.setTransform(k, 0, 0, (k * 300) / 560, CX * k, CY * k);
+    const brilho = ctx.createRadialGradient(0, 0, 0, 0, 0, 560);
+    brilho.addColorStop(0, comAlfa(AQUA, 0.22));
+    brilho.addColorStop(0.6, comAlfa("#378ADD", 0.04));
+    brilho.addColorStop(1, "rgba(255, 255, 255, 0)");
+    ctx.fillStyle = brilho;
+    ctx.fillRect(-560, -560, 1120, 1120);
+    ctx.restore();
+
+    // ligações apagadas
+    ctx.beginPath();
+    for (const [a, b] of MUNDO.ligacoes) {
+      ctx.moveTo(X(N[a][0]), Y(N[a][1]));
+      ctx.lineTo(X(N[b][0]), Y(N[b][1]));
+    }
+    ctx.strokeStyle = comAlfa(CINZA_LIGACAO, 0.1);
+    ctx.lineWidth = Math.max(0.6, 0.6 * z) * px;
+    ctx.stroke();
+
+    // ligações acesas, juntas por cor, espessura e transparência (um traço por grupo)
+    const grupos = new Map<string, number[][]>();
+    const juntar = (sinal: number, w: number, alfa: number, linha: number[]) => {
+      const a = Math.round(alfa * 20) / 20;
+      if (a <= 0) return;
+      const chave = `${sinal}|${baseDaLigacao(w)}|${a}`;
+      if (!grupos.has(chave)) grupos.set(chave, []);
+      grupos.get(chave)!.push(linha);
+    };
+    MUNDO.ligacoes.forEach(([a, b, sinal, w, op], i) => {
+      const v = ligacoes[i].v;
+      if (v > 0) juntar(sinal, w, (Math.round(op * 3) / 3) * 0.85 * v, [X(N[a][0]), Y(N[a][1]), X(N[b][0]), Y(N[b][1])]);
+    });
+    for (const [lado, i, w] of MUNDO.bracos) {
+      const [bx, by] = bracinho(lado, z);
+      juntar(1, w, 0.85, [X(bx), Y(by), X(N[i][0]), Y(N[i][1])]);
+    }
+    for (const [chave, linhas] of grupos) {
+      const [sinal, base, alfa] = chave.split("|").map(Number);
+      ctx.beginPath();
+      for (const [x0, y0, x1, y1] of linhas) {
+        ctx.moveTo(x0, y0);
+        ctx.lineTo(x1, y1);
+      }
+      ctx.strokeStyle = comAlfa(sinal > 0 ? VERDE : VERMELHO, alfa);
+      ctx.lineWidth = espessuraAcesa(base, z) * px;
+      ctx.stroke();
+    }
+
+    // neurônios apagados: anel cinza com miolo branco
+    const circulos = (fator: number, filtro?: (i: number) => boolean) => {
+      ctx.beginPath();
+      N.forEach(([x, y, r], i) => {
+        if (filtro && !filtro(i)) return;
+        const cx = X(x);
+        const cy = Y(y);
+        ctx.moveTo(cx + r * fator * z * k, cy);
+        ctx.arc(cx, cy, r * fator * z * k, 0, Math.PI * 2);
+      });
+    };
+    circulos(1);
+    ctx.fillStyle = CINZA_NEURONIO;
+    ctx.fill();
+    circulos(0.675);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fill();
+
+    // neurônios acesos (anel aqua) e a piscada de quando o pulso chega, agrupados pela transparência
+    const porAlfa = (valores: Valor[]) => {
+      const m = new Map<number, Set<number>>();
+      valores.forEach(({ v }, i) => {
+        const a = Math.round(v * 20) / 20;
+        if (a <= 0) return;
+        if (!m.has(a)) m.set(a, new Set());
+        m.get(a)!.add(i);
+      });
+      return m;
+    };
+    ctx.strokeStyle = AQUA;
+    for (const [a, idx] of porAlfa(acesos)) {
+      ctx.globalAlpha = a;
+      circulos(0.83, (i) => idx.has(i));
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fill();
+      // o anel tem a espessura do raio: um traço por grupo de raio (como os pontos cinza)
+      for (const [r, doRaio] of POR_RAIO) {
+        ctx.beginPath();
+        for (const i of doRaio) {
+          if (!idx.has(i)) continue;
+          const raio = N[i][2] * 0.83 * z * k;
+          ctx.moveTo(X(N[i][0]) + raio, Y(N[i][1]));
+          ctx.arc(X(N[i][0]), Y(N[i][1]), raio, 0, Math.PI * 2);
+        }
+        ctx.lineWidth = r * 0.35 * z * k;
+        ctx.stroke();
+      }
+    }
+    ctx.fillStyle = AQUA;
+    for (const [a, idx] of porAlfa(piscadas)) {
+      ctx.globalAlpha = a * 0.25;
+      circulos(2.5, (i) => idx.has(i));
+      ctx.fill();
+      ctx.globalAlpha = a;
+      circulos(1, (i) => idx.has(i));
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // pulsos: andam pela ligação; o tamanho acompanha o zoom da onda (no ciclo do fim, zoom 1)
+    const pintarPulsos = (lista: Pulso[], zoom: number) => {
+      const r = raioDoPulso(zoom) * k;
+      for (const fator of [1.6, 0.6]) {
+        ctx.beginPath();
+        for (const { u, de, ate } of lista) {
+          if (u <= 0 || u >= 1) continue;
+          const [x0, y0] = de >= 0 ? N[de] : bracinho(MUNDO.bracos[-de - 1][0], z);
+          const [x1, y1] = N[ate];
+          const cx = X(x0 + (x1 - x0) * u);
+          const cy = Y(y0 + (y1 - y0) * u);
+          ctx.moveTo(cx + r * fator, cy);
+          ctx.arc(cx, cy, r * fator, 0, Math.PI * 2);
+        }
+        ctx.fillStyle = fator > 1 ? comAlfa(AQUA, 0.28) : AQUA;
+        ctx.fill();
+      }
+    };
+    pintarPulsos(pulsos, z);
+    pintarPulsos(lentos, 1);
+
+    // a Aqua, por cima de tudo, em pixels inteiros da grade
+    const escala = P1 * z ** 0.6 * k;
+    ctx.setTransform(escala, 0, 0, escala, CX * k, CY * k);
+    for (const [x, y, w, h, cor] of [...CORPO, ...(olho.feliz ? OLHOS_FELIZES : OLHOS_NORMAIS)]) {
+      ctx.fillStyle = cor;
+      ctx.fillRect(x - 10, y - 6, w, h);
+    }
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+  }
+
+  const tl = gsap.timeline({ defaults: { ease: "none" }, onUpdate: marcar });
+  tl.to(camera, { lz: 0, duration: DURACAO_CAMERA, ease: "sine.inOut" }, INICIO);
 
   // ---------- onda: cada neurônio acende quando o pulso chega ----------
   const quando = (i: number) => INICIO + MUNDO.acende[i];
   N.forEach((_, i) => {
     const t = quando(i);
-    tl.to(acesos[i], { opacity: 1, duration: 0.25 }, t);
-    tl.to(piscadas[i], { keyframes: [{ opacity: 1, duration: 0.1 }, { opacity: 0, duration: 0.6 }] }, t);
+    tl.to(acesos[i], { v: 1, duration: 0.25 }, t);
+    tl.to(piscadas[i], { keyframes: [{ v: 1, duration: 0.1 }, { v: 0, duration: 0.6 }] }, t);
   });
   MUNDO.ligacoes.forEach(([a, b], k) => {
-    tl.to(ligacoes[k], { opacity: 1, duration: 0.3 }, Math.max(quando(a), quando(b)));
+    tl.to(ligacoes[k], { v: 1, duration: 0.3 }, Math.max(quando(a), quando(b)));
   });
 
   // Pulsos: andam pela ligação que trouxe a onda até cada neurônio (de um bracinho ou de outro neurônio).
@@ -192,84 +258,82 @@ function montarCena(svg: SVGSVGElement) {
     const saida = de >= 0 ? quando(de) : 0;
     const duracao = quando(j) - saida;
     if (duracao < 0.05) return;
-    const pulso = novoPulso();
-    const p = { u: 0 };
-    tl.to(
-      p,
-      {
-        u: 1,
-        duration: duracao,
-        onUpdate: () => {
-          const [x0, y0] = de >= 0 ? [N[de][0], N[de][1]] : bracinho(MUNDO.bracos[-de - 1][0], zoomAtual);
-          const [x1, y1] = N[j];
-          desenharPulso(pulso, x0 + (x1 - x0) * p.u, y0 + (y1 - y0) * p.u, zoomAtual, p.u > 0 && p.u < 1);
-        },
-      },
-      saida,
-    );
+    const pulso: Pulso = { u: 0, de, ate: j };
+    pulsos.push(pulso);
+    tl.to(pulso, { u: 1, duration: duracao }, saida);
   });
 
   // A Aqua troca de quadro (olho normal -> feliz); o GSAP só marca a hora.
-  tl.set(q("[data-olho='normal']"), { attr: { visibility: "hidden" } }, OLHO_FELIZ);
-  tl.set(q("[data-olho='feliz']"), { attr: { visibility: "visible" } }, OLHO_FELIZ);
+  tl.set(olho, { feliz: 1 }, OLHO_FELIZ);
 
   // Depois do fim: pulsos lentos por ligações sorteadas, em ciclo.
   const pulsosLentos = () => {
-    const ciclo = gsap.timeline({ repeat: -1, defaults: { ease: "sine.inOut" } });
-    for (let k = 0; k < 18; k++) {
+    lentos = Array.from({ length: 18 }, () => {
       const [a, b] = MUNDO.ligacoes[Math.floor(Math.random() * MUNDO.ligacoes.length)];
-      const pulso = novoPulso();
-      const p = { u: 0 };
-      ciclo.to(
-        p,
-        {
-          u: 1,
-          duration: 1.8,
-          onUpdate: () => {
-            const [x0, y0] = N[a];
-            const [x1, y1] = N[b];
-            desenharPulso(pulso, x0 + (x1 - x0) * p.u, y0 + (y1 - y0) * p.u, 1, p.u > 0 && p.u < 1);
-          },
-        },
-        k * 0.45,
-      );
-    }
+      return { u: 0, de: a, ate: b };
+    });
+    const ciclo = gsap.timeline({ repeat: -1, defaults: { ease: "sine.inOut" }, onUpdate: marcar });
+    lentos.forEach((p, k) => ciclo.to(p, { u: 1, duration: 1.8 }, k * 0.45));
     return ciclo;
   };
 
-  return { tl, aplicarCamera, pulsosLentos };
+  // Um desenho por quadro, só quando algum número mudou (pausado, não gasta nada).
+  const quadro = () => {
+    if (sujo) desenhar();
+  };
+  return { tl, pulsosLentos, quadro, desenhar: () => desenhar() };
 }
 
 export function CenaHeroi() {
-  const svg = useRef<SVGSVGElement>(null);
+  const canvas = useRef<HTMLCanvasElement>(null);
   const tocando = useRef<gsap.core.Timeline[]>([]);
   const [pausada, setPausada] = useState(false);
   const [comMovimento, setComMovimento] = useState(true);
 
   useEffect(() => {
+    const el = canvas.current!;
+    const cena = montarCena(el);
+    // O canvas acompanha a largura da página, na resolução da tela (nítido em telas retina).
+    const ajustar = () => {
+      const largura = Math.round(el.clientWidth * Math.min(2, window.devicePixelRatio || 1));
+      if (!largura || el.width === largura) return;
+      el.width = largura;
+      el.height = Math.round((largura * H) / W);
+      cena.desenhar();
+    };
+    const observador = new ResizeObserver(ajustar);
+    observador.observe(el);
+    ajustar();
+
     const mm = gsap.matchMedia();
     mm.add(
       { mover: "(prefers-reduced-motion: no-preference)", parar: "(prefers-reduced-motion: reduce)" },
       (ctx) => {
-        const { tl, aplicarCamera, pulsosLentos } = montarCena(svg.current!);
         if (ctx.conditions?.parar) {
           // Quem pediu menos movimento vê só o último quadro, parado.
-          tl.progress(1, true);
-          aplicarCamera();
+          cena.tl.progress(1, true).pause();
+          cena.desenhar();
           setComMovimento(false);
           tocando.current = [];
           return;
         }
         setComMovimento(true);
-        tocando.current = [tl];        tl.eventCallback("onComplete", () => {
+        cena.tl.restart();
+        tocando.current = [cena.tl];
+        gsap.ticker.add(cena.quadro);
+        cena.tl.eventCallback("onComplete", () => {
           ctx.add(() => {
-            tocando.current = [pulsosLentos()];
+            tocando.current = [cena.pulsosLentos()];
           });
         });
+        return () => gsap.ticker.remove(cena.quadro);
       },
-      svg,
     );
-    return () => mm.revert();
+    return () => {
+      mm.revert();
+      cena.tl.kill();
+      observador.disconnect();
+    };
   }, []);
 
   const alternarPausa = () => {
@@ -282,58 +346,19 @@ export function CenaHeroi() {
     // Sem quadro: a máscara apaga as bordas no branco da página.
     <div className="relative">
       <div className="mx-auto w-full max-w-[1280px]">
-        <svg
-          ref={svg}
-          viewBox={`0 0 ${W} ${H}`}
+        <canvas
+          ref={canvas}
+          width={W}
+          height={H}
           className="block h-auto w-full"
           style={{
+            aspectRatio: `${W} / ${H}`,
             maskImage: "radial-gradient(closest-side, #000 55%, transparent)",
             WebkitMaskImage: "radial-gradient(closest-side, #000 55%, transparent)",
           }}
           role="img"
           aria-label="A Aqua no meio de muitos neurônios. Pulsos saem dos bracinhos dela e cada neurônio acende quando o pulso chega, enquanto a câmera se afasta até mostrar todos acesos."
-        >
-          <defs>
-            <radialGradient id="cena-brilho">
-              <stop offset="0" stopColor={AQUA} stopOpacity={0.22} />
-              <stop offset="0.6" stopColor="#378ADD" stopOpacity={0.04} />
-              <stop offset="1" stopColor="#FFFFFF" stopOpacity={0} />
-            </radialGradient>
-          </defs>
-          <ellipse cx={CX} cy={CY} rx={560} ry={300} fill="url(#cena-brilho)" />
-          <g data-mundo transform={transformDaCamera(Z0)}>
-            <path
-              data-ligacoes-cinza
-              d={LIGACOES_CINZA}
-              stroke={CINZA_LIGACAO}
-              strokeOpacity={0.1}
-              strokeWidth={0.6 * Z0}
-              vectorEffect="non-scaling-stroke"
-            />
-            <g data-ligacoes-acesas data-camada />
-            <g strokeLinecap="round">
-              {PONTOS_POR_RAIO.map(({ r, d }) => (
-                <g key={r}>
-                  <path d={d} stroke={CINZA_NEURONIO} strokeWidth={2 * r} />
-                  <path d={d} stroke="#FFFFFF" strokeWidth={1.35 * r} />
-                </g>
-              ))}
-            </g>
-            <g data-neuronios-acesos data-camada />
-            <g data-piscadas data-camada />
-            <g data-pulsos data-camada fill={AQUA} />
-          </g>
-          <g data-aqua transform={transformDaAqua(Z0)}>
-            <Pixels celulas={CORPO} />
-            {/* visibility explícito: o GSAP guarda esse valor para poder desfazer a troca */}
-            <g data-olho="normal" visibility="visible">
-              <Pixels celulas={OLHOS_NORMAIS} />
-            </g>
-            <g data-olho="feliz" visibility="hidden">
-              <Pixels celulas={OLHOS_FELIZES} />
-            </g>
-          </g>
-        </svg>
+        />
       </div>
       <div className="mx-auto flex max-w-[1120px] items-center justify-center gap-3">
         <p className="text-center text-[13px] font-medium text-text-subtle">
