@@ -16,4 +16,5 @@
 | [06 · Roadmap](06-roadmap.md) | Fases de entrega | Proposta da IA, em revisão (progresso real no topo) |
 | [07 · Guia de conteúdo](07-guia-de-conteudo.md) | Como escrever uma aula | Proposta da IA, em revisão |
 | [08 · Testes](08-testes.md) | Cola dos comandos, do molde de um teste e das armadilhas | ✅ |
+| [09 · Resumo: Busca por significado](09-resumo-busca-por-significado.md) | Cola rápida da conversa sobre a aba: decisões e conceitos (tokens, embedding, cosseno, PCA, treino) | ✅ 2026-11-25 |
 | [ADRs](adr/README.md) | Decisões e seus porquês | ✅ |

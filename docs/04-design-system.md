@@ -78,7 +78,7 @@ Como a cor foi escolhida: a ideia era fugir do roxo comum em sites gerados por I
 | 0 · Fundamentos | Grafite | `#8E8E93` | Neutro, introdutório |
 | 1 · Redes neurais | Aqua claro (antes Violeta `#7C5CFF`) | `#5ED3DB` | Neurônios, conexões |
 | 2 · LLMs | Azul | `#2F7CF6` | Tokens, probabilidades |
-| 3 · Embeddings (Busca por significado) | Ciano ⚠️ | `#14B8C4` | Pontos no espaço |
+| 3 · Embeddings (Busca por significado) | Aqua claro, igual ao lab (antes Ciano `#14B8C4`, [ADR-0037](adr/0037-aba-busca-por-significado.md)) | `#5ED3DB` | Pontos no espaço |
 | 4 · RAG | Verde-água | `#10B981` | Documentos, recuperação |
 | 5 · Deep thinking | Âmbar | `#F59E0B` | Traços de raciocínio |
 | 6 · Aprendizado contínuo | Rosa | `#F43F5E` | Memória, esquecimento |
