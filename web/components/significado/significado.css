@@ -1,0 +1,597 @@
+/* Aba Busca por significado (ADR-0037). Mesmas cores do lab das cores. */
+
+/* ---------- Lista da esquerda ---------- */
+.sig-lista {
+  width: 260px;
+  flex-shrink: 0;
+  padding: 20px 14px;
+  overflow-y: auto;
+  background: var(--bg);
+}
+
+.sig-secao {
+  margin-bottom: 24px;
+}
+
+.sig-secao h2 {
+  margin: 0 0 10px 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.sig-caixa {
+  width: 100%;
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid #e5e5ea;
+  border-radius: 10px;
+  font-size: 13px;
+  background: var(--bg);
+}
+
+.sig-caixa:focus {
+  outline: 2px solid var(--destaque);
+  outline-offset: 1px;
+}
+
+.sig-secao ul {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sig-secao li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 8px;
+  border-radius: 8px;
+}
+
+.sig-secao li.selecionada {
+  background: var(--destaque-fundo);
+}
+
+.sig-secao li.selecionada label span {
+  font-weight: 700;
+}
+
+.sig-secao label {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.sig-secao label span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sig-secao input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--destaque);
+}
+
+.sig-secao .escondida {
+  color: var(--text-subtle);
+}
+
+.sig-novo {
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: var(--bg-subtle);
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.marca-palavra,
+.marca-categoria {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+}
+
+.marca-palavra {
+  border-radius: 50%;
+  background: var(--destaque);
+}
+
+.marca-categoria {
+  background: var(--sobre-destaque);
+}
+
+.sig-apagar {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--text-subtle);
+  opacity: 0;
+}
+
+.sig-secao li:hover .sig-apagar,
+.sig-apagar:focus-visible {
+  opacity: 1;
+}
+
+.sig-apagar:hover {
+  background: var(--bg-subtle);
+  color: var(--text);
+}
+
+.sig-dica {
+  margin: 0 6px;
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+/* ---------- Centro ---------- */
+.sig-canvas {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  background: var(--bg-subtle);
+}
+
+.sig-mapa,
+.sig-passo {
+  position: relative;
+  min-height: 100%;
+  padding: 22px 24px 64px;
+}
+
+.sig-titulo {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.sig-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: calc(100vh - 200px);
+}
+
+.sig-ponto {
+  cursor: pointer;
+}
+
+.sig-rotulo {
+  font-size: 15px;
+  fill: var(--text);
+}
+
+.sig-rotulo.categoria {
+  font-weight: 700;
+  fill: var(--sobre-destaque);
+}
+
+.sig-nota-linha {
+  font-size: 13px;
+  font-weight: 700;
+  fill: var(--sobre-destaque);
+  paint-order: stroke;
+  stroke: var(--bg-subtle);
+  stroke-width: 4px;
+}
+
+.sig-legenda {
+  position: absolute;
+  bottom: 16px;
+  left: 24px;
+}
+
+.sig-legenda .marca-palavra,
+.sig-legenda .marca-categoria {
+  margin-right: 4px;
+  vertical-align: -1px;
+}
+
+.sig-aqua-canto {
+  position: absolute;
+  right: 40px;
+  bottom: 60px;
+}
+
+/* ---------- Download (telas 6 a 8) ---------- */
+.sig-download {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 460px;
+  padding: 24px 40px 28px;
+  border: 1px solid #e5e5ea;
+  border-radius: 20px;
+  background: var(--bg);
+  transform: translate(-50%, -50%);
+}
+
+.sig-download.com-erro {
+  border: 2px solid var(--erro);
+}
+
+.sig-download > svg,
+.sig-download > div:first-child {
+  align-self: center;
+}
+
+.sig-download h3 {
+  margin: 12px 0 6px;
+  font-size: 20px;
+}
+
+.sig-download p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.sig-trilho {
+  width: 100%;
+  height: 10px;
+  margin-top: 16px;
+  border-radius: 5px;
+  background: var(--destaque-fundo);
+  overflow: hidden;
+}
+
+.sig-barra {
+  height: 100%;
+  border-radius: 5px;
+  background: var(--destaque);
+  transition: width 0.3s;
+}
+
+.sig-barra.erro {
+  background: var(--erro);
+}
+
+.sig-mb {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--destaque-texto);
+}
+
+.sig-mb.erro {
+  color: #b91c1c;
+}
+
+.sig-erro {
+  width: 100%;
+  margin-top: 14px !important;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #fdecec;
+  font-weight: 700;
+  color: #b91c1c;
+}
+
+.sig-tentar {
+  margin-top: 16px;
+  padding: 9px 22px;
+}
+
+.sig-download .sig-dica-download {
+  position: absolute;
+  top: calc(100% + 16px);
+  left: 0;
+  width: 100%;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+/* ---------- Passo 1: tokens ---------- */
+.sig-tokens-area {
+  display: flex;
+  align-items: flex-start;
+  gap: 40px;
+  padding: 30px 20px;
+}
+
+.sig-tokens {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sig-tokens li {
+  display: flex;
+  gap: 8px;
+}
+
+.ficha {
+  padding: 6px 14px;
+  border: 1.5px solid var(--destaque);
+  border-radius: 8px;
+  background: var(--destaque-fundo);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--sobre-destaque);
+}
+
+.ficha.especial {
+  border-color: #e5e5ea;
+  background: #e5e5ea;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ---------- Passo 2: Entrada → Aqua → Saída ---------- */
+.sig-fluxo {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  margin-top: 40px;
+}
+
+.sig-bloco {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-width: 190px;
+  padding: 0 16px 20px;
+  border: 1.5px solid #d1d1d6;
+  border-radius: 16px;
+  background: var(--bg);
+}
+
+.sig-bloco h3 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  align-self: stretch;
+  margin: 0 -16px 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e5ea;
+  font-size: 14px;
+}
+
+.sig-modelo {
+  flex: 1;
+  max-width: 420px;
+  border: 2px solid var(--destaque);
+  background: var(--destaque-fundo);
+}
+
+.sig-modelo h3 {
+  border-bottom-color: #bfeff2;
+  color: var(--sobre-destaque);
+}
+
+.sig-ver-camadas {
+  padding: 4px 12px;
+  border: 1.5px solid var(--destaque);
+  border-radius: 13px;
+  background: var(--bg);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--destaque-texto);
+}
+
+.sig-ver-camadas.ativo {
+  background: var(--destaque);
+  color: var(--sobre-destaque);
+}
+
+.sig-palavra {
+  font-size: 16px;
+  color: var(--destaque-texto);
+}
+
+.sig-cortador {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.sig-fichas {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sig-fichas .ficha {
+  min-width: 110px;
+  text-align: center;
+}
+
+.sig-seta {
+  align-self: center;
+  font-size: 22px;
+  color: var(--text-subtle);
+}
+
+.sig-selo {
+  margin-top: auto;
+  padding: 3px 14px;
+  border: 1.5px solid var(--destaque);
+  border-radius: 13px;
+  background: var(--bg);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--destaque-texto);
+}
+
+.sig-tira {
+  width: 180px;
+  margin-top: 60px;
+}
+
+.sig-saida-nome {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--destaque-texto);
+}
+
+.sig-camadas {
+  width: 100%;
+  max-width: 380px;
+}
+
+.sig-384 {
+  font-size: 12px;
+  font-weight: 700;
+  fill: var(--destaque-texto);
+}
+
+.sig-camada-nome {
+  font-size: 11px;
+  fill: var(--text-muted);
+}
+
+.sig-etiqueta {
+  font-size: 10px;
+  font-weight: 700;
+  fill: var(--sobre-destaque);
+}
+
+/* ---------- Painel da direita ---------- */
+.sig-painel {
+  width: 300px;
+}
+
+.sig-vazio {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-subtle);
+}
+
+.sig-navegar {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.sig-passos {
+  display: flex;
+  gap: 6px;
+}
+
+.sig-passos button {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 14px;
+  background: #f2f2f5;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.sig-passos button.ativo {
+  background: var(--destaque);
+  font-weight: 700;
+  color: var(--sobre-destaque);
+}
+
+.sig-passo-titulo {
+  margin: 8px 0 0;
+  font-size: 18px;
+}
+
+.sig-passo-texto {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.sig-selo-painel {
+  margin: 0;
+  padding: 10px 12px;
+  background: var(--destaque-fundo);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--sobre-destaque);
+}
+
+.sig-glossario {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-subtle);
+}
+
+.sig-barras-titulo {
+  margin: 0;
+  font-size: 18px;
+}
+
+.sig-barras-sub {
+  margin: 0;
+  font-size: 13px;
+}
+
+.sig-barras-legenda {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.sig-barras {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sig-barras li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.sig-trilho-barra {
+  grid-column: 1 / -1;
+  height: 10px;
+  background: var(--destaque-fundo);
+}
+
+.sig-trilho-barra div {
+  height: 100%;
+  background: var(--destaque);
+}
+
+.sig-resultado {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--destaque);
+  border-radius: 12px;
+  background: var(--destaque-fundo);
+  font-size: 11px;
+  color: var(--sobre-destaque);
+}
+
+.sig-resultado b {
+  font-size: 14px;
+}
+
+.sig-nota-escondido {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-muted);
+}

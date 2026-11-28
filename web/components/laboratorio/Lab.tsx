@@ -30,6 +30,7 @@ import PainelContas, { type Convite } from "@/components/laboratorio/PainelConta
 import LadoRecolhivel from "@/components/laboratorio/LadoRecolhivel";
 import QuadroFoco from "@/components/laboratorio/QuadroFoco";
 import AbaAqua, { type ConversaAqua } from "@/components/laboratorio/AbaAqua";
+import AbaSignificado from "@/components/significado/AbaSignificado";
 import { ResultadoTreino, SecaoTreinar, useTreino } from "@/components/laboratorio/Treinar";
 import { LabContexto, PosicaoDoPesoContexto } from "@/components/laboratorio/contexto";
 import { Aqua as AquaDesenho } from "@/components/mascote";
@@ -128,6 +129,9 @@ type Salvamento = "salvo" | "nao-salvo";
 
 function Laboratorio({ projeto }: { projeto: Projeto | null }) {
   const [inicial] = useState(() => montagemDoProjeto(projeto));
+  // as duas abas do lab (ADR-0014): Classificar (a rede das cores) e Busca por significado (ADR-0037)
+  const [tema, setTema] = useState<"classificar" | "significado">("classificar");
+  const rodarSignificado = useRef<(() => void) | null>(null);
   const [ajusteInicial] = useState(() => ajusteDaRede(inicial.nodes));
   const [nodes, setNodes] = useState<NoDaRede[]>(inicial.nodes);
   const [fiosBrutos, setFios] = useState<Fio[]>(inicial.fios);
@@ -606,16 +610,30 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
           </div>
 
           <div className="lab-abas" role="tablist" aria-label="Tema do laboratório">
-            <button role="tab" aria-selected className="ativa">
+            <button role="tab" aria-selected={tema === "classificar"} className={tema === "classificar" ? "ativa" : undefined} onClick={() => setTema("classificar")}>
               Classificar
             </button>
-            <button role="tab" aria-selected={false} disabled>
-              Busca por significado <span className="sr-only">(em breve)</span>
+            <button
+              role="tab"
+              aria-selected={tema === "significado"}
+              className={tema === "significado" ? "ativa" : undefined}
+              onClick={() => {
+                if (treino.emAndamento) return;
+                setTela("lab");
+                setTema("significado");
+              }}
+            >
+              Busca por significado
             </button>
           </div>
 
           <div className="lab-topo-direita">
-            {tela === "aqua" ? (
+            {tema === "significado" ? (
+              // na Busca por significado o topo só tem o Rodar dela (ADR-0037)
+              <button className="botao principal lab-botao" onClick={() => rodarSignificado.current?.()}>
+                <span aria-hidden>▶</span> Rodar
+              </button>
+            ) : tela === "aqua" ? (
               // já está na Aqua: o botão dela vira a volta para o lab, direto, sem zoom (ADR-0028)
               <button
                 className="botao lab-botao aqua-botao-topo"
@@ -655,7 +673,7 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
               </span>
             )}
             {/* na aba da Aqua não tem Rodar: ele mexe no lab, que não está na tela (ADR-0028) */}
-            {tela !== "aqua" && (
+            {tema === "classificar" && tela !== "aqua" && (
               <button className="botao principal lab-botao" onClick={rodar} disabled={treino.emAndamento}>
                 <span aria-hidden>▶</span> {rodada ? "Rodar de novo" : "Rodar"}
               </button>
@@ -663,7 +681,9 @@ function Laboratorio({ projeto }: { projeto: Projeto | null }) {
           </div>
         </header>
 
-        {tela === "aqua" ? (
+        {tema === "significado" ? (
+          <AbaSignificado projetoId={projeto?.id ?? "experimento"} rodarRef={rodarSignificado} />
+        ) : tela === "aqua" ? (
           <AbaAqua
             conversa={conversa}
             setConversa={setConversa}

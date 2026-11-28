@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // motor do ONNX copiado de node_modules (scripts/copiar-motor-onnx.mjs), não é código nosso
+    "public/modelos/**",
   ]),
 ]);
 

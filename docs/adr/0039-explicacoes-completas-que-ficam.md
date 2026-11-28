@@ -19,6 +19,7 @@ O autor **montou e treinou** a rede das cores e mesmo assim não sabia ligar o q
 | Explicações boas no chat, esquecidas dias depois. | **A explicação some.** Não há um lugar no site para voltar e reler. |
 | "Regressão logística é o nome da sigmoide?" e "a descida do gradiente é o forward e o backward pass?" | **Nomes parecidos se misturam.** O aluno usou as peças no lab, mas não sabe onde uma termina e a outra começa. |
 | "Embedding" (o bloco do rascunho) e "384 números" pareciam coisas diferentes. | O **mesmo conceito com dois nomes** parece serem duas coisas. |
+| A tela do Rodar dizia "6 camadas misturam os tokens entre si". O autor não entendeu; quando a IA explicou a atenção e o feed-forward, ele perguntou *"por que não mencionou isso antes? é esse tipo de coisa que precisamos colocar!"* (2026-11-27) | **Palavra vaga no lugar do nome** ("misturar" em vez de atenção) esconde o mecanismo e quebra a regra 1. |
 
 ## Decisão (proposta)
 
@@ -89,11 +90,13 @@ Nem todo modelo é rede neural: Naive Bayes, SVM, árvores de decisão e regress
 | Ajuste fino | × | Aprendizado por reforço | O ajuste fino continua o treino com exemplos que têm a resposta certa; o reforço só recebe uma nota. |
 | Encoder (ex.: BERT, MiniLM) | × | Decoder (ex.: GPT, Claude) | Os dois são Transformers. O encoder **lê o texto inteiro** e devolve números (serve para embeddings); o decoder **escreve**, um token por vez. |
 | Modelo base | × | Modelo de chat | O base só **continua** o texto; o de chat é o mesmo modelo com **ajuste fino** para conversar (o ChatGPT é um GPT ajustado para chat). |
+| Sigmoide | × | Normalização (norma 1) | A sigmoide espreme **cada número sozinho** para entre 0 e 1 e muda a proporção; a normalização divide **a lista toda pelo mesmo número**, mantém a proporção e o sinal e só deixa o tamanho igual a 1. |
+| Embedding da tabela | × | Embedding contextual | O da tabela é fixo por pedaço (keyboard tem sempre os mesmos números); o contextual sai das camadas e depende dos tokens em volta. |
 | k-NN classificador | × | k-NN busca | O classificador faz os vizinhos **votarem**; a busca devolve os vizinhos **em ordem**. |
 
 ### Termos já explicados ao autor (candidatos ao glossário)
 
-Token · Vocabulário · Tokens especiais (`[CLS]`, `[SEP]`, `[PAD]`, `[UNK]`, `[MASK]`) · Cortadores de texto (WordPiece, BPE, SentencePiece) · Embedding · Modelo de embeddings · Mean pooling · Produto escalar · Norma e normalização · Similaridade de cosseno · Classificação zero-shot · Análise de sentimento · k-NN · PCA (redução de dimensionalidade) · Quantização · Inferência · Forward pass · Perda (*loss*) · Backward pass (*backpropagation*) · Gradiente · Descida do gradiente · Taxa de aprendizado · Sigmoide · Regressão logística · Função degrau · Ajuste fino (*fine-tuning*) · Aprendizado contrastivo · Aprendizado por reforço · RLHF
+Token · Vocabulário · Tokens especiais (`[CLS]`, `[SEP]`, `[PAD]`, `[UNK]`, `[MASK]`) · Cortadores de texto (WordPiece, BPE, SentencePiece) · Tabela de embeddings · Embedding de posição · Atenção (*self-attention*, cabeças de atenção) · Feed-forward · GELU · Conexão residual · Normalização da camada · Embedding contextual · Embedding · Modelo de embeddings · Mean pooling · Produto escalar · Norma e normalização · Similaridade de cosseno · Classificação zero-shot · Análise de sentimento · k-NN · PCA (redução de dimensionalidade) · Quantização · Inferência · Forward pass · Perda (*loss*) · Backward pass (*backpropagation*) · Gradiente · Descida do gradiente · Taxa de aprendizado · Sigmoide · Regressão logística · Função degrau · Ajuste fino (*fine-tuning*) · Aprendizado contrastivo · Aprendizado por reforço · RLHF
 
 ## Consequências
 

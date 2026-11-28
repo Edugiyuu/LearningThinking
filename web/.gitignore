@@ -40,5 +40,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# motor do ONNX, copiado de node_modules no predev/prebuild (scripts/copiar-motor-onnx.mjs)
+/public/modelos/ort/
+
 # testes compilados (npm test)
 /.teste/

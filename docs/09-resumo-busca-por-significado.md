@@ -40,7 +40,29 @@
 - **`##`:** "grudado no pedaço anterior". O primeiro pedaço da palavra **não** tem `##`.
 - **Tokens especiais:** marcas que o modelo põe sozinho. `[CLS]` = começo, `[SEP]` = fim (ou separador entre dois textos). Então *keybaord* vira **5 tokens**: `[CLS]` `key` `##ba` `##ord` `[SEP]`.
 - **Cada família tem os seus:** BERT usa `[CLS]` `[SEP]` (e `[PAD]` enchimento, `[UNK]` desconhecido, `[MASK]` escondido no treino); RoBERTa usa `<s>` `</s>`; o GPT base quase só `<|endoftext|>`; modelos de chat ganham marcas de quem fala.
+- **`[CLS]` e `[SEP]` são por texto, não por palavra.** *red* e *keyboard* em duas linhas = 2 textos: `[CLS] red [SEP]` e `[CLS] keyboard [SEP]`, 6 entradas, 2 médias, **2 pontos**. *red keyboard* numa linha = 1 texto: `[CLS] red keyboard [SEP]`, 4 entradas, 1 média, **1 ponto**.
+- **O que muda:** na atenção, só os tokens **do mesmo texto** se olham. Separados, *red* não sabe que *keyboard* existe. Juntos, cada um muda os números do outro, e o ponto é o sentido **da combinação**. Por isso a média dos 2 pontos separados **não** dá o ponto de *red keyboard*. É o que resolve palavra de dois sentidos: *mouse* sozinho fica em dúvida (bicho ou aparelho), *computer mouse* puxa para aparelho (não medido).
 - **Cortadores:** o nosso usa **WordPiece**; o GPT usa **BPE**; existe também o **SentencePiece**. A ideia é a mesma, muda a regra do corte.
+
+## Do token aos 384 números (o que tem dentro do modelo)
+
+Conferido no `config.json` do all-MiniLM-L6-v2 em 2026-11-27.
+
+1. **Tabela de embeddings:** cada token pega 384 números de uma tabela fixa (uma linha por pedaço do vocabulário, 30.522 linhas), somados com os números da **posição** dele. Aqui *keyboard* tem sempre os mesmos números.
+2. **6 camadas** (o **L6** do nome; o L12 tem 12). Cada camada tem:
+   - **Atenção** (*self-attention*): cada token olha os outros (e a si mesmo) e muda seus números conforme o que viu. São 12 "cabeças" olhando ao mesmo tempo.
+   - **Feed-forward** (rede de camadas ligadas): soma ponderada + ativação, **igual à Camada do lab das cores**. Sobe para 1536 neurônios e volta para 384. A ativação é a **GELU** (prima da ReLU, sem o canto).
+   - Peças pequenas: **conexão residual** (soma a entrada de volta na saída) e **normalização da camada**.
+3. **Embedding contextual:** cada token sai com 384 números que agora dependem dos vizinhos.
+4. **Média** (*mean pooling*) de todos os tokens, **com** `[CLS]` e `[SEP]`.
+5. **Normalização:** a lista final fica com **norma 1**.
+
+- **Quantos neurônios e pesos o modelo tem** (conta feita com os números do `config.json`, 2026-11-27):
+  - Cada camada **devolve 384 números por token**: é a "largura" da camada, como uma Camada do lab com 384 neurônios. Por dentro, o feed-forward passa por **1536** e volta para 384. Contando como no lab (1536 + 384), dá **1920 neurônios por camada** e **11.520 nas 6 camadas**.
+  - O que o modelo aprendeu fica nos **pesos**: cerca de **22,7 milhões**. Mais da metade (**11,9 milhões**) está na **tabela** do começo (30.522 pedaços × 384). Cada camada tem cerca de **1,77 milhão**.
+  - **A mesma rede serve para todos os tokens.** Os 3 tokens não ganham neurônios próprios: cada um passa pelas mesmas 6 camadas, com os mesmos pesos, e eles só se misturam na atenção.
+- **`[CLS]` e `[SEP]` também viram 384 números.** O modelo só entende números, então até a marca de começo e fim precisa de uma lista. Eles passam pelas 6 camadas, olham e são olhados. No BERT original, a saída do `[CLS]` era usada como resumo da frase (CLS vem de *classification*).
+- **Normalização × sigmoide:** a sigmoide espreme **cada número sozinho** para entre 0 e 1 e muda a proporção entre eles. A normalização divide **a lista inteira pelo mesmo número** (a norma): a proporção e a direção ficam, só o tamanho vira 1, e o negativo continua negativo. Ex.: [3, 4] → [0,6, 0,8].
 
 ## Três jeitos de montar um Transformer
 
